@@ -1,58 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>OntarID - TikTok Style</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OntarID</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif;
-      background-color: #f0f0f0;
+      background-color: #f2f2f2;
       color: #333;
       overflow-x: hidden;
     }
 
     #judul {
       position: fixed;
-      top: 15px;
+      top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 28px;
+      font-size: 26px;
       font-weight: bold;
       animation: rainbow 5s linear infinite;
       z-index: 99;
       background: white;
-      padding: 10px 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.2);
+      padding: 6px 18px;
+      border-radius: 10px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.15);
     }
 
     @keyframes rainbow {
       0% { color: red; }
-      16% { color: orange; }
-      33% { color: yellow; }
-      50% { color: green; }
-      66% { color: blue; }
-      83% { color: indigo; }
+      20% { color: orange; }
+      40% { color: yellow; }
+      60% { color: green; }
+      80% { color: blue; }
       100% { color: violet; }
     }
 
     #uploadForm {
       position: fixed;
-      top: 70px;
+      top: 60px;
       left: 20px;
+      width: 220px;
       background: white;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
       z-index: 10;
     }
 
     #uploadForm input, #uploadForm button {
-      margin: 5px 0;
+      margin: 6px 0;
       width: 100%;
-      padding: 8px;
-      border-radius: 8px;
+      padding: 7px;
+      border-radius: 6px;
       border: 1px solid #ccc;
     }
 
@@ -61,6 +62,7 @@
       color: green;
       font-weight: bold;
       margin-top: 5px;
+      font-size: 14px;
     }
 
     .container {
@@ -76,12 +78,13 @@
       justify-content: center;
       align-items: center;
       scroll-snap-align: start;
+      padding: 20px 0;
     }
 
     .video-card {
       background: white;
-      border-radius: 15px;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+      border-radius: 16px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
       overflow: hidden;
       width: 90%;
       max-width: 500px;
@@ -93,6 +96,7 @@
       width: 100%;
       height: auto;
       display: block;
+      background: black;
     }
 
     .title {
@@ -109,10 +113,10 @@
       background: crimson;
       color: white;
       border: none;
-      padding: 8px 12px;
+      padding: 6px 10px;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     @media screen and (max-width: 600px) {
@@ -128,87 +132,77 @@
   <div id="judul">OntarID</div>
 
   <form id="uploadForm">
-    <input type="text" id="title" placeholder="Judul Video" required>
-    <input type="file" id="videoFile" accept="video/*" required>
+    <input type="text" id="videoTitle" placeholder="Judul Video" required />
+    <input type="file" id="videoFile" accept="video/*" required />
     <button type="submit">Upload</button>
-    <div id="loading">Uploading...</div>
+    <div id="loading">Mengupload...</div>
   </form>
 
-  <div class="container" id="videoContainer"></div>
+  <div class="container"></div>
 
   <script>
     const form = document.getElementById('uploadForm');
-    const container = document.getElementById('videoContainer');
+    const titleInput = document.getElementById('videoTitle');
+    const fileInput = document.getElementById('videoFile');
     const loading = document.getElementById('loading');
+    const container = document.querySelector('.container');
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      loading.style.display = 'block';
+    let userId = localStorage.getItem('userId');
+    if (!userId) {
+      userId = 'user-' + Date.now();
+      localStorage.setItem('userId', userId);
+    }
 
-      const title = document.getElementById('title').value;
-      const file = document.getElementById('videoFile').files[0];
-      if (!file) return;
+    let videos = JSON.parse(localStorage.getItem('videos')) || [];
 
-      const reader = new FileReader();
-      reader.onload = function () {
-        const videoData = reader.result;
-        const id = Date.now();
-        const videoObj = { id, title, video: videoData };
+    function saveVideos() {
+      localStorage.setItem('videos', JSON.stringify(videos));
+    }
 
-        let videos = JSON.parse(localStorage.getItem('videos') || '[]');
-        videos.push(videoObj);
-        localStorage.setItem('videos', JSON.stringify(videos));
-
-        form.reset();
-        loading.style.display = 'none';
-        loadVideos();
-      };
-      reader.readAsDataURL(file);
-    });
-
-    function loadVideos() {
-      const videos = JSON.parse(localStorage.getItem('videos') || '[]');
+    function renderVideos() {
       container.innerHTML = '';
-      videos.reverse().forEach(v => {
+      videos.forEach((vid, i) => {
         const page = document.createElement('div');
         page.className = 'video-page';
         page.innerHTML = `
           <div class="video-card">
-            <button class="delete-btn" onclick="deleteVideo(${v.id})">Hapus</button>
-            <video muted autoplay loop playsinline src="${v.video}"></video>
-            <div class="title">${v.title}</div>
-          </div>
-        `;
+            <video src="${vid.url}" controls></video>
+            <div class="title">${vid.title}</div>
+            ${vid.owner === userId ? `<button class="delete-btn" onclick="deleteVideo(${i})">Hapus</button>` : ''}
+          </div>`;
         container.appendChild(page);
       });
-      setupAutoplay();
     }
 
-    function deleteVideo(id) {
-      let videos = JSON.parse(localStorage.getItem('videos') || '[]');
-      videos = videos.filter(v => v.id !== id);
-      localStorage.setItem('videos', JSON.stringify(videos));
-      loadVideos();
+    window.deleteVideo = function(i) {
+      if (videos[i].owner === userId) {
+        videos.splice(i, 1);
+        saveVideos();
+        renderVideos();
+      }
     }
 
-    function setupAutoplay() {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          const video = entry.target.querySelector('video');
-          if (entry.isIntersecting) {
-            video.play();
-          } else {
-            video.pause();
-          }
-        });
-      }, { threshold: 0.7 });
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const title = titleInput.value;
+      const file = fileInput.files[0];
+      if (!title || !file) return alert('Judul dan video wajib diisi.');
 
-      document.querySelectorAll('.video-page').forEach(page => {
-        observer.observe(page);
-      });
-    }
+      loading.style.display = 'inline';
 
-    loadVideos();
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const url = e.target.result;
+        videos.unshift({ title, url, owner: userId });
+        saveVideos();
+        renderVideos();
+        form.reset();
+        loading.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    renderVideos();
   </script>
 
 </body>
