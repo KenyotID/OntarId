@@ -2,78 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>TikTok Lite (HTML Only)</title>
+  <title>TikTok Scroll - HTML Only</title>
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      margin: 0;
       background: #000;
       color: #fff;
       font-family: sans-serif;
+      overflow-x: hidden;
     }
     #uploadForm {
       position: fixed;
       top: 10px;
       left: 10px;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.7);
       padding: 10px;
       border-radius: 10px;
-      z-index: 100;
-    }
-    .feed {
-      margin-top: 150px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .video-card {
-      width: 100%;
-      max-width: 400px;
-      margin-bottom: 40px;
-      border-bottom: 1px solid #333;
-    }
-    video {
-      width: 100%;
-      height: 600px;
-      object-fit: cover;
-      background: #111;
-    }
-    h3 {
-      padding: 10px;
-      text-align: center;
-      font-size: 18px;
+      z-index: 10;
     }
     #loading {
       color: lime;
       display: none;
     }
+    .video-page {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      scroll-snap-align: start;
+      position: relative;
+    }
+    video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+    .title {
+      position: relative;
+      z-index: 1;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      width: 100%;
+      text-align: center;
+      font-size: 20px;
+    }
+    .container {
+      scroll-snap-type: y mandatory;
+      overflow-y: scroll;
+      height: 100vh;
+    }
   </style>
 </head>
 <body>
   <form id="uploadForm">
-    <input type="text" id="title" placeholder="Judul Video" required><br><br>
-    <input type="file" id="videoFile" accept="video/*" required><br><br>
+    <input type="text" id="title" placeholder="Judul Video" required><br>
+    <input type="file" id="videoFile" accept="video/*" required><br>
     <button type="submit">Upload</button>
     <span id="loading">Uploading...</span>
   </form>
 
-  <div class="feed" id="videoFeed"></div>
+  <div class="container" id="videoContainer"></div>
 
   <script>
     const form = document.getElementById('uploadForm');
-    const feed = document.getElementById('videoFeed');
+    const container = document.getElementById('videoContainer');
     const loading = document.getElementById('loading');
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
       loading.style.display = 'inline';
 
       const title = document.getElementById('title').value;
       const file = document.getElementById('videoFile').files[0];
-
-      if (!file) {
-        alert("Pilih video dulu ya!");
-        return;
-      }
+      if (!file) return;
 
       const reader = new FileReader();
       reader.onload = function () {
@@ -93,33 +99,33 @@
 
     function loadVideos() {
       const videos = JSON.parse(localStorage.getItem('videos') || '[]');
-      feed.innerHTML = '';
+      container.innerHTML = '';
       videos.reverse().forEach(v => {
-        const div = document.createElement('div');
-        div.className = 'video-card';
-        div.innerHTML = `
-          <h3>${v.title}</h3>
+        const page = document.createElement('div');
+        page.className = 'video-page';
+        page.innerHTML = `
           <video muted loop playsinline src="${v.video}"></video>
+          <div class="title">${v.title}</div>
         `;
-        feed.appendChild(div);
+        container.appendChild(page);
       });
-      setupAutoPlay();
+      setupAutoplay();
     }
 
-    function setupAutoPlay() {
-      const observer = new IntersectionObserver(entries => {
+    function setupAutoplay() {
+      const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-          const video = entry.target;
+          const video = entry.target.querySelector('video');
           if (entry.isIntersecting) {
             video.play();
           } else {
             video.pause();
           }
         });
-      }, { threshold: 0.6 });
+      }, { threshold: 0.7 });
 
-      document.querySelectorAll('video').forEach(video => {
-        observer.observe(video);
+      document.querySelectorAll('.video-page').forEach(page => {
+        observer.observe(page);
       });
     }
 
