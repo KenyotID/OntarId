@@ -1,204 +1,78 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>The Ontar ??</title>
-  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Video Upload</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #e6f0ff;
-      color: #222;
-      padding: 40px;
-      display: flex;
-      justify-content: center;
-      flex-direction: column;
-      align-items: center;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    .container {
-      background: white;
-      padding: 30px 40px;
-      border-radius: 20px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-      width: 400px;
-    }
-
-    h1 {
-      text-align: center;
-      background: linear-gradient(to right, red, orange, yellow, green, cyan, blue, violet);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-size: 28px;
-      animation: animateText 4s linear infinite;
-    }
-
-    @keyframes animateText {
-      0% {background-position: 0%}
-      100% {background-position: 100%}
-    }
-
-    label {
-      display: block;
-      margin-top: 20px;
-      font-weight: 500;
-    }
-
-    input, select {
-      margin-top: 8px;
-      padding: 10px;
-      width: 100%;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      font-size: 14px;
-    }
-
-    button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      background-color: #0066ff;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #004fcc;
-    }
-
-    .settings {
-      margin-top: 30px;
-      border-top: 1px solid #ddd;
-      padding-top: 20px;
-    }
-
-    .settings h2 {
-      font-size: 18px;
-      margin-bottom: 10px;
-      color: #444;
-    }
-
-    .settings input[type="checkbox"], .settings select {
-      margin-right: 10px;
-    }
+    body { font-family: Arial; padding: 20px; }
+    .video-card { border: 1px solid #ccc; border-radius: 10px; padding: 10px; margin-top: 10px; }
+    .video-card img { width: 120px; height: auto; display: block; margin-bottom: 5px; }
+    video { width: 100%; max-width: 400px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>The Ontar ??</h1>
-    <label>Judul Video:
-      <input type="text" id="title">
-    </label>
-    <label>Kategori:
-      <select id="category">
-        <option value="anime">Anime</option>
-        <option value="film">Film</option>
-        <option value="biasa">Vidio Biasa</option>
-      </select>
-    </label>
-    <label>Thumbnail:
-      <input type="file" id="thumbFile">
-    </label>
-    <label>File Video:
-      <input type="file" id="videoFile">
-    </label>
+  <h1>Upload Video</h1>
+  <form id="uploadForm">
+    <input type="text" id="title" placeholder="Judul video" required /><br><br>
+    <input type="file" id="videoFile" accept="video/*" required /><br><br>
+    <input type="file" id="thumbnailFile" accept="image/*" required /><br><br>
+    <button type="submit">Upload</button>
+  </form>
 
-    <div class="settings">
-      <h2>Pengaturan</h2>
-      <label><input type="checkbox" id="isPublic">Tampilkan untuk semua pengguna</label><br>
-      <label><input type="checkbox" id="allowComments">Izinkan komentar</label><br>
-      <label>Tema Warna:
-        <select id="themeSelector" onchange="changeTheme()">
-          <option value="default">Tema Sejuk</option>
-          <option value="dark">Gelap</option>
-          <option value="redblack">Merah-Hitam</option>
-          <option value="redwhite">Merah-Putih</option>
-        </select>
-      </label>
-    </div>
-
-    <button onclick="uploadVideo()">?? Upload Sekarang</button>
-  </div>
+  <h2>Daftar Video</h2>
+  <div id="videoList"></div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "API_KEY_ANDA",
-      authDomain: "the-ontar.firebaseapp.com",
-      databaseURL: "https://the-ontar-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "the-ontar",
-      storageBucket: "the-ontar.appspot.com",
-      messagingSenderId: "270364958222",
-      appId: "1:270364958222:web:a7d312dca0940969b8e65f",
-      measurementId: "G-SSLVGW4N5C"
-    };
+    const uploadForm = document.getElementById('uploadForm');
+    const videoList = document.getElementById('videoList');
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const storage = firebase.storage();
+    function loadVideos() {
+      const videos = JSON.parse(localStorage.getItem('videos') || '[]');
+      videoList.innerHTML = '';
+      videos.forEach((v, index) => {
+        const div = document.createElement('div');
+        div.className = 'video-card';
+        div.innerHTML = `
+          <h3>${v.title}</h3>
+          <img src="${v.thumbnail}" alt="Thumbnail">
+          <video controls src="${v.video}"></video>
+        `;
+        videoList.appendChild(div);
+      });
+    }
 
-    async function uploadVideo() {
-      const title = document.getElementById("title").value;
-      const category = document.getElementById("category").value;
-      const thumbFile = document.getElementById("thumbFile").files[0];
-      const videoFile = document.getElementById("videoFile").files[0];
-      const isPublic = document.getElementById("isPublic").checked;
-      const allowComments = document.getElementById("allowComments").checked;
+    uploadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-      if (!title || !category || !thumbFile || !videoFile) {
-        alert("Lengkapi semua data dulu ya!");
-        return;
-      }
+      const title = document.getElementById('title').value;
+      const videoFile = document.getElementById('videoFile').files[0];
+      const thumbFile = document.getElementById('thumbnailFile').files[0];
 
-      const thumbRef = storage.ref().child('thumbnails/' + thumbFile.name);
-      const videoRef = storage.ref().child('videos/' + videoFile.name);
+      if (!videoFile || !thumbFile) return;
 
-      const thumbSnap = await thumbRef.put(thumbFile);
-      const videoSnap = await videoRef.put(videoFile);
-
-      const thumbURL = await thumbSnap.ref.getDownloadURL();
-      const videoURL = await videoSnap.ref.getDownloadURL();
-
-      const newVideoRef = db.ref("videos").push();
-      await newVideoRef.set({
-        title,
-        category,
-        thumbURL,
-        videoURL,
-        isPublic,
-        allowComments
+      const toBase64 = file => new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => res(reader.result);
+        reader.onerror = err => rej(err);
       });
 
-      alert("? Upload sukses! Cek halaman utama buat liat hasilnya.");
-      document.getElementById("title").value = "";
-      document.getElementById("thumbFile").value = null;
-      document.getElementById("videoFile").value = null;
-      document.getElementById("isPublic").checked = false;
-      document.getElementById("allowComments").checked = false;
-    }
+      const videoData = await toBase64(videoFile);
+      const thumbData = await toBase64(thumbFile);
 
-    function changeTheme() {
-      const theme = document.getElementById("themeSelector").value;
-      if (theme === "default") {
-        document.body.style.backgroundColor = "#e6f0ff";
-        document.body.style.color = "#222";
-      } else if (theme === "dark") {
-        document.body.style.backgroundColor = "#111";
-        document.body.style.color = "#fff";
-      } else if (theme === "redblack") {
-        document.body.style.backgroundColor = "#8B0000";
-        document.body.style.color = "#fff";
-      } else if (theme === "redwhite") {
-        document.body.style.backgroundColor = "#fff0f0";
-        document.body.style.color = "#800000";
-      }
-    }
+      const newVideo = { title, video: videoData, thumbnail: thumbData };
+
+      const existing = JSON.parse(localStorage.getItem('videos') || '[]');
+      existing.push(newVideo);
+      localStorage.setItem('videos', JSON.stringify(existing));
+
+      uploadForm.reset();
+      loadVideos();
+    });
+
+    // Load saat pertama
+    loadVideos();
   </script>
 </body>
 </html>
