@@ -1,209 +1,174 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OntarID</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      color: #333;
-      overflow-x: hidden;
+      background: #eee;
     }
 
-    #judul {
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 26px;
-      font-weight: bold;
-      animation: rainbow 5s linear infinite;
-      z-index: 99;
+    .header {
+      text-align: center;
+      font-size: 2rem;
+      padding: 10px;
+      background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: animateText 5s infinite linear;
+    }
+
+    @keyframes animateText {
+      0% { background-position: 0% }
+      100% { background-position: 100% }
+    }
+
+    .upload-box {
+      max-width: 400px;
       background: white;
-      padding: 6px 18px;
+      padding: 15px;
+      margin: 20px auto;
       border-radius: 10px;
-      box-shadow: 0 0 6px rgba(0,0,0,0.15);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
-    @keyframes rainbow {
-      0% { color: red; }
-      20% { color: orange; }
-      40% { color: yellow; }
-      60% { color: green; }
-      80% { color: blue; }
-      100% { color: violet; }
-    }
-
-    #uploadForm {
-      position: fixed;
-      top: 60px;
-      left: 20px;
-      width: 220px;
-      background: white;
-      padding: 12px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-      z-index: 10;
-    }
-
-    #uploadForm input, #uploadForm button {
-      margin: 6px 0;
+    .upload-box input, .upload-box button {
       width: 100%;
-      padding: 7px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 1rem;
     }
 
-    #loading {
-      display: none;
-      color: green;
-      font-weight: bold;
-      margin-top: 5px;
-      font-size: 14px;
-    }
-
-    .container {
-      scroll-snap-type: y mandatory;
-      overflow-y: scroll;
-      height: 100vh;
-      padding-top: 130px;
-    }
-
-    .video-page {
-      height: 100vh;
+    .video-container {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      scroll-snap-align: start;
-      padding: 20px 0;
     }
 
     .video-card {
       background: white;
-      border-radius: 16px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
-      overflow: hidden;
+      margin: 15px;
+      padding: 10px;
+      border-radius: 12px;
       width: 90%;
       max-width: 500px;
-      position: relative;
-      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
     video {
       width: 100%;
-      height: auto;
-      display: block;
-      background: black;
-    }
-
-    .title {
-      padding: 10px;
-      font-weight: bold;
-      background: #fafafa;
-      border-top: 1px solid #eee;
-    }
-
-    .delete-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: crimson;
-      color: white;
-      border: none;
-      padding: 6px 10px;
       border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
     }
 
-    @media screen and (max-width: 600px) {
-      #uploadForm {
-        width: 80%;
-        left: 10%;
-      }
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+
+    .comment-box {
+      margin-top: 10px;
+    }
+
+    .comment-box input {
+      width: 80%;
+      padding: 5px;
+    }
+
+    .comment-box button {
+      padding: 6px 10px;
+    }
+
+    .comments {
+      font-size: 0.9rem;
+      margin-top: 5px;
     }
   </style>
 </head>
 <body>
+  <div class="header">OntarID</div>
 
-  <div id="judul">OntarID</div>
+  <div class="upload-box">
+    <input type="text" id="title" placeholder="Judul Video" />
+    <input type="file" id="videoFile" accept="video/*" />
+    <button onclick="uploadVideo()">Upload</button>
+  </div>
 
-  <form id="uploadForm">
-    <input type="text" id="videoTitle" placeholder="Judul Video" required />
-    <input type="file" id="videoFile" accept="video/*" required />
-    <button type="submit">Upload</button>
-    <div id="loading">Mengupload...</div>
-  </form>
-
-  <div class="container"></div>
+  <div class="video-container" id="videoList"></div>
 
   <script>
-    const form = document.getElementById('uploadForm');
-    const titleInput = document.getElementById('videoTitle');
-    const fileInput = document.getElementById('videoFile');
-    const loading = document.getElementById('loading');
-    const container = document.querySelector('.container');
-
-    let userId = localStorage.getItem('userId');
-    if (!userId) {
-      userId = 'user-' + Date.now();
-      localStorage.setItem('userId', userId);
-    }
-
-    let videos = JSON.parse(localStorage.getItem('videos')) || [];
-
-    function saveVideos() {
-      localStorage.setItem('videos', JSON.stringify(videos));
-    }
+    let videos = JSON.parse(localStorage.getItem('videos') || '[]');
 
     function renderVideos() {
+      const container = document.getElementById('videoList');
       container.innerHTML = '';
-      videos.forEach((vid, i) => {
-        const page = document.createElement('div');
-        page.className = 'video-page';
-        page.innerHTML = `
-          <div class="video-card">
-            <video src="${vid.url}" controls></video>
-            <div class="title">${vid.title}</div>
-            ${vid.owner === userId ? `<button class="delete-btn" onclick="deleteVideo(${i})">Hapus</button>` : ''}
-          </div>`;
-        container.appendChild(page);
+      videos.forEach((vid, index) => {
+        const div = document.createElement('div');
+        div.className = 'video-card';
+        div.innerHTML = `
+          <h3>${vid.title}</h3>
+          <video controls src="${vid.src}"></video>
+          <div class="actions">
+            <button onclick="deleteVideo(${index})">🗑️ Delete</button>
+            <button onclick="likeVideo(${index})">${vid.liked ? '❤️' : '🤍'} Like</button>
+          </div>
+          <div class="comment-box">
+            <input type="text" placeholder="Komentar..." id="comment-${index}" />
+            <button onclick="addComment(${index})">💬</button>
+            <div class="comments" id="comments-${index}">
+              ${vid.comments.map(c => `<div>• ${c}</div>`).join('')}
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
       });
     }
 
-    window.deleteVideo = function(i) {
-      if (videos[i].owner === userId) {
-        videos.splice(i, 1);
-        saveVideos();
+    function uploadVideo() {
+      const fileInput = document.getElementById('videoFile');
+      const titleInput = document.getElementById('title');
+      const file = fileInput.files[0];
+      if (!file) return alert('Pilih file dulu');
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const src = e.target.result;
+        videos.unshift({ title: titleInput.value || "Tanpa Judul", src, liked: false, comments: [] });
+        localStorage.setItem('videos', JSON.stringify(videos));
+        renderVideos();
+        titleInput.value = '';
+        fileInput.value = '';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function deleteVideo(index) {
+      if (confirm('Yakin mau hapus video ini?')) {
+        videos.splice(index, 1);
+        localStorage.setItem('videos', JSON.stringify(videos));
         renderVideos();
       }
     }
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const title = titleInput.value;
-      const file = fileInput.files[0];
-      if (!title || !file) return alert('Judul dan video wajib diisi.');
+    function likeVideo(index) {
+      videos[index].liked = !videos[index].liked;
+      localStorage.setItem('videos', JSON.stringify(videos));
+      renderVideos();
+    }
 
-      loading.style.display = 'inline';
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const url = e.target.result;
-        videos.unshift({ title, url, owner: userId });
-        saveVideos();
+    function addComment(index) {
+      const input = document.getElementById(`comment-${index}`);
+      const text = input.value.trim();
+      if (text) {
+        videos[index].comments.push(text);
+        localStorage.setItem('videos', JSON.stringify(videos));
         renderVideos();
-        form.reset();
-        loading.style.display = 'none';
-      };
-      reader.readAsDataURL(file);
-    });
+      }
+    }
 
     renderVideos();
   </script>
-
 </body>
 </html>
