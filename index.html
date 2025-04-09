@@ -1,22 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Video Upload</title>
+  <meta charset="UTF-8">
+  <title>Upload Video</title>
   <style>
-    body { font-family: Arial; padding: 20px; }
-    .video-card { border: 1px solid #ccc; border-radius: 10px; padding: 10px; margin-top: 10px; }
-    .video-card img { width: 120px; height: auto; display: block; margin-bottom: 5px; }
-    video { width: 100%; max-width: 400px; }
+    video, img { max-width: 300px; margin-top: 10px; display: block; }
+    .video-card { margin-bottom: 20px; }
   </style>
 </head>
 <body>
   <h1>Upload Video</h1>
   <form id="uploadForm">
-    <input type="text" id="title" placeholder="Judul video" required /><br><br>
-    <input type="file" id="videoFile" accept="video/*" required /><br><br>
-    <input type="file" id="thumbnailFile" accept="image/*" required /><br><br>
+    <input type="text" name="title" placeholder="Judul" required><br><br>
+    <input type="file" name="video" accept="video/*" required><br><br>
+    <input type="file" name="thumbnail" accept="image/*" required><br><br>
     <button type="submit">Upload</button>
   </form>
 
@@ -24,54 +21,39 @@
   <div id="videoList"></div>
 
   <script>
-    const uploadForm = document.getElementById('uploadForm');
+    const form = document.getElementById('uploadForm');
     const videoList = document.getElementById('videoList');
 
-    function loadVideos() {
-      const videos = JSON.parse(localStorage.getItem('videos') || '[]');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const res = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Upload berhasil!');
+        form.reset();
+        loadVideos();
+      }
+    });
+
+    async function loadVideos() {
+      const res = await fetch('/videos');
+      const videos = await res.json();
       videoList.innerHTML = '';
-      videos.forEach((v, index) => {
-        const div = document.createElement('div');
-        div.className = 'video-card';
-        div.innerHTML = `
-          <h3>${v.title}</h3>
-          <img src="${v.thumbnail}" alt="Thumbnail">
-          <video controls src="${v.video}"></video>
+      videos.forEach(v => {
+        videoList.innerHTML += `
+          <div class="video-card">
+            <h3>${v.title}</h3>
+            <img src="${v.thumbnailUrl}" alt="Thumbnail">
+            <video controls src="${v.videoUrl}"></video>
+          </div>
         `;
-        videoList.appendChild(div);
       });
     }
 
-    uploadForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const title = document.getElementById('title').value;
-      const videoFile = document.getElementById('videoFile').files[0];
-      const thumbFile = document.getElementById('thumbnailFile').files[0];
-
-      if (!videoFile || !thumbFile) return;
-
-      const toBase64 = file => new Promise((res, rej) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => res(reader.result);
-        reader.onerror = err => rej(err);
-      });
-
-      const videoData = await toBase64(videoFile);
-      const thumbData = await toBase64(thumbFile);
-
-      const newVideo = { title, video: videoData, thumbnail: thumbData };
-
-      const existing = JSON.parse(localStorage.getItem('videos') || '[]');
-      existing.push(newVideo);
-      localStorage.setItem('videos', JSON.stringify(existing));
-
-      uploadForm.reset();
-      loadVideos();
-    });
-
-    // Load saat pertama
     loadVideos();
   </script>
 </body>
