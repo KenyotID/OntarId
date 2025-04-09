@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>TikTok Scroll - HTML Only</title>
+  <title>OntarID - TikTok Scroll</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -11,19 +11,46 @@
       font-family: sans-serif;
       overflow-x: hidden;
     }
-    #uploadForm {
+
+    #judul {
       position: fixed;
       top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 28px;
+      font-weight: bold;
+      animation: rainbow 5s linear infinite;
+      z-index: 99;
+      background: rgba(0,0,0,0.6);
+      padding: 5px 15px;
+      border-radius: 10px;
+    }
+
+    @keyframes rainbow {
+      0% { color: red; }
+      16% { color: orange; }
+      33% { color: yellow; }
+      50% { color: green; }
+      66% { color: blue; }
+      83% { color: indigo; }
+      100% { color: violet; }
+    }
+
+    #uploadForm {
+      position: fixed;
+      top: 60px;
       left: 10px;
       background: rgba(0,0,0,0.7);
       padding: 10px;
       border-radius: 10px;
       z-index: 10;
     }
+
     #loading {
       color: lime;
       display: none;
     }
+
     .video-page {
       height: 100vh;
       display: flex;
@@ -33,6 +60,7 @@
       scroll-snap-align: start;
       position: relative;
     }
+
     video {
       position: absolute;
       top: 0;
@@ -42,6 +70,7 @@
       object-fit: cover;
       z-index: 0;
     }
+
     .title {
       position: relative;
       z-index: 1;
@@ -51,6 +80,21 @@
       text-align: center;
       font-size: 20px;
     }
+
+    .delete-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 2;
+      background: rgba(255, 0, 0, 0.7);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
     .container {
       scroll-snap-type: y mandatory;
       overflow-y: scroll;
@@ -59,6 +103,9 @@
   </style>
 </head>
 <body>
+
+  <div id="judul">OntarID</div>
+
   <form id="uploadForm">
     <input type="text" id="title" placeholder="Judul Video" required><br>
     <input type="file" id="videoFile" accept="video/*" required><br>
@@ -84,7 +131,8 @@
       const reader = new FileReader();
       reader.onload = function () {
         const videoData = reader.result;
-        const videoObj = { title, video: videoData };
+        const id = Date.now();
+        const videoObj = { id, title, video: videoData };
 
         let videos = JSON.parse(localStorage.getItem('videos') || '[]');
         videos.push(videoObj);
@@ -104,12 +152,20 @@
         const page = document.createElement('div');
         page.className = 'video-page';
         page.innerHTML = `
+          <button class="delete-btn" onclick="deleteVideo(${v.id})">Hapus</button>
           <video muted loop playsinline src="${v.video}"></video>
           <div class="title">${v.title}</div>
         `;
         container.appendChild(page);
       });
       setupAutoplay();
+    }
+
+    function deleteVideo(id) {
+      let videos = JSON.parse(localStorage.getItem('videos') || '[]');
+      videos = videos.filter(v => v.id !== id);
+      localStorage.setItem('videos', JSON.stringify(videos));
+      loadVideos();
     }
 
     function setupAutoplay() {
@@ -131,5 +187,6 @@
 
     loadVideos();
   </script>
+
 </body>
 </html>
