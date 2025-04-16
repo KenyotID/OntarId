@@ -1,175 +1,214 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OntarID</title>
+  <title>SeroStore</title>
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
-      background: #f0f0f0;
+      background: #f5f5f5;
+      color: #333;
+      padding: 20px;
     }
-
-    .header {
+    header {
       text-align: center;
-      font-size: 2rem;
-      padding: 10px;
-      background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
-      -webkit-background-clip: text;
-      color: transparent;
-      animation: animateText 5s infinite linear;
-    }
-
-    @keyframes animateText {
-      0% { background-position: 0% }
-      100% { background-position: 100% }
-    }
-
-    .upload-box {
-      max-width: 400px;
-      background: white;
-      padding: 15px;
-      margin: 20px auto;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    .upload-box input, .upload-box button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 10px;
-      font-size: 1rem;
-    }
-
-    .video-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .video-card {
-      background: white;
-      margin: 15px;
-      padding: 10px;
+      background: #2196f3;
+      color: white;
+      padding: 20px;
       border-radius: 12px;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
-
-    video {
+    main {
+      max-width: 700px;
+      margin: auto;
+    }
+    .auth-box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .auth-box input {
+      display: block;
       width: 100%;
+      margin: 10px 0;
+      padding: 10px;
       border-radius: 8px;
+      border: 1px solid #ccc;
     }
-
-    .actions {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 8px;
+    .auth-buttons button {
+      margin: 5px;
+      padding: 10px 20px;
+      border: none;
+      background: #2196f3;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
     }
-
-    .comment-box {
+    .upload-section,
+    .game-list {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 30px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .upload-section input,
+    .upload-section textarea,
+    .upload-section button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    .upload-section button {
+      background: #43a047;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .game-card {
+      background: #fafafa;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+    }
+    .download-link {
+      display: inline-block;
       margin-top: 10px;
-    }
-
-    .comment-box input {
-      width: 80%;
-      padding: 5px;
-    }
-
-    .comment-box button {
-      padding: 6px 10px;
-    }
-
-    .comments {
-      font-size: 0.9rem;
-      margin-top: 5px;
+      background: #1e88e5;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
-  <div class="header">OntarID</div>
+  <header>
+    <h1>SeroStore</h1>
+    <p>Toko Game Buatan Kamu</p>
+  </header>
 
-  <div class="upload-box">
-    <input type="text" id="title" placeholder="Judul Video" />
-    <input type="file" id="videoFile" accept="video/*" />
-   <button type="button" onclick="uploadVideo()">Upload</button>
-    
-  </div>
+  <main>
+    <section id="authSection">
+      <div class="auth-box">
+        <h2>Login / Register</h2>
+        <input type="text" id="username" placeholder="Username" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <div class="auth-buttons">
+          <button onclick="register()">Register</button>
+          <button onclick="login()">Login</button>
+        </div>
+        <p id="authMsg"></p>
+      </div>
+    </section>
 
-  <div class="video-container" id="videoList"></div>
+    <section id="appSection" style="display:none;">
+      <div class="upload-section">
+        <h2>Upload Game</h2>
+        <form id="gameForm">
+          <input type="text" id="gameName" placeholder="Nama Game" required />
+          <input type="text" id="genre" placeholder="Genre" required />
+          <textarea id="description" placeholder="Deskripsi" required></textarea>
+          <input type="file" id="gameFile" required />
+          <button type="submit">Upload</button>
+        </form>
+      </div>
+
+      <div class="game-list">
+        <h2>Game Tersedia</h2>
+        <div id="gamesContainer"></div>
+      </div>
+    </section>
+  </main>
 
   <script>
-    let videos = JSON.parse(localStorage.getItem('videos') || '[]');
+    const gameForm = document.getElementById("gameForm");
+    const gamesContainer = document.getElementById("gamesContainer");
+    let currentUser = null;
 
-    function renderVideos() {
-      const container = document.getElementById('videoList');
-      container.innerHTML = '';
-      videos.forEach((vid, index) => {
-        const div = document.createElement('div');
-        div.className = 'video-card';
-        div.innerHTML = `
-          <h3>${vid.title}</h3>
-          <video controls src="${vid.src}"></video>
-          <div class="actions">
-            <button onclick="deleteVideo(${index})">🗑️ Hapus</button>
-            <button onclick="likeVideo(${index})">${vid.liked ? '❤️' : '🤍'} Like</button>
-          </div>
-          <div class="comment-box">
-            <input type="text" placeholder="Komentar..." id="comment-${index}" />
-            <button onclick="addComment(${index})">💬</button>
-            <div class="comments" id="comments-${index}">
-              ${vid.comments.map(c => `<div>• ${c}</div>`).join('')}
-            </div>
-          </div>
-        `;
-        container.appendChild(div);
-      });
+    function register() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      if (localStorage.getItem("user_" + user)) {
+        showMessage("Username sudah dipakai!", "red");
+      } else {
+        localStorage.setItem("user_" + user, pass);
+        showMessage("Berhasil register! Sekarang login.", "green");
+      }
     }
 
-    function uploadVideo() {
-      const fileInput = document.getElementById('videoFile');
-      const titleInput = document.getElementById('title');
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      const storedPass = localStorage.getItem("user_" + user);
+      if (storedPass === pass) {
+        currentUser = user;
+        document.getElementById("authSection").style.display = "none";
+        document.getElementById("appSection").style.display = "block";
+        loadGames();
+      } else {
+        showMessage("Username atau password salah!", "red");
+      }
+    }
+
+    function showMessage(msg, color) {
+      const el = document.getElementById("authMsg");
+      el.innerText = msg;
+      el.style.color = color;
+    }
+
+    gameForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("gameName").value;
+      const genre = document.getElementById("genre").value;
+      const desc = document.getElementById("description").value;
+      const fileInput = document.getElementById("gameFile");
       const file = fileInput.files[0];
-      if (!file) return alert('Pilih file dulu');
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const src = e.target.result;
-        videos.unshift({ title: titleInput.value || "Tanpa Judul", src, liked: false, comments: [] });
-        localStorage.setItem('videos', JSON.stringify(videos));
-        renderVideos();
-        titleInput.value = '';
-        fileInput.value = '';
-      };
-      reader.readAsDataURL(file);
-    }
 
-    function deleteVideo(index) {
-      if (confirm('Yakin mau hapus video ini?')) {
-        videos.splice(index, 1);
-        localStorage.setItem('videos', JSON.stringify(videos));
-        renderVideos();
+      if (file && currentUser) {
+        const fileURL = URL.createObjectURL(file);
+        const game = {
+          uploader: currentUser,
+          name,
+          genre,
+          desc,
+          fileName: file.name,
+          fileURL,
+        };
+
+        let games = JSON.parse(localStorage.getItem("games")) || [];
+        games.push(game);
+        localStorage.setItem("games", JSON.stringify(games));
+
+        renderGame(game);
+        gameForm.reset();
       }
+    });
+
+    function loadGames() {
+      gamesContainer.innerHTML = "";
+      const games = JSON.parse(localStorage.getItem("games")) || [];
+      games.forEach(renderGame);
     }
 
-    function likeVideo(index) {
-      videos[index].liked = !videos[index].liked;
-      localStorage.setItem('videos', JSON.stringify(videos));
-      renderVideos();
+    function renderGame(game) {
+      const card = document.createElement("div");
+      card.className = "game-card";
+      card.innerHTML = `
+        <h3>${game.name}</h3>
+        <p><strong>Genre:</strong> ${game.genre}</p>
+        <p><strong>Deskripsi:</strong> ${game.desc}</p>
+        <p><strong>Uploader:</strong> ${game.uploader}</p>
+        <a class="download-link" href="${game.fileURL}" download="${game.fileName}">Download</a>
+      `;
+      gamesContainer.appendChild(card);
     }
-
-    function addComment(index) {
-      const input = document.getElementById(`comment-${index}`);
-      const text = input.value.trim();
-      if (text) {
-        videos[index].comments.push(text);
-        localStorage.setItem('videos', JSON.stringify(videos));
-        renderVideos();
-      }
-    }
-
-    renderVideos();
   </script>
 </body>
 </html>
