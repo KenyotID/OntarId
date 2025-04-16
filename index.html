@@ -3,212 +3,188 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SeroStore</title>
+  <title>SeroChat</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      color: #333;
-      padding: 20px;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
     }
     header {
-      text-align: center;
-      background: #2196f3;
+      background-color: #4CAF50;
       color: white;
-      padding: 20px;
-      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
     }
     main {
-      max-width: 700px;
-      margin: auto;
-    }
-    .auth-box {
-      background: white;
+      display: flex;
+      flex-direction: column;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      text-align: center;
     }
-    .auth-box input {
-      display: block;
-      width: 100%;
-      margin: 10px 0;
-      padding: 10px;
+    #chatBox {
+      background-color: white;
       border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    .auth-buttons button {
-      margin: 5px;
-      padding: 10px 20px;
-      border: none;
-      background: #2196f3;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .upload-section,
-    .game-list {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      margin-top: 30px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    .upload-section input,
-    .upload-section textarea,
-    .upload-section button {
-      display: block;
-      width: 100%;
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    .upload-section button {
-      background: #43a047;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    .game-card {
-      background: #fafafa;
       padding: 15px;
+      max-height: 400px;
+      overflow-y: auto;
       margin-bottom: 15px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
     }
-    .download-link {
-      display: inline-block;
+    .message {
+      background: #e1e1e1;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 5px 0;
+    }
+    .message .username {
+      font-weight: bold;
+    }
+    .input-box {
+      display: flex;
+      gap: 10px;
       margin-top: 10px;
-      background: #1e88e5;
+    }
+    .input-box input, .input-box textarea {
+      padding: 10px;
+      width: 60%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .input-box button {
+      padding: 10px;
+      background-color: #4CAF50;
       color: white;
-      padding: 8px 12px;
-      border-radius: 6px;
-      text-decoration: none;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .file-input {
+      width: 100%;
+      margin-top: 10px;
+    }
+    .message .delete-btn {
+      color: red;
+      cursor: pointer;
+      font-size: 12px;
+      float: right;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>SeroStore</h1>
-    <p>Toko Game Buatan Kamu</p>
+    <h1>SeroChat</h1>
+    <p>Welcome to Web Chat!</p>
   </header>
-
+  
   <main>
-    <section id="authSection">
-      <div class="auth-box">
-        <h2>Login / Register</h2>
-        <input type="text" id="username" placeholder="Username" required />
-        <input type="password" id="password" placeholder="Password" required />
-        <div class="auth-buttons">
-          <button onclick="register()">Register</button>
-          <button onclick="login()">Login</button>
-        </div>
-        <p id="authMsg"></p>
-      </div>
-    </section>
+    <div id="chatBox"></div>
 
-    <section id="appSection" style="display:none;">
-      <div class="upload-section">
-        <h2>Upload Game</h2>
-        <form id="gameForm">
-          <input type="text" id="gameName" placeholder="Nama Game" required />
-          <input type="text" id="genre" placeholder="Genre" required />
-          <textarea id="description" placeholder="Deskripsi" required></textarea>
-          <input type="file" id="gameFile" required />
-          <button type="submit">Upload</button>
-        </form>
-      </div>
+    <div class="input-box">
+      <input type="text" id="messageInput" placeholder="Type a message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
 
-      <div class="game-list">
-        <h2>Game Tersedia</h2>
-        <div id="gamesContainer"></div>
-      </div>
-    </section>
+    <div class="input-box file-input">
+      <input type="file" id="fileInput" />
+      <button onclick="sendFile()">Send File</button>
+    </div>
+
+    <textarea id="fileDescription" placeholder="File description..." rows="3" style="width: 100%; margin-top: 10px;"></textarea>
   </main>
 
   <script>
-    const gameForm = document.getElementById("gameForm");
-    const gamesContainer = document.getElementById("gamesContainer");
-    let currentUser = null;
+    let currentUser = prompt("Enter your username:");
 
-    function register() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-      if (localStorage.getItem("user_" + user)) {
-        showMessage("Username sudah dipakai!", "red");
-      } else {
-        localStorage.setItem("user_" + user, pass);
-        showMessage("Berhasil register! Sekarang login.", "green");
-      }
+    if (!currentUser) {
+      alert("Username is required!");
+      throw new Error("Username is required!");
     }
 
-    function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-      const storedPass = localStorage.getItem("user_" + user);
-      if (storedPass === pass) {
-        currentUser = user;
-        document.getElementById("authSection").style.display = "none";
-        document.getElementById("appSection").style.display = "block";
-        loadGames();
-      } else {
-        showMessage("Username atau password salah!", "red");
-      }
+    const chatBox = document.getElementById("chatBox");
+    const messageInput = document.getElementById("messageInput");
+    const fileInput = document.getElementById("fileInput");
+    const fileDescription = document.getElementById("fileDescription");
+
+    // Load saved messages from localStorage
+    function loadMessages() {
+      const savedMessages = JSON.parse(localStorage.getItem("messages")) || [];
+      chatBox.innerHTML = '';
+      savedMessages.forEach((message) => {
+        renderMessage(message);
+      });
     }
 
-    function showMessage(msg, color) {
-      const el = document.getElementById("authMsg");
-      el.innerText = msg;
-      el.style.color = color;
-    }
+    // Render message to chatBox
+    function renderMessage(message) {
+      const div = document.createElement("div");
+      div.classList.add("message");
 
-    gameForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const name = document.getElementById("gameName").value;
-      const genre = document.getElementById("genre").value;
-      const desc = document.getElementById("description").value;
-      const fileInput = document.getElementById("gameFile");
-      const file = fileInput.files[0];
-
-      if (file && currentUser) {
-        const fileURL = URL.createObjectURL(file);
-        const game = {
-          uploader: currentUser,
-          name,
-          genre,
-          desc,
-          fileName: file.name,
-          fileURL,
-        };
-
-        let games = JSON.parse(localStorage.getItem("games")) || [];
-        games.push(game);
-        localStorage.setItem("games", JSON.stringify(games));
-
-        renderGame(game);
-        gameForm.reset();
-      }
-    });
-
-    function loadGames() {
-      gamesContainer.innerHTML = "";
-      const games = JSON.parse(localStorage.getItem("games")) || [];
-      games.forEach(renderGame);
-    }
-
-    function renderGame(game) {
-      const card = document.createElement("div");
-      card.className = "game-card";
-      card.innerHTML = `
-        <h3>${game.name}</h3>
-        <p><strong>Genre:</strong> ${game.genre}</p>
-        <p><strong>Deskripsi:</strong> ${game.desc}</p>
-        <p><strong>Uploader:</strong> ${game.uploader}</p>
-        <a class="download-link" href="${game.fileURL}" download="${game.fileName}">Download</a>
+      div.innerHTML = `
+        <div class="username">${message.username}</div>
+        <div class="message-text">${message.text}</div>
+        ${message.file ? `<a href="${message.fileURL}" download="${message.fileName}" class="file-link">Download File</a>` : ''}
+        <div class="delete-btn" onclick="deleteMessage('${message.timestamp}')">Delete</div>
       `;
-      gamesContainer.appendChild(card);
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight; // Auto scroll to bottom
     }
+
+    // Send message
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (!message) return;
+
+      const newMessage = {
+        username: currentUser,
+        text: message,
+        file: null,
+        fileURL: null,
+        fileName: null,
+        timestamp: new Date().toISOString(),
+      };
+
+      saveMessage(newMessage);
+      messageInput.value = ''; // Clear input field
+    }
+
+    // Send file
+    function sendFile() {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const fileURL = URL.createObjectURL(file);
+      const newMessage = {
+        username: currentUser,
+        text: fileDescription.value || "File sent",
+        file: true,
+        fileURL: fileURL,
+        fileName: file.name,
+        timestamp: new Date().toISOString(),
+      };
+
+      saveMessage(newMessage);
+      fileInput.value = ''; // Clear file input
+      fileDescription.value = ''; // Clear file description input
+    }
+
+    // Save message to localStorage
+    function saveMessage(message) {
+      const savedMessages = JSON.parse(localStorage.getItem("messages")) || [];
+      savedMessages.push(message);
+      localStorage.setItem("messages", JSON.stringify(savedMessages));
+      renderMessage(message);
+    }
+
+    // Delete message
+    function deleteMessage(timestamp) {
+      let savedMessages = JSON.parse(localStorage.getItem("messages")) || [];
+      savedMessages = savedMessages.filter(message => message.timestamp !== timestamp);
+      localStorage.setItem("messages", JSON.stringify(savedMessages));
+      loadMessages(); // Reload messages after deletion
+    }
+
+    // Initialize chat on page load
+    loadMessages();
   </script>
 </body>
 </html>
