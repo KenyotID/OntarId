@@ -1,190 +1,300 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SeroChat</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f0f0f0;
-    }
-    header {
-      background-color: #4CAF50;
-      color: white;
-      padding: 15px;
-      text-align: center;
-    }
-    main {
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-    }
-    #chatBox {
-      background-color: white;
-      border-radius: 8px;
-      padding: 15px;
-      max-height: 400px;
-      overflow-y: auto;
-      margin-bottom: 15px;
-    }
-    .message {
-      background: #e1e1e1;
-      padding: 10px;
-      border-radius: 5px;
-      margin: 5px 0;
-    }
-    .message .username {
-      font-weight: bold;
-    }
-    .input-box {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .input-box input, .input-box textarea {
-      padding: 10px;
-      width: 60%;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    .input-box button {
-      padding: 10px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .file-input {
-      width: 100%;
-      margin-top: 10px;
-    }
-    .message .delete-btn {
-      color: red;
-      cursor: pointer;
-      font-size: 12px;
-      float: right;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ratn9Headsome </title>
+<style>
+  :root{
+    --cell-size: 18px; /* ubah utk ukuran grid */
+    --cols: 20;
+    --rows: 14;
+    --bg: #d8f0ff;
+    --panel: #0b3b5e;
+    --accent: #ffcc00;
+    --snake: #007700;
+    --food: #cc0000;
+  }
+  html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;background:var(--bg);display:flex;align-items:center;justify-content:center}
+  .wrap{
+    width: calc(var(--cols) * var(--cell-size) + 2rem);
+    max-width: 98vw;
+    background:#f3f6fb;
+    border-radius:12px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.15);
+    padding:12px;
+  }
+  .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .title{font-weight:700;color:var(--panel);letter-spacing:1px}
+  .info{color:var(--panel);font-size:14px}
+  .board{
+    background: #b7e0ff;
+    width: calc(var(--cols) * var(--cell-size));
+    height: calc(var(--rows) * var(--cell-size));
+    display:grid;
+    grid-template-columns: repeat(var(--cols), 1fr);
+    grid-template-rows: repeat(var(--rows), 1fr);
+    gap: 1px;
+    border: 6px solid #08314a;
+    margin: 0 auto;
+    touch-action: none;
+    image-rendering: pixelated;
+  }
+  .cell{
+    width:100%;
+    height:100%;
+    background: linear-gradient(#d7f1ff,#bfeaff);
+    box-sizing:border-box;
+  }
+  .snake{
+    background: var(--panel);
+    box-shadow: inset -2px -2px 0 rgba(0,0,0,0.15);
+    border-radius:2px;
+  }
+  .head{
+    background: var(--accent);
+  }
+  .food{
+    background: var(--food);
+    border-radius:3px;
+    box-shadow: 0 0 0 3px rgba(204,0,0,0.12) inset;
+  }
+
+  .controls{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+  .btn{
+    background:#ffffff;
+    border:1px solid #cfe6ff;
+    padding:8px 12px;border-radius:8px;font-weight:700;color:var(--panel)
+  }
+  .arrow-pad{display:grid;grid-template-columns:repeat(3,42px);gap:6px;align-items:center;justify-items:center}
+  .arrow{
+    width:42px;height:42px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #cfdfe9;font-weight:700;user-select:none
+  }
+  .big{font-size:18px}
+  .hud{display:flex;gap:10px;align-items:center}
+  .small{font-size:13px;color:#08314a}
+  @media (max-width:420px){
+    :root{--cell-size:16px; --cols:18; --rows:12}
+    .arrow{width:36px;height:36px}
+    .arrow-pad{grid-template-columns:repeat(3,36px)}
+  }
+</style>
 </head>
 <body>
-  <header>
-    <h1>SeroChat</h1>
-    <p>Welcome to Web Chat!</p>
-  </header>
-  
-  <main>
-    <div id="chatBox"></div>
-
-    <div class="input-box">
-      <input type="text" id="messageInput" placeholder="Type a message..." />
-      <button onclick="sendMessage()">Send</button>
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <div class="title">Ratno Fineshyt Game</div>
+        <div class="small">Kontrol: swipe / tombol arah / keyboard</div>
+      </div>
+      <div class="hud">
+        <div class="info">Score: <span id="score">0</span></div>
+        <button id="restart" class="btn">Restart</button>
+      </div>
     </div>
 
-    <div class="input-box file-input">
-      <input type="file" id="fileInput" />
-      <button onclick="sendFile()">Send File</button>
+    <div id="board" class="board" tabindex="0"></div>
+
+    <div class="controls">
+      <div style="min-width:160px">
+        <div style="font-size:13px;margin-bottom:6px;color:#08314a">Tombol Sentuh</div>
+        <div class="arrow-pad" id="touchPad">
+          <div></div>
+          <div class="arrow" data-dir="up">▲</div>
+          <div></div>
+          <div class="arrow" data-dir="left">◀</div>
+          <div class="arrow" data-dir="down">▼</div>
+          <div class="arrow" data-dir="right">▶</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;justify-content:center">
+        <button id="speedDown" class="btn">- Speed</button>
+        <button id="speedUp" class="btn">+ Speed</button>
+      </div>
+
+      <div style="flex:1"></div>
     </div>
+  </div>
 
-    <textarea id="fileDescription" placeholder="File description..." rows="3" style="width: 100%; margin-top: 10px;"></textarea>
-  </main>
+<script>
+/* SIMPLE SNAKE - grid based, no canvas */
+(function(){
+  const BOARD = document.getElementById('board');
+  const SCORE = document.getElementById('score');
+  const RESTART = document.getElementById('restart');
+  const speedUpBtn = document.getElementById('speedUp');
+  const speedDownBtn = document.getElementById('speedDown');
 
-  <script>
-    let currentUser = prompt("Enter your username:");
+  // derive cols/rows from computed grid
+  let cols = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols')) || 20;
+  let rows = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--rows')) || 14;
 
-    if (!currentUser) {
-      alert("Username is required!");
-      throw new Error("Username is required!");
+  let cells = []; // array of cell divs
+  let gridSize = cols * rows;
+
+  // build board cells
+  function buildBoard(){
+    BOARD.innerHTML = '';
+    cells = [];
+    for(let i=0;i<gridSize;i++){
+      const d = document.createElement('div');
+      d.className = 'cell';
+      BOARD.appendChild(d);
+      cells.push(d);
     }
+  }
 
-    const chatBox = document.getElementById("chatBox");
-    const messageInput = document.getElementById("messageInput");
-    const fileInput = document.getElementById("fileInput");
-    const fileDescription = document.getElementById("fileDescription");
+  buildBoard();
 
-    // Load saved messages from localStorage
-    function loadMessages() {
-      const savedMessages = JSON.parse(localStorage.getItem("messages")) || [];
-      chatBox.innerHTML = '';
-      savedMessages.forEach((message) => {
-        renderMessage(message);
-      });
+  // helpers
+  function idx(x,y){ return y*cols + x; }
+  function coord(i){ return {x: i % cols, y: Math.floor(i/cols)}; }
+  function inside(x,y){ return x>=0 && y>=0 && x<cols && y<rows; }
+
+  // game state
+  let snake = [ idx(Math.floor(cols/2), Math.floor(rows/2)) ]; // initial head
+  let dir = {x:1,y:0}; // moving right
+  let nextDir = {...dir};
+  let food = null;
+  let running = false;
+  let score = 0;
+  let speed = 120; // ms per step (lower = faster)
+  let ticker = null;
+
+  function placeFood(){
+    let empty = [];
+    for(let i=0;i<gridSize;i++){
+      if(!snake.includes(i)) empty.push(i);
     }
+    if(empty.length===0) return null;
+    food = empty[Math.floor(Math.random()*empty.length)];
+  }
 
-    // Render message to chatBox
-    function renderMessage(message) {
-      const div = document.createElement("div");
-      div.classList.add("message");
-
-      div.innerHTML = `
-        <div class="username">${message.username}</div>
-        <div class="message-text">${message.text}</div>
-        ${message.file ? `<a href="${message.fileURL}" download="${message.fileName}" class="file-link">Download File</a>` : ''}
-        <div class="delete-btn" onclick="deleteMessage('${message.timestamp}')">Delete</div>
-      `;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight; // Auto scroll to bottom
+  function render(){
+    // clear
+    cells.forEach(c=>{ c.className='cell' });
+    // snake body
+    for(let i=0;i<snake.length;i++){
+      let cl = 'snake';
+      if(i===snake.length-1) cl += ' head';
+      cells[ snake[i] ].className = 'cell ' + cl;
     }
+    if(food !== null) cells[food].className = 'cell food';
+    SCORE.textContent = score;
+  }
 
-    // Send message
-    function sendMessage() {
-      const message = messageInput.value.trim();
-      if (!message) return;
-
-      const newMessage = {
-        username: currentUser,
-        text: message,
-        file: null,
-        fileURL: null,
-        fileName: null,
-        timestamp: new Date().toISOString(),
-      };
-
-      saveMessage(newMessage);
-      messageInput.value = ''; // Clear input field
+  function step(){
+    // update dir
+    if((nextDir.x !== -dir.x || nextDir.y !== -dir.y)) dir = {...nextDir}; // prevent reverse
+    const head = coord(snake[snake.length-1]);
+    const nx = head.x + dir.x;
+    const ny = head.y + dir.y;
+    if(!inside(nx,ny)){ gameOver(); return; }
+    const ni = idx(nx,ny);
+    // self collision
+    if(snake.includes(ni)){ gameOver(); return; }
+    // move
+    snake.push(ni);
+    if(ni === food){
+      score += 10;
+      placeFood();
+    } else {
+      snake.shift(); // remove tail
     }
+    render();
+  }
 
-    // Send file
-    function sendFile() {
-      const file = fileInput.files[0];
-      if (!file) return;
+  function gameOver(){
+    running = false;
+    clearInterval(ticker);
+    alert('Game over. Score: ' + score);
+  }
 
-      const fileURL = URL.createObjectURL(file);
-      const newMessage = {
-        username: currentUser,
-        text: fileDescription.value || "File sent",
-        file: true,
-        fileURL: fileURL,
-        fileName: file.name,
-        timestamp: new Date().toISOString(),
-      };
+  function start(){
+    // reset
+    cols = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols')) || cols;
+    rows = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--rows')) || rows;
+    gridSize = cols*rows;
+    buildBoard();
+    snake = [ idx(Math.floor(cols/2), Math.floor(rows/2)) ];
+    dir = {x:1,y:0};
+    nextDir = {...dir};
+    score = 0;
+    placeFood();
+    render();
+    running = true;
+    clearInterval(ticker);
+    ticker = setInterval(step, speed);
+  }
 
-      saveMessage(newMessage);
-      fileInput.value = ''; // Clear file input
-      fileDescription.value = ''; // Clear file description input
-    }
+  // controls
+  document.addEventListener('keydown', e=>{
+    const key = e.key;
+    if(key === 'ArrowUp' || key === 'w') nextDir = {x:0,y:-1};
+    if(key === 'ArrowDown' || key === 's') nextDir = {x:0,y:1};
+    if(key === 'ArrowLeft' || key === 'a') nextDir = {x:-1,y:0};
+    if(key === 'ArrowRight' || key === 'd') nextDir = {x:1,y:0};
+  });
 
-    // Save message to localStorage
-    function saveMessage(message) {
-      const savedMessages = JSON.parse(localStorage.getItem("messages")) || [];
-      savedMessages.push(message);
-      localStorage.setItem("messages", JSON.stringify(savedMessages));
-      renderMessage(message);
-    }
+  // touch buttons
+  document.querySelectorAll('.arrow').forEach(b=>{
+    b.addEventListener('touchstart', e=>{
+      const d = b.getAttribute('data-dir');
+      if(d==='up') nextDir={x:0,y:-1};
+      if(d==='down') nextDir={x:0,y:1};
+      if(d==='left') nextDir={x:-1,y:0};
+      if(d==='right') nextDir={x:1,y:0};
+      e.preventDefault();
+    });
+    b.addEventListener('mousedown', e=>{
+      const d = b.getAttribute('data-dir');
+      if(d==='up') nextDir={x:0,y:-1};
+      if(d==='down') nextDir={x:0,y:1};
+      if(d==='left') nextDir={x:-1,y:0};
+      if(d==='right') nextDir={x:1,y:0};
+    });
+  });
 
-    // Delete message
-    function deleteMessage(timestamp) {
-      let savedMessages = JSON.parse(localStorage.getItem("messages")) || [];
-      savedMessages = savedMessages.filter(message => message.timestamp !== timestamp);
-      localStorage.setItem("messages", JSON.stringify(savedMessages));
-      loadMessages(); // Reload messages after deletion
-    }
+  // swipe detection on board
+  (function addSwipe(el){
+    let startX=0,startY=0,active=false;
+    el.addEventListener('touchstart', e=>{
+      active=true; startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    }, {passive:true});
+    el.addEventListener('touchmove', e=>{ if(!active) return; e.preventDefault(); }, {passive:false});
+    el.addEventListener('touchend', e=>{
+      if(!active) return;
+      active=false;
+      const endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : startX;
+      const endY = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientY : startY;
+      const dx = endX - startX, dy = endY - startY;
+      if(Math.abs(dx) > Math.abs(dy)){
+        if(dx > 20) nextDir = {x:1,y:0};
+        else if(dx < -20) nextDir = {x:-1,y:0};
+      } else {
+        if(dy > 20) nextDir = {x:0,y:1};
+        else if(dy < -20) nextDir = {x:0,y:-1};
+      }
+    }, {passive:true});
+  })(BOARD);
 
-    // Initialize chat on page load
-    loadMessages();
-  </script>
+  RESTART.addEventListener('click', ()=>start());
+  speedUpBtn.addEventListener('click', ()=>{
+    speed = Math.max(40, speed - 20);
+    if(running){ clearInterval(ticker); ticker = setInterval(step, speed); }
+  });
+  speedDownBtn.addEventListener('click', ()=>{
+    speed = Math.min(300, speed + 20);
+    if(running){ clearInterval(ticker); ticker = setInterval(step, speed); }
+  });
+
+  // start initially
+  start();
+
+  // keep focus for keyboard
+  BOARD.addEventListener('click', ()=>BOARD.focus());
+})();
+</script>
 </body>
 </html>
