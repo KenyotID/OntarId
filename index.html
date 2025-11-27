@@ -240,6 +240,19 @@ html,body{
       <button id="speedUp" class="btn">+ Speed</button>
     </div>
   </div>
+
+  <!-- Tombol buka pengaturan musik -->
+  <div style="text-align:center; margin-top:10px;">
+    <button id="openMusic" class="btn">Pengaturan Musik</button>
+  </div>
+
+  <!-- Panel Pengaturan Musik -->
+  <div id="musicPanel" style="display:none; text-align:center; margin-top:12px;">
+    <div style="margin-bottom:8px; color:#ccc; font-size:14px;">Pengaturan Musik</div>
+    <button id="musicOn" class="btn">Nyalakan Musik</button>
+    <button id="musicOff" class="btn">Matikan Musik</button>
+    <button id="musicBack" class="btn">Back</button>
+  </div>
 </div>
 
 <script>
@@ -316,7 +329,7 @@ html,body{
     snake.push(ni);
     if(ni===food){
       score+=10;
-      placeFood(); // muncul di tempat baru
+      placeFood();
     } else snake.shift();
     render();
   }
@@ -325,6 +338,9 @@ html,body{
     running=false;
     clearInterval(ticker);
     GAMEOVER.style.display='flex';
+    // berhentiin musik saat game over
+    music.pause();
+    music.currentTime=0;
   }
 
   function start(){
@@ -400,6 +416,35 @@ html,body{
   speedDownBtn.addEventListener('click',()=>{
     speed=Math.min(300,speed+20);
     if(running){clearInterval(ticker); ticker=setInterval(step,speed);}
+  });
+
+  // Musik
+  const music = new Audio('AdhesiveWombat.-.Night.Shade.NO.COPYRIGHT.8-bit.Music.mp3');
+  music.loop = true;
+
+  const musicPanel = document.getElementById('musicPanel');
+  const openMusicBtn = document.getElementById('openMusic');
+  const musicOnBtn = document.getElementById('musicOn');
+  const musicOffBtn = document.getElementById('musicOff');
+  const musicBackBtn = document.getElementById('musicBack');
+
+  openMusicBtn.addEventListener('click', ()=>{
+    musicPanel.style.display='block';
+    openMusicBtn.style.display='none';
+  });
+
+  musicBackBtn.addEventListener('click', ()=>{
+    musicPanel.style.display='none';
+    openMusicBtn.style.display='inline-block';
+  });
+
+  musicOnBtn.addEventListener('click', ()=>{
+    music.play();
+  });
+
+  musicOffBtn.addEventListener('click', ()=>{
+    music.pause();
+    music.currentTime=0;
   });
 
   start();
