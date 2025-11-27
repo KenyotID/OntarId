@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -100,7 +99,6 @@ html,body{
   box-shadow: 0 0 6px var(--accent);
 }
 
-/* Makanan */
 .food{
   animation: pulse 0.6s infinite alternate;
   font-size:20px;
@@ -241,12 +239,10 @@ html,body{
     </div>
   </div>
 
-  <!-- Tombol buka pengaturan musik -->
+  <!-- Musik -->
   <div style="text-align:center; margin-top:10px;">
     <button id="openMusic" class="btn">Pengaturan Musik</button>
   </div>
-
-  <!-- Panel Pengaturan Musik -->
   <div id="musicPanel" style="display:none; text-align:center; margin-top:12px;">
     <div style="margin-bottom:8px; color:#ccc; font-size:14px;">Pengaturan Musik</div>
     <button id="musicOn" class="btn">Nyalakan Musik</button>
@@ -338,7 +334,6 @@ html,body{
     running=false;
     clearInterval(ticker);
     GAMEOVER.style.display='flex';
-    // berhentiin musik saat game over
     music.pause();
     music.currentTime=0;
   }
@@ -358,6 +353,8 @@ html,body{
     GAMEOVER.style.display='none';
     clearInterval(ticker);
     ticker=setInterval(step,speed);
+    // Otomatis play musik jika user sudah klik sebelumnya
+    if(userClickedMusic) music.play();
   }
 
   document.addEventListener('keydown',e=>{
@@ -421,6 +418,7 @@ html,body{
   // Musik
   const music = new Audio('AdhesiveWombat.-.Night.Shade.NO.COPYRIGHT.8-bit.Music.mp3');
   music.loop = true;
+  let userClickedMusic = false;
 
   const musicPanel = document.getElementById('musicPanel');
   const openMusicBtn = document.getElementById('openMusic');
@@ -440,11 +438,13 @@ html,body{
 
   musicOnBtn.addEventListener('click', ()=>{
     music.play();
+    userClickedMusic = true;
   });
 
   musicOffBtn.addEventListener('click', ()=>{
     music.pause();
     music.currentTime=0;
+    userClickedMusic = false;
   });
 
   start();
