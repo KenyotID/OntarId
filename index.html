@@ -152,7 +152,6 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
 .effect-ice .effect-preview{background:linear-gradient(145deg,#00aaff,#00ffff);}
 .effect-poison .effect-preview{background:linear-gradient(145deg,#aa00ff,#ff00ff);}
 .effect-nature .effect-preview{background:linear-gradient(145deg,#00aa00,#00ff00);}
-.effect-smoke .effect-preview{background:linear-gradient(145deg,#888888,#cccccc);}
 .effect-default .effect-preview{background:linear-gradient(145deg,#444,#555);}
 
 /* Skin Editor Styles */
@@ -273,11 +272,6 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
 .snake.nature-effect .head {
   background: linear-gradient(145deg, #00aa00, #00ff00);
   box-shadow: 0 0 4px #00aa00, 0 0 6px #00ff00;
-}
-
-.snake.smoke-effect .head {
-  background: linear-gradient(145deg, #888888, #cccccc);
-  box-shadow: 0 0 8px #888888, 0 0 12px #cccccc;
 }
 
 /* Custom skin styling */
@@ -545,7 +539,10 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
   <source src="assets/sounds/tombol.mp3" type="audio/mpeg">
 </audio>
 <audio id="gachaWinSfx" preload="auto">
-  <source src="assets/sounds/spin.mp3" type="audio/mpeg">
+  <source src="assets/sounds/win.mp3" type="audio/mpeg">
+</audio>
+<audio id="gachaZonkSfx" preload="auto">
+  <source src="assets/sounds/zonk.mp3" type="audio/mpeg">
 </audio>
 <audio id="gachaSpinSfx" preload="auto">
   <source src="assets/sounds/muter.mp3" type="audio/mpeg">
@@ -625,6 +622,7 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
   const gameOverSfx = document.getElementById('gameOverSfx');
   const buttonSfx = document.getElementById('buttonSfx');
   const gachaWinSfx = document.getElementById('gachaWinSfx');
+  const gachaZonkSfx = document.getElementById('gachaZonkSfx');
   const gachaSpinSfx = document.getElementById('gachaSpinSfx');
 
   // Currency elements
@@ -654,7 +652,7 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
   let isDragging = false;
   let dragStart = { x: 0, y: 0 };
 
-  // Define available effects - TAMBAH SMOKE EFFECT
+  // Define available effects - TANPA SMOKE EFFECT
   const effects = [
     { 
       id: 'default', 
@@ -695,14 +693,6 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
       icon: '🌿',
       color: '#00aa00',
       unlocked: false
-    },
-    { 
-      id: 'smoke', 
-      name: 'Smoke Effect', 
-      description: 'Efek asap dengan partikel abu-abu yang realistis',
-      icon: '☁️',
-      color: '#888888',
-      unlocked: false
     }
   ];
 
@@ -736,6 +726,7 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
       gameOverSfx.volume = 0.6;
       buttonSfx.volume = 0.4;
       gachaWinSfx.volume = 0.6;
+      gachaZonkSfx.volume = 0.6;
       gachaSpinSfx.volume = 0.5;
       
       // Play music jika setting enabled
@@ -839,15 +830,6 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
         particle.style.boxShadow = '0 0 3px #00aa00';
         particle.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
         break;
-      case 'smoke':
-        // Efek asap yang lebih realistis
-        particle.style.background = 'radial-gradient(circle, #f0f0f0, #888888)';
-        particle.style.borderRadius = '50%';
-        particle.style.boxShadow = '0 0 8px #ffffff';
-        particle.style.filter = 'blur(2px)';
-        // Animasi khusus untuk asap
-        particle.style.animation = 'smokeFloat 2s ease-out forwards';
-        break;
       default:
         particle.style.background = 'radial-gradient(circle, #ffffff, #cccccc)';
         particle.style.borderRadius = '50%';
@@ -862,31 +844,8 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
       if (particle.parentNode) {
         particle.parentNode.removeChild(particle);
       }
-    }, effectType === 'smoke' ? 2000 : 1500);
+    }, 1500);
   }
-
-  // Animasi khusus untuk smoke effect
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes smokeFloat {
-      0% { 
-        transform: translateY(0) scale(0.4) rotate(0deg); 
-        opacity: 0.7; 
-        filter: blur(1px);
-      }
-      50% { 
-        transform: translateY(-15px) scale(0.8) rotate(90deg); 
-        opacity: 0.9; 
-        filter: blur(3px);
-      }
-      100% { 
-        transform: translateY(-30px) scale(1.2) rotate(180deg); 
-        opacity: 0; 
-        filter: blur(5px);
-      }
-    }
-  `;
-  document.head.appendChild(style);
 
   function startParticleEffect() {
     if (particleInterval) clearInterval(particleInterval);
@@ -897,10 +856,10 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
       if (!running) return;
       
       const head = coord(snake[snake.length-1]);
-      for (let i = 0; i < (currentEffect === 'smoke' ? 3 : 2); i++) { // Lebih banyak partikel untuk smoke
+      for (let i = 0; i < 2; i++) {
         createParticle(head.x, head.y, currentEffect);
       }
-    }, currentEffect === 'smoke' ? 150 : 300); // Frekuensi lebih tinggi untuk smoke
+    }, 300);
   }
 
   function render(){
@@ -1385,19 +1344,25 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
       RESULT_TEXT.textContent = 'Hahaha gk dapet';
       RESULT_TEXT.style.color = '#ff0000';
       EFFECT_DESC.textContent = 'Coba lagi ya!';
+      
+      // Play zonk sound
+      if (effectOn) {
+        gachaZonkSfx.currentTime = 0;
+        gachaZonkSfx.play().catch(e => console.log('Zonk SFX play failed:', e));
+      }
     } else {
       RESULT_TEXT.innerHTML = `Kamu mendapatkan: <span style="color:${result.color}">${result.name}</span>`;
       RESULT_TEXT.style.color = '#ffd60a';
       EFFECT_DESC.textContent = result.description;
+      
+      // Play win sound
+      if (effectOn) {
+        gachaWinSfx.currentTime = 0;
+        gachaWinSfx.play().catch(e => console.log('Win SFX play failed:', e));
+      }
     }
     
     GACHA_RESULT.style.display = 'block';
-    
-    // Play win sound (spin.mp3) hanya jika bukan ZONK
-    if (effectOn && result.id !== 'zonk') {
-      gachaWinSfx.currentTime = 0;
-      gachaWinSfx.play().catch(e => console.log('Win SFX play failed:', e));
-    }
     
     // Re-enable buttons
     setTimeout(() => {
@@ -1703,4 +1668,4 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
 })();
 </script>
 </body>
-  </html>
+</html>
