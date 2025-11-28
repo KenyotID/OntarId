@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Ratno Fineshyt Game</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
 <style>
 :root{
   --cell-size:28px;
@@ -18,8 +24,66 @@
 html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;background: var(--bg);display:flex;align-items:center;justify-content:center;}
 .wrap{width: calc(var(--cols) * var(--cell-size) + 3rem);max-width: 95vw;background: linear-gradient(145deg,#16162a,#2a2a4d);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.5);padding:20px;position: relative;}
 
+/* Login Screen Styles */
+.login-screen{text-align:center;color:#fff;}
+.login-title{font-family: 'Press Start 2P', monospace;font-size:24px;color:var(--accent);text-shadow:0 0 10px rgba(255,214,0,0.5);margin-bottom:30px;line-height:1.4;}
+.login-buttons{display:flex;flex-direction:column;gap:15px;}
+.login-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:18px 25px;border-radius:15px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.4);transition:all 0.2s;font-family:'Press Start 2P', monospace;display:flex;align-items:center;justify-content:center;gap:10px;}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.5);}
+.login-btn:active{transform:translateY(0);}
+.login-btn.google{background:linear-gradient(145deg,#db4437,#e57373);}
+.login-btn.facebook{background:linear-gradient(145deg,#4267B2,#5b7bd5);}
+.login-btn.guest{background:linear-gradient(145deg,#666,#888);}
+
+/* Profile Setup Screen */
+.profile-setup{display:none;text-align:center;color:#fff;}
+.profile-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.profile-form{display:flex;flex-direction:column;gap:20px;align-items:center;}
+.profile-input{width:100%;max-width:300px;padding:15px;border-radius:12px;border:2px solid #ffd60a;background:rgba(0,0,0,0.3);color:#fff;font-size:16px;text-align:center;font-family:'Press Start 2P', monospace;}
+.profile-input::placeholder{color:#ccc;}
+.profile-submit{background:linear-gradient(145deg,#00aa00,#00cc00);border:none;padding:15px 30px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;font-family:'Press Start 2P', monospace;}
+
+/* Profile Menu Styles */
+.profile-menu{display:none;text-align:center;color:#fff;}
+.profile-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.profile-info{background:rgba(0,0,0,0.3);border-radius:12px;padding:20px;margin-bottom:20px;}
+.profile-name{font-size:18px;color:#ffd60a;margin-bottom:10px;}
+.profile-email{font-size:14px;color:#ccc;margin-bottom:15px;}
+.profile-type{font-size:12px;color:#888;padding:5px 10px;background:rgba(255,214,0,0.2);border-radius:6px;display:inline-block;}
+.profile-buttons{display:flex;flex-direction:column;gap:15px;}
+.profile-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:15px 25px;border-radius:12px;color:#fff;font-size:14px;cursor:pointer;font-family:'Press Start 2P', monospace;}
+.profile-btn.change-name{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.profile-btn.logout{background:linear-gradient(145deg,#aa0000,#cc0000);}
+
+/* Change Name Modal */
+.change-name-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;}
+.change-name-content{background:linear-gradient(145deg,#16162a,#2a2a4d);padding:30px;border-radius:20px;text-align:center;max-width:400px;width:90%;}
+.change-name-title{font-family: 'Press Start 2P', monospace;font-size:18px;color:var(--accent);margin-bottom:20px;}
+.change-name-input{width:100%;padding:15px;border-radius:12px;border:2px solid #ffd60a;background:rgba(0,0,0,0.3);color:#fff;font-size:16px;text-align:center;margin-bottom:20px;font-family:'Press Start 2P', monospace;}
+.change-name-cost{color:#ffd60a;font-size:14px;margin-bottom:20px;}
+.change-name-buttons{display:flex;gap:15px;justify-content:center;}
+.change-name-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:12px 20px;border-radius:10px;color:#fff;font-size:14px;cursor:pointer;font-family:'Press Start 2P', monospace;min-width:100px;}
+.change-name-btn.confirm{background:linear-gradient(145deg,#00aa00,#00cc00);}
+.change-name-btn.cancel{background:linear-gradient(145deg,#aa0000,#cc0000);}
+
+/* Name Tag in Game */
+.name-tag {
+  position: absolute;
+  background: rgba(0,0,0,0.7);
+  color: #ffd60a;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-family: 'Press Start 2P', monospace;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  transform: translate(-50%, -100%);
+  margin-top: -5px;
+}
+
 /* Main Menu Styles */
-.main-menu{text-align:center;color:#fff;}
+.main-menu{display:none;text-align:center;color:#fff;}
 .game-title{font-family: 'Press Start 2P', monospace;font-size:24px;color:var(--accent);text-shadow:0 0 10px rgba(255,214,0,0.5);margin-bottom:30px;line-height:1.4;}
 .currency-display{display:flex;justify-content:space-between;margin-bottom:30px;font-size:18px;}
 .currency-item{display:flex;align-items:center;gap:8px;padding:10px 15px;background:rgba(0,0,0,0.3);border-radius:10px;}
@@ -33,6 +97,7 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
 .menu-btn.skin{background:linear-gradient(145deg,#0088aa,#00aacc);}
 .menu-btn.fashion{background:linear-gradient(145deg,#aa8800,#ccaa00);}
 .menu-btn.topup{background:linear-gradient(145deg,#888888,#aaaaaa);}
+.menu-btn.profile{background:linear-gradient(145deg,#aa00aa,#cc00cc);}
 
 /* Settings Menu Styles */
 .settings-menu{display:none;text-align:center;color:#fff;}
@@ -152,7 +217,6 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
 .effect-ice .effect-preview{background:linear-gradient(145deg,#00aaff,#00ffff);}
 .effect-poison .effect-preview{background:linear-gradient(145deg,#aa00ff,#ff00ff);}
 .effect-nature .effect-preview{background:linear-gradient(145deg,#00aa00,#00ff00);}
-.effect-smoke .effect-preview{background:linear-gradient(145deg,#888888,#cccccc);}
 .effect-default .effect-preview{background:linear-gradient(145deg,#444,#555);}
 
 /* Skin Editor Styles */
@@ -275,11 +339,6 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
   box-shadow: 0 0 4px #00aa00, 0 0 6px #00ff00;
 }
 
-.snake.smoke-effect .head {
-  background: linear-gradient(145deg, #888888, #cccccc);
-  box-shadow: 0 0 8px #888888, 0 0 12px #cccccc;
-}
-
 /* Custom skin styling */
 .snake.custom-skin .head {
   background-size: cover !important;
@@ -332,6 +391,59 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
 </head>
 <body>
 <div class="wrap">
+  <!-- Login Screen -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-title">Ratno Fineshyt Game</div>
+    <div class="login-buttons">
+      <button class="login-btn google" id="googleLogin">
+        <span>🔵</span> Login dengan Google
+      </button>
+      <button class="login-btn facebook" id="facebookLogin">
+        <span>🔵</span> Login dengan Facebook
+      </button>
+      <button class="login-btn guest" id="guestLogin">
+        <span>👤</span> Main sebagai Guest
+      </button>
+    </div>
+  </div>
+
+  <!-- Profile Setup Screen -->
+  <div class="profile-setup" id="profileSetup">
+    <div class="profile-title">BUAT NAMA PLAYER</div>
+    <div class="profile-form">
+      <input type="text" class="profile-input" id="playerNameInput" placeholder="Masukkan nama player" maxlength="15">
+      <button class="profile-submit" id="saveProfileBtn">SIMPAN & MAIN</button>
+    </div>
+  </div>
+
+  <!-- Profile Menu -->
+  <div class="profile-menu" id="profileMenu">
+    <div class="profile-title">PROFIL PLAYER</div>
+    <div class="profile-info">
+      <div class="profile-name" id="profileName">Player Name</div>
+      <div class="profile-email" id="profileEmail">user@example.com</div>
+      <div class="profile-type" id="profileType">Guest Account</div>
+    </div>
+    <div class="profile-buttons">
+      <button class="profile-btn change-name" id="changeNameBtn">GANTI NAMA (10💎)</button>
+      <button class="profile-btn logout" id="profileLogoutBtn">LOGOUT / GANTI AKUN</button>
+      <button class="profile-btn" id="profileBackBtn">KEMBALI</button>
+    </div>
+  </div>
+
+  <!-- Change Name Modal -->
+  <div class="change-name-modal" id="changeNameModal">
+    <div class="change-name-content">
+      <div class="change-name-title">GANTI NAMA PLAYER</div>
+      <input type="text" class="change-name-input" id="newNameInput" placeholder="Nama baru" maxlength="15">
+      <div class="change-name-cost">Biaya: 10 Diamond</div>
+      <div class="change-name-buttons">
+        <button class="change-name-btn confirm" id="confirmNameChange">GANTI</button>
+        <button class="change-name-btn cancel" id="cancelNameChange">BATAL</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Menu -->
   <div class="main-menu" id="mainMenu">
     <div class="game-title">Ratno<br>Fineshyt Game</div>
@@ -349,6 +461,7 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
     
     <div class="menu-buttons">
       <button class="menu-btn play" id="playBtn">PLAY</button>
+      <button class="menu-btn profile" id="profileBtn">PROFIL</button>
       <button class="menu-btn settings" id="menuSettingsBtn">PENGATURAN</button>
       <button class="menu-btn gacha" id="gachaBtn">GACHA</button>
       <button class="menu-btn skin" id="skinBtn">CUSTOM SKIN</button>
@@ -379,6 +492,12 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
           <span id="speedVal">0</span>
           <button class="speed-btn" id="speedInc">+</button>
         </div>
+      </div>
+
+      <!-- NEW: Name Tag Toggle -->
+      <div class="settings-item name-tag">
+        <span>Name Tag</span>
+        <input type="checkbox" id="nameTagToggle">
       </div>
     </div>
     
@@ -545,1162 +664,1472 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
   <source src="assets/sounds/tombol.mp3" type="audio/mpeg">
 </audio>
 <audio id="gachaWinSfx" preload="auto">
-  <source src="assets/sounds/spin.mp3" type="audio/mpeg">
+  <source src="assets/sounds/win.mp3" type="audio/mpeg">
+</audio>
+<audio id="gachaZonkSfx" preload="auto">
+  <source src="assets/sounds/zonk.mp3" type="audio/mpeg">
 </audio>
 <audio id="gachaSpinSfx" preload="auto">
   <source src="assets/sounds/muter.mp3" type="audio/mpeg">
 </audio>
 
 <script>
-(function(){
-  // Screen elements
-  const MAIN_MENU = document.getElementById('mainMenu');
-  const SETTINGS_MENU = document.getElementById('settingsMenu');
-  const FASHION_MENU = document.getElementById('fashionMenu');
-  const SKIN_MENU = document.getElementById('skinMenu');
-  const GACHA_MENU = document.getElementById('gachaMenu');
-  const GAME_SCREEN = document.getElementById('gameScreen');
-  const PLAY_BTN = document.getElementById('playBtn');
-  const MENU_SETTINGS_BTN = document.getElementById('menuSettingsBtn');
-  const SETTINGS_BACK_BTN = document.getElementById('settingsBackBtn');
-  const FASHION_BTN = document.getElementById('fashionBtn');
-  const FASHION_BACK_BTN = document.getElementById('fashionBackBtn');
-  const SKIN_BTN = document.getElementById('skinBtn');
-  const SKIN_BACK_BTN = document.getElementById('skinBackBtn');
-  const GACHA_BTN = document.getElementById('gachaBtn');
-  const GACHA_BACK_BTN = document.getElementById('gachaBackBtn');
-  const TOPUP_BTN = document.getElementById('topupBtn');
-  const COMING_SOON = document.getElementById('comingSoon');
-  const CLOSE_COMING_SOON = document.getElementById('closeComingSoon');
-  
-  // Game elements
-  const BOARD = document.getElementById('board');
-  const SCORE = document.getElementById('score');
-  const RESTART = document.getElementById('restart');
-  const GAMEOVER = document.getElementById('gameover');
-  const COUNTDOWN = document.getElementById('countdown');
-  const CURRENT_EFFECT = document.getElementById('currentEffect');
-  const MANUAL_RESTART = document.getElementById('manualRestart');
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyC3Yw5NIexJddefw-AtutQ1vPhErdfL89s",
+  authDomain: "akun-7b590.firebaseapp.com",
+  projectId: "akun-7b590",
+  storageBucket: "akun-7b590.firebasestorage.app",
+  messagingSenderId: "65784994154",
+  appId: "1:65784994154:web:f7b9fd921736462985ed13"
+};
 
-  // Settings elements
-  const speedValEl = document.getElementById('speedVal');
-  const speedInc = document.getElementById('speedInc');
-  const speedDec = document.getElementById('speedDec');
-  const musicToggle = document.getElementById('musicToggle');
-  const effectToggle = document.getElementById('effectToggle');
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-  // Fashion elements
-  const EFFECTS_GRID = document.getElementById('effectsGrid');
-  const ACTIVE_EFFECT_NAME = document.getElementById('activeEffectName');
+// Firebase Providers
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+const facebookProvider = new firebase.auth.FacebookAuthProvider();
 
-  // Skin editor elements
-  const SKIN_PREVIEW = document.getElementById('skinPreview');
-  const UPLOAD_AREA = document.getElementById('uploadArea');
-  const UPLOAD_BTN = document.getElementById('uploadBtn');
-  const SKIN_UPLOAD = document.getElementById('skinUpload');
-  const SAVE_SKIN = document.getElementById('saveSkin');
-  const RESET_SKIN = document.getElementById('resetSkin');
-  const ZOOM_IN = document.getElementById('zoomIn');
-  const ZOOM_OUT = document.getElementById('zoomOut');
-  const ZOOM_VALUE = document.getElementById('zoomValue');
-  const MOVE_UP = document.getElementById('moveUp');
-  const MOVE_LEFT = document.getElementById('moveLeft');
-  const MOVE_RIGHT = document.getElementById('moveRight');
-  const MOVE_DOWN = document.getElementById('moveDown');
-  const CENTER_IMAGE = document.getElementById('centerImage');
-  const RESET_POSITION = document.getElementById('resetPosition');
+// Game State
+let currentUser = null;
+let userData = null;
+let showNameTag = localStorage.getItem('showNameTag') !== 'false'; // default true
 
-  // Gacha elements
-  const GACHA_ITEMS = document.getElementById('gachaItems');
-  const GACHA_LEVER = document.getElementById('gachaLever');
-  const ONE_SPIN = document.getElementById('oneSpin');
-  const FIVE_SPIN = document.getElementById('fiveSpin');
-  const GACHA_RESULT = document.getElementById('gachaResult');
-  const RESULT_TEXT = document.getElementById('resultText');
-  const EFFECT_DESC = document.getElementById('effectDescription');
+// DOM Elements
+const LOGIN_SCREEN = document.getElementById('loginScreen');
+const PROFILE_SETUP = document.getElementById('profileSetup');
+const PROFILE_MENU = document.getElementById('profileMenu');
+const MAIN_MENU = document.getElementById('mainMenu');
+const CHANGE_NAME_MODAL = document.getElementById('changeNameModal');
 
-  // Audio elements
-  const bgMusic = document.getElementById('bgMusic');
-  const eatSfx = document.getElementById('eatSfx');
-  const gameOverSfx = document.getElementById('gameOverSfx');
-  const buttonSfx = document.getElementById('buttonSfx');
-  const gachaWinSfx = document.getElementById('gachaWinSfx');
-  const gachaSpinSfx = document.getElementById('gachaSpinSfx');
+// Login Elements
+const GOOGLE_LOGIN = document.getElementById('googleLogin');
+const FACEBOOK_LOGIN = document.getElementById('facebookLogin');
+const GUEST_LOGIN = document.getElementById('guestLogin');
 
-  // Currency elements
-  const MENU_COINS = document.getElementById('menuCoins');
-  const MENU_DIAMONDS = document.getElementById('menuDiamonds');
-  const GAME_COINS = document.getElementById('coins');
+// Profile Elements
+const PLAYER_NAME_INPUT = document.getElementById('playerNameInput');
+const SAVE_PROFILE_BTN = document.getElementById('saveProfileBtn');
+const PROFILE_NAME = document.getElementById('profileName');
+const PROFILE_EMAIL = document.getElementById('profileEmail');
+const PROFILE_TYPE = document.getElementById('profileType');
+const CHANGE_NAME_BTN = document.getElementById('changeNameBtn');
+const PROFILE_LOGOUT_BTN = document.getElementById('profileLogoutBtn');
+const PROFILE_BACK_BTN = document.getElementById('profileBackBtn');
+const PROFILE_BTN = document.getElementById('profileBtn');
 
-  let cols = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols')) || 16;
-  let rows = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--rows')) || 12;
-  let cells = [];
-  let gridSize = cols*rows;
+// Change Name Elements
+const NEW_NAME_INPUT = document.getElementById('newNameInput');
+const CONFIRM_NAME_CHANGE = document.getElementById('confirmNameChange');
+const CANCEL_NAME_CHANGE = document.getElementById('cancelNameChange');
 
-  // Load settings and currency
-  let speed = parseInt(localStorage.getItem('speed')) || 120;
-  let musicOn = localStorage.getItem('music') !== 'false'; // default true
-  let effectOn = localStorage.getItem('effect') !== 'false'; // default true
-  let coins = parseInt(localStorage.getItem('coins')) || 0;
-  let diamonds = parseInt(localStorage.getItem('diamonds')) || 0;
-  let currentEffect = localStorage.getItem('currentEffect') || 'default';
-  let customSkin = localStorage.getItem('customSkin') || null;
-  let unlockedEffects = JSON.parse(localStorage.getItem('unlockedEffects')) || ['default'];
+// Settings Elements
+const NAME_TAG_TOGGLE = document.getElementById('nameTagToggle');
 
-  // Skin editor variables
-  let currentSkinImage = null;
-  let skinZoom = 1;
-  let skinPosition = { x: 0, y: 0 };
-  let isDragging = false;
-  let dragStart = { x: 0, y: 0 };
+// Initialize Name Tag Toggle
+NAME_TAG_TOGGLE.checked = showNameTag;
 
-  // Define available effects - TAMBAH SMOKE EFFECT
-  const effects = [
-    { 
-      id: 'default', 
-      name: 'Default', 
-      description: 'Efek standar tanpa partikel',
-      icon: '🐍',
-      color: '#00ffa1',
-      unlocked: true
-    },
-    { 
-      id: 'fire', 
-      name: 'Fire Effect', 
-      description: 'Efek api dengan partikel merah-oranye',
-      icon: '🔥',
-      color: '#ff4400',
-      unlocked: false
-    },
-    { 
-      id: 'ice', 
-      name: 'Ice Effect', 
-      description: 'Efek es dengan partikel biru',
-      icon: '❄️',
-      color: '#00aaff',
-      unlocked: false
-    },
-    { 
-      id: 'poison', 
-      name: 'Poison Effect', 
-      description: 'Efek racun dengan partikel ungu',
-      icon: '☠️',
-      color: '#aa00ff',
-      unlocked: false
-    },
-    { 
-      id: 'nature', 
-      name: 'Nature Effect', 
-      description: 'Efek alam dengan partikel hijau',
-      icon: '🌿',
-      color: '#00aa00',
-      unlocked: false
-    },
-    { 
-      id: 'smoke', 
-      name: 'Smoke Effect', 
-      description: 'Efek asap dengan partikel abu-abu yang realistis',
-      icon: '☁️',
-      color: '#888888',
-      unlocked: false
-    }
-  ];
-
-  musicToggle.checked = musicOn;
-  effectToggle.checked = effectOn;
-  speedValEl.textContent = speed;
-
-  // Audio context untuk handle autoplay
-  let audioContext = null;
-  let countdownTimer = null;
-  let particleInterval = null;
-
-  function initAudio() {
-    if (audioContext) return;
+// Authentication State Listener
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    currentUser = user;
+    await loadUserData();
     
-    try {
-      // Create audio context (dibutuhkan untuk autoplay di browser modern)
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      
-      // Resume audio context ketika user berinteraksi
-      document.addEventListener('click', function initAudioOnce() {
-        if (audioContext.state === 'suspended') {
-          audioContext.resume();
-        }
-        document.removeEventListener('click', initAudioOnce);
-      });
-      
-      // Set volume
-      bgMusic.volume = 0.7;
-      eatSfx.volume = 0.5;
-      gameOverSfx.volume = 0.6;
-      buttonSfx.volume = 0.4;
-      gachaWinSfx.volume = 0.6;
-      gachaSpinSfx.volume = 0.5;
-      
-      // Play music jika setting enabled
-      if (musicOn) {
-        bgMusic.play().catch(e => console.log('Audio play failed:', e));
-      }
-    } catch (e) {
-      console.log('Audio context not supported:', e);
-    }
-  }
-
-  function playButtonSound() {
-    if (effectOn) {
-      buttonSfx.currentTime = 0;
-      buttonSfx.play().catch(e => console.log('Button SFX play failed:', e));
-    }
-  }
-
-  function renderCurrency() {
-    MENU_COINS.textContent = coins;
-    MENU_DIAMONDS.textContent = diamonds;
-    GAME_COINS.textContent = coins;
-    
-    // Update gacha button states
-    ONE_SPIN.disabled = coins < 10;
-    FIVE_SPIN.disabled = coins < 50;
-  }
-
-  function buildBoard(){
-    BOARD.innerHTML='';
-    BOARD.appendChild(GAMEOVER);
-    cells=[];
-    for(let i=0;i<gridSize;i++){
-      const d=document.createElement('div');
-      d.className='cell';
-      BOARD.appendChild(d);
-      cells.push(d);
-    }
-  }
-
-  buildBoard();
-
-  function idx(x,y){return y*cols+x;}
-  function coord(i){return {x:i%cols,y:Math.floor(i/cols)};}
-  function inside(x,y){return x>=0&&y>=0&&x<cols&&y<rows;}
-
-  let snake=[idx(Math.floor(cols/2),Math.floor(rows/2))];
-  let dir={x:1,y:0};
-  let nextDir={...dir};
-  let food=null;
-  let running=false;
-  let score=0;
-  let ticker=null;
-
-  function placeFood(){
-    let empty=[];
-    for(let i=0;i<gridSize;i++) if(!snake.includes(i)) empty.push(i);
-    if(empty.length===0) return null;
-    food=empty[Math.floor(Math.random()*empty.length)];
-  }
-
-  function coinAnimation(x,y){
-    const c = document.createElement('div');
-    c.className='coinAnim';
-    c.textContent='1🪙';
-    c.style.left = (x*parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')))+'px';
-    c.style.top = (y*parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')))+'px';
-    BOARD.appendChild(c);
-    setTimeout(()=>BOARD.removeChild(c),800);
-  }
-
-  function createParticle(x, y, effectType) {
-    const particle = document.createElement('div');
-    particle.className = 'particle';
-    
-    // Set ukuran LEBIH KECIL LAGI
-    const size = 6 + Math.random() * 6; // 6-12px (lebih kecil dari sebelumnya)
-    particle.style.width = size + 'px';
-    particle.style.height = size + 'px';
-    
-    // Set bentuk berdasarkan efek
-    switch(effectType) {
-      case 'fire':
-        particle.style.background = 'radial-gradient(circle, #ff9900, #ff4400)';
-        particle.style.borderRadius = '50% 50% 20% 80%';
-        particle.style.boxShadow = '0 0 4px #ff4400';
-        break;
-      case 'ice':
-        particle.style.background = 'radial-gradient(circle, #00ffff, #00aaff)';
-        particle.style.borderRadius = '60% 40% 30% 70%';
-        particle.style.boxShadow = '0 0 3px #00aaff';
-        break;
-      case 'poison':
-        particle.style.background = 'radial-gradient(circle, #ff00ff, #aa00ff)';
-        particle.style.borderRadius = '50% 20% 80% 30%';
-        particle.style.boxShadow = '0 0 3px #aa00ff';
-        break;
-      case 'nature':
-        particle.style.background = 'radial-gradient(circle, #00ff00, #00aa00)';
-        particle.style.borderRadius = '70% 30% 50% 50%';
-        particle.style.boxShadow = '0 0 3px #00aa00';
-        particle.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
-        break;
-      case 'smoke':
-        // Efek asap yang lebih realistis
-        particle.style.background = 'radial-gradient(circle, #f0f0f0, #888888)';
-        particle.style.borderRadius = '50%';
-        particle.style.boxShadow = '0 0 8px #ffffff';
-        particle.style.filter = 'blur(2px)';
-        // Animasi khusus untuk asap
-        particle.style.animation = 'smokeFloat 2s ease-out forwards';
-        break;
-      default:
-        particle.style.background = 'radial-gradient(circle, #ffffff, #cccccc)';
-        particle.style.borderRadius = '50%';
-    }
-    
-    particle.style.left = (x * parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) + Math.random() * 12 - 6) + 'px';
-    particle.style.top = (y * parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) + Math.random() * 12 - 6) + 'px';
-    BOARD.appendChild(particle);
-    
-    // Remove particle after animation
-    setTimeout(() => {
-      if (particle.parentNode) {
-        particle.parentNode.removeChild(particle);
-      }
-    }, effectType === 'smoke' ? 2000 : 1500);
-  }
-
-  // Animasi khusus untuk smoke effect
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes smokeFloat {
-      0% { 
-        transform: translateY(0) scale(0.4) rotate(0deg); 
-        opacity: 0.7; 
-        filter: blur(1px);
-      }
-      50% { 
-        transform: translateY(-15px) scale(0.8) rotate(90deg); 
-        opacity: 0.9; 
-        filter: blur(3px);
-      }
-      100% { 
-        transform: translateY(-30px) scale(1.2) rotate(180deg); 
-        opacity: 0; 
-        filter: blur(5px);
-      }
-    }
-  `;
-  document.head.appendChild(style);
-
-  function startParticleEffect() {
-    if (particleInterval) clearInterval(particleInterval);
-    
-    if (currentEffect === 'default') return;
-    
-    particleInterval = setInterval(() => {
-      if (!running) return;
-      
-      const head = coord(snake[snake.length-1]);
-      for (let i = 0; i < (currentEffect === 'smoke' ? 3 : 2); i++) { // Lebih banyak partikel untuk smoke
-        createParticle(head.x, head.y, currentEffect);
-      }
-    }, currentEffect === 'smoke' ? 150 : 300); // Frekuensi lebih tinggi untuk smoke
-  }
-
-  function render(){
-    cells.forEach(c=>{c.className='cell';c.textContent='';c.style.backgroundImage='';});
-    
-    // Apply effect class to snake
-    let snakeClass = 'snake';
-    if (currentEffect !== 'default') {
-      snakeClass += ' ' + currentEffect + '-effect';
-    }
-    
-    // Apply custom skin if available
-    if (customSkin) {
-      snakeClass += ' custom-skin';
-    }
-    
-    for(let i=0;i<snake.length;i++){
-      let cl = snakeClass;
-      if(i===snake.length-1) cl+=' head';
-      cells[snake[i]].className='cell '+cl;
-      
-      // Apply custom skin background ONLY to head (sesuai permintaan)
-      if (customSkin && i === snake.length-1) {
-        cells[snake[i]].style.backgroundImage = `url(${customSkin})`;
-        cells[snake[i]].style.backgroundSize = 'cover';
-        cells[snake[i]].style.backgroundPosition = 'center';
-      }
-      // Body menggunakan warna default (sesuai permintaan)
-    }
-    
-    if(food!==null){
-      cells[food].className='cell food';
-      cells[food].textContent='🍆';
-    }
-    
-    SCORE.textContent=score;
-    CURRENT_EFFECT.textContent = 'Efek: ' + effects.find(e => e.id === currentEffect).name;
-    ACTIVE_EFFECT_NAME.textContent = effects.find(e => e.id === currentEffect).name;
-    renderCurrency();
-  }
-
-  function step(){
-    if(nextDir.x!==-dir.x||nextDir.y!==-dir.y) dir={...nextDir};
-    const head=coord(snake[snake.length-1]);
-    const nx=head.x+dir.x;
-    const ny=head.y+dir.y;
-    if(!inside(nx,ny)){ gameOver(); return;}
-    const ni=idx(nx,ny);
-    
-    // FIXED: Player TIDAK mati saat nabrak badan sendiri
-    // if(snake.includes(ni)) { gameOver(); return; } // DIHAPUS
-    
-    // FIXED: Hanya tambah segment ketika makan
-    if(ni===food){
-      // Makan food - tambah segment tanpa menghapus tail
-      snake.push(ni);
-      score+=10;
-      coins += 1;
-      localStorage.setItem('coins', coins);
-      coinAnimation(nx, ny);
-      if(effectOn) {
-        eatSfx.currentTime=0;
-        eatSfx.play().catch(e => console.log('SFX play failed:', e));
-      }
-      placeFood();
+    if (!userData?.playerName) {
+      // New user - show profile setup
+      showScreen(PROFILE_SETUP);
     } else {
-      // Gerak normal - pindah posisi tanpa nambah panjang
-      snake.push(ni);
-      snake.shift(); // Hapus tail hanya ketika TIDAK makan
+      // Existing user - show main menu
+      showScreen(MAIN_MENU);
+      updateProfileDisplay();
     }
-    render();
+  } else {
+    // No user - show login screen
+    currentUser = null;
+    userData = null;
+    showScreen(LOGIN_SCREEN);
   }
+});
 
-  function backToLobby() {
-    GAME_SCREEN.style.display = 'none';
-    MAIN_MENU.style.display = 'block';
+// Login Functions
+GOOGLE_LOGIN.addEventListener('click', () => {
+  auth.signInWithPopup(googleProvider).catch((error) => {
+    console.error('Google Login Error:', error);
+    alert('Login Google gagal: ' + error.message);
+  });
+});
+
+FACEBOOK_LOGIN.addEventListener('click', () => {
+  auth.signInWithPopup(facebookProvider).catch((error) => {
+    console.error('Facebook Login Error:', error);
+    alert('Login Facebook gagal: ' + error.message);
+  });
+});
+
+GUEST_LOGIN.addEventListener('click', () => {
+  // Create anonymous guest account
+  auth.signInAnonymously().catch((error) => {
+    console.error('Guest Login Error:', error);
+    alert('Login Guest gagal: ' + error.message);
+  });
+});
+
+// Profile Setup
+SAVE_PROFILE_BTN.addEventListener('click', () => {
+  const playerName = PLAYER_NAME_INPUT.value.trim();
+  
+  if (!playerName) {
+    alert('Masukkan nama player!');
+    return;
+  }
+  
+  if (playerName.length > 15) {
+    alert('Nama maksimal 15 karakter!');
+    return;
+  }
+  
+  saveUserData({
+    playerName: playerName,
+    coins: 100, // Starting coins
+    diamonds: 5, // Starting diamonds
+    unlockedEffects: ['default'],
+    currentEffect: 'default',
+    accountType: currentUser.isAnonymous ? 'guest' : 'premium',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+});
+
+// Save User Data to Firestore
+async function saveUserData(data) {
+  try {
+    if (currentUser) {
+      await db.collection('users').doc(currentUser.uid).set(data, { merge: true });
+      userData = data;
+      showScreen(MAIN_MENU);
+      updateProfileDisplay();
+      updateGameData();
+    }
+  } catch (error) {
+    console.error('Error saving user data:', error);
+    alert('Error menyimpan data: ' + error.message);
+  }
+}
+
+// Load User Data from Firestore
+async function loadUserData() {
+  try {
+    if (currentUser) {
+      const doc = await db.collection('users').doc(currentUser.uid).get();
+      if (doc.exists) {
+        userData = doc.data();
+        updateGameData();
+      }
+    }
+  } catch (error) {
+    console.error('Error loading user data:', error);
+  }
+}
+
+// Update game data from userData
+function updateGameData() {
+  if (userData) {
+    coins = userData.coins || 0;
+    diamonds = userData.diamonds || 0;
+    currentEffect = userData.currentEffect || 'default';
+    unlockedEffects = userData.unlockedEffects || ['default'];
+    customSkin = userData.customSkin || null;
     
-    // Stop game
-    running = false;
-    clearInterval(ticker);
-    if (particleInterval) clearInterval(particleInterval);
+    // Update localStorage for offline compatibility
+    localStorage.setItem('coins', coins);
+    localStorage.setItem('diamonds', diamonds);
+    localStorage.setItem('currentEffect', currentEffect);
+    localStorage.setItem('unlockedEffects', JSON.stringify(unlockedEffects));
+    if (customSkin) {
+      localStorage.setItem('customSkin', customSkin);
+    }
     
-    // Update currency display
     renderCurrency();
   }
+}
 
-  function startCountdown() {
-    let count = 5;
+// Update Profile Display
+function updateProfileDisplay() {
+  if (userData) {
+    PROFILE_NAME.textContent = userData.playerName || 'Unknown';
+    PROFILE_EMAIL.textContent = currentUser.email || 'No Email';
+    PROFILE_TYPE.textContent = userData.accountType === 'guest' ? 'Guest Account' : 'Premium Account';
+  }
+}
+
+// Profile Menu Navigation
+PROFILE_BTN.addEventListener('click', () => {
+  showScreen(PROFILE_MENU);
+  updateProfileDisplay();
+});
+
+PROFILE_BACK_BTN.addEventListener('click', () => {
+  showScreen(MAIN_MENU);
+});
+
+// Change Name Functionality
+CHANGE_NAME_BTN.addEventListener('click', () => {
+  if ((userData.diamonds || 0) < 10) {
+    alert('Diamond tidak cukup! Butuh 10💎');
+    return;
+  }
+  CHANGE_NAME_MODAL.style.display = 'flex';
+  NEW_NAME_INPUT.value = userData.playerName || '';
+});
+
+CONFIRM_NAME_CHANGE.addEventListener('click', () => {
+  const newName = NEW_NAME_INPUT.value.trim();
+  
+  if (!newName) {
+    alert('Masukkan nama baru!');
+    return;
+  }
+  
+  if (newName.length > 15) {
+    alert('Nama maksimal 15 karakter!');
+    return;
+  }
+  
+  // Deduct diamonds and update name
+  const newDiamonds = (userData.diamonds || 0) - 10;
+  
+  saveUserData({
+    ...userData,
+    playerName: newName,
+    diamonds: newDiamonds
+  });
+  
+  CHANGE_NAME_MODAL.style.display = 'none';
+  alert('Nama berhasil diubah!');
+});
+
+CANCEL_NAME_CHANGE.addEventListener('click', () => {
+  CHANGE_NAME_MODAL.style.display = 'none';
+});
+
+// Logout Function
+PROFILE_LOGOUT_BTN.addEventListener('click', () => {
+  if (confirm('Yakin ingin logout?')) {
+    auth.signOut().then(() => {
+      // Clear local data for guest accounts
+      if (userData?.accountType === 'guest') {
+        localStorage.clear();
+      }
+      showScreen(LOGIN_SCREEN);
+    });
+  }
+});
+
+// Name Tag Toggle
+NAME_TAG_TOGGLE.addEventListener('change', () => {
+  showNameTag = NAME_TAG_TOGGLE.checked;
+  localStorage.setItem('showNameTag', showNameTag);
+});
+
+// Screen Management
+function showScreen(screen) {
+  const screens = [LOGIN_SCREEN, PROFILE_SETUP, PROFILE_MENU, MAIN_MENU];
+  screens.forEach(s => s.style.display = 'none');
+  screen.style.display = 'block';
+}
+
+// ===============================
+// EXISTING GAME LOGIC STARTS HERE
+// ===============================
+
+// Screen elements
+const SETTINGS_MENU = document.getElementById('settingsMenu');
+const FASHION_MENU = document.getElementById('fashionMenu');
+const SKIN_MENU = document.getElementById('skinMenu');
+const GACHA_MENU = document.getElementById('gachaMenu');
+const GAME_SCREEN = document.getElementById('gameScreen');
+const PLAY_BTN = document.getElementById('playBtn');
+const MENU_SETTINGS_BTN = document.getElementById('menuSettingsBtn');
+const SETTINGS_BACK_BTN = document.getElementById('settingsBackBtn');
+const FASHION_BTN = document.getElementById('fashionBtn');
+const FASHION_BACK_BTN = document.getElementById('fashionBackBtn');
+const SKIN_BTN = document.getElementById('skinBtn');
+const SKIN_BACK_BTN = document.getElementById('skinBackBtn');
+const GACHA_BTN = document.getElementById('gachaBtn');
+const GACHA_BACK_BTN = document.getElementById('gachaBackBtn');
+const TOPUP_BTN = document.getElementById('topupBtn');
+const COMING_SOON = document.getElementById('comingSoon');
+const CLOSE_COMING_SOON = document.getElementById('closeComingSoon');
+
+// Game elements
+const BOARD = document.getElementById('board');
+const SCORE = document.getElementById('score');
+const RESTART = document.getElementById('restart');
+const GAMEOVER = document.getElementById('gameover');
+const COUNTDOWN = document.getElementById('countdown');
+const CURRENT_EFFECT = document.getElementById('currentEffect');
+const MANUAL_RESTART = document.getElementById('manualRestart');
+
+// Settings elements
+const speedValEl = document.getElementById('speedVal');
+const speedInc = document.getElementById('speedInc');
+const speedDec = document.getElementById('speedDec');
+const musicToggle = document.getElementById('musicToggle');
+const effectToggle = document.getElementById('effectToggle');
+
+// Fashion elements
+const EFFECTS_GRID = document.getElementById('effectsGrid');
+const ACTIVE_EFFECT_NAME = document.getElementById('activeEffectName');
+
+// Skin editor elements
+const SKIN_PREVIEW = document.getElementById('skinPreview');
+const UPLOAD_AREA = document.getElementById('uploadArea');
+const UPLOAD_BTN = document.getElementById('uploadBtn');
+const SKIN_UPLOAD = document.getElementById('skinUpload');
+const SAVE_SKIN = document.getElementById('saveSkin');
+const RESET_SKIN = document.getElementById('resetSkin');
+const ZOOM_IN = document.getElementById('zoomIn');
+const ZOOM_OUT = document.getElementById('zoomOut');
+const ZOOM_VALUE = document.getElementById('zoomValue');
+const MOVE_UP = document.getElementById('moveUp');
+const MOVE_LEFT = document.getElementById('moveLeft');
+const MOVE_RIGHT = document.getElementById('moveRight');
+const MOVE_DOWN = document.getElementById('moveDown');
+const CENTER_IMAGE = document.getElementById('centerImage');
+const RESET_POSITION = document.getElementById('resetPosition');
+
+// Gacha elements
+const GACHA_ITEMS = document.getElementById('gachaItems');
+const GACHA_LEVER = document.getElementById('gachaLever');
+const ONE_SPIN = document.getElementById('oneSpin');
+const FIVE_SPIN = document.getElementById('fiveSpin');
+const GACHA_RESULT = document.getElementById('gachaResult');
+const RESULT_TEXT = document.getElementById('resultText');
+const EFFECT_DESC = document.getElementById('effectDescription');
+
+// Audio elements
+const bgMusic = document.getElementById('bgMusic');
+const eatSfx = document.getElementById('eatSfx');
+const gameOverSfx = document.getElementById('gameOverSfx');
+const buttonSfx = document.getElementById('buttonSfx');
+const gachaWinSfx = document.getElementById('gachaWinSfx');
+const gachaZonkSfx = document.getElementById('gachaZonkSfx');
+const gachaSpinSfx = document.getElementById('gachaSpinSfx');
+
+// Currency elements
+const MENU_COINS = document.getElementById('menuCoins');
+const MENU_DIAMONDS = document.getElementById('menuDiamonds');
+const GAME_COINS = document.getElementById('coins');
+
+let cols = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols')) || 16;
+let rows = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--rows')) || 12;
+let cells = [];
+let gridSize = cols*rows;
+
+// Load settings and currency
+let speed = parseInt(localStorage.getItem('speed')) || 120;
+let musicOn = localStorage.getItem('music') !== 'false'; // default true
+let effectOn = localStorage.getItem('effect') !== 'false'; // default true
+let coins = parseInt(localStorage.getItem('coins')) || 0;
+let diamonds = parseInt(localStorage.getItem('diamonds')) || 0;
+let currentEffect = localStorage.getItem('currentEffect') || 'default';
+let customSkin = localStorage.getItem('customSkin') || null;
+let unlockedEffects = JSON.parse(localStorage.getItem('unlockedEffects')) || ['default'];
+
+// Skin editor variables
+let currentSkinImage = null;
+let skinZoom = 1;
+let skinPosition = { x: 0, y: 0 };
+let isDragging = false;
+let dragStart = { x: 0, y: 0 };
+
+// Define available effects - TANPA SMOKE EFFECT
+const effects = [
+  { 
+    id: 'default', 
+    name: 'Default', 
+    description: 'Efek standar tanpa partikel',
+    icon: '🐍',
+    color: '#00ffa1',
+    unlocked: true
+  },
+  { 
+    id: 'fire', 
+    name: 'Fire Effect', 
+    description: 'Efek api dengan partikel merah-oranye',
+    icon: '🔥',
+    color: '#ff4400',
+    unlocked: false
+  },
+  { 
+    id: 'ice', 
+    name: 'Ice Effect', 
+    description: 'Efek es dengan partikel biru',
+    icon: '❄️',
+    color: '#00aaff',
+    unlocked: false
+  },
+  { 
+    id: 'poison', 
+    name: 'Poison Effect', 
+    description: 'Efek racun dengan partikel ungu',
+    icon: '☠️',
+    color: '#aa00ff',
+    unlocked: false
+  },
+  { 
+    id: 'nature', 
+    name: 'Nature Effect', 
+    description: 'Efek alam dengan partikel hijau',
+    icon: '🌿',
+    color: '#00aa00',
+    unlocked: false
+  }
+];
+
+musicToggle.checked = musicOn;
+effectToggle.checked = effectOn;
+speedValEl.textContent = speed;
+
+// Audio context untuk handle autoplay
+let audioContext = null;
+let countdownTimer = null;
+let particleInterval = null;
+
+function initAudio() {
+  if (audioContext) return;
+  
+  try {
+    // Create audio context (dibutuhkan untuk autoplay di browser modern)
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Resume audio context ketika user berinteraksi
+    document.addEventListener('click', function initAudioOnce() {
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      document.removeEventListener('click', initAudioOnce);
+    });
+    
+    // Set volume
+    bgMusic.volume = 0.7;
+    eatSfx.volume = 0.5;
+    gameOverSfx.volume = 0.6;
+    buttonSfx.volume = 0.4;
+    gachaWinSfx.volume = 0.6;
+    gachaZonkSfx.volume = 0.6;
+    gachaSpinSfx.volume = 0.5;
+    
+    // Play music jika setting enabled
+    if (musicOn) {
+      bgMusic.play().catch(e => console.log('Audio play failed:', e));
+    }
+  } catch (e) {
+    console.log('Audio context not supported:', e);
+  }
+}
+
+function playButtonSound() {
+  if (effectOn) {
+    buttonSfx.currentTime = 0;
+    buttonSfx.play().catch(e => console.log('Button SFX play failed:', e));
+  }
+}
+
+function renderCurrency() {
+  MENU_COINS.textContent = coins;
+  MENU_DIAMONDS.textContent = diamonds;
+  GAME_COINS.textContent = coins;
+  
+  // Update gacha button states
+  ONE_SPIN.disabled = coins < 10;
+  FIVE_SPIN.disabled = coins < 50;
+}
+
+function buildBoard(){
+  BOARD.innerHTML='';
+  BOARD.appendChild(GAMEOVER);
+  cells=[];
+  for(let i=0;i<gridSize;i++){
+    const d=document.createElement('div');
+    d.className='cell';
+    BOARD.appendChild(d);
+    cells.push(d);
+  }
+}
+
+buildBoard();
+
+function idx(x,y){return y*cols+x;}
+function coord(i){return {x:i%cols,y:Math.floor(i/cols)};}
+function inside(x,y){return x>=0&&y>=0&&x<cols&&y<rows;}
+
+let snake=[idx(Math.floor(cols/2),Math.floor(rows/2))];
+let dir={x:1,y:0};
+let nextDir={...dir};
+let food=null;
+let running=false;
+let score=0;
+let ticker=null;
+
+function placeFood(){
+  let empty=[];
+  for(let i=0;i<gridSize;i++) if(!snake.includes(i)) empty.push(i);
+  if(empty.length===0) return null;
+  food=empty[Math.floor(Math.random()*empty.length)];
+}
+
+function coinAnimation(x,y){
+  const c = document.createElement('div');
+  c.className='coinAnim';
+  c.textContent='1🪙';
+  c.style.left = (x*parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')))+'px';
+  c.style.top = (y*parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')))+'px';
+  BOARD.appendChild(c);
+  setTimeout(()=>BOARD.removeChild(c),800);
+}
+
+function createParticle(x, y, effectType) {
+  const particle = document.createElement('div');
+  particle.className = 'particle';
+  
+  // Set ukuran LEBIH KECIL LAGI
+  const size = 6 + Math.random() * 6; // 6-12px (lebih kecil dari sebelumnya)
+  particle.style.width = size + 'px';
+  particle.style.height = size + 'px';
+  
+  // Set bentuk berdasarkan efek
+  switch(effectType) {
+    case 'fire':
+      particle.style.background = 'radial-gradient(circle, #ff9900, #ff4400)';
+      particle.style.borderRadius = '50% 50% 20% 80%';
+      particle.style.boxShadow = '0 0 4px #ff4400';
+      break;
+    case 'ice':
+      particle.style.background = 'radial-gradient(circle, #00ffff, #00aaff)';
+      particle.style.borderRadius = '60% 40% 30% 70%';
+      particle.style.boxShadow = '0 0 3px #00aaff';
+      break;
+    case 'poison':
+      particle.style.background = 'radial-gradient(circle, #ff00ff, #aa00ff)';
+      particle.style.borderRadius = '50% 20% 80% 30%';
+      particle.style.boxShadow = '0 0 3px #aa00ff';
+      break;
+    case 'nature':
+      particle.style.background = 'radial-gradient(circle, #00ff00, #00aa00)';
+      particle.style.borderRadius = '70% 30% 50% 50%';
+      particle.style.boxShadow = '0 0 3px #00aa00';
+      particle.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
+      break;
+    default:
+      particle.style.background = 'radial-gradient(circle, #ffffff, #cccccc)';
+      particle.style.borderRadius = '50%';
+  }
+  
+  particle.style.left = (x * parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) + Math.random() * 12 - 6) + 'px';
+  particle.style.top = (y * parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) + Math.random() * 12 - 6) + 'px';
+  BOARD.appendChild(particle);
+  
+  // Remove particle after animation
+  setTimeout(() => {
+    if (particle.parentNode) {
+      particle.parentNode.removeChild(particle);
+    }
+  }, 1500);
+}
+
+function startParticleEffect() {
+  if (particleInterval) clearInterval(particleInterval);
+  
+  if (currentEffect === 'default') return;
+  
+  particleInterval = setInterval(() => {
+    if (!running) return;
+    
+    const head = coord(snake[snake.length-1]);
+    for (let i = 0; i < 2; i++) {
+      createParticle(head.x, head.y, currentEffect);
+    }
+  }, 300);
+}
+
+// Name Tag in Game
+function updateNameTags() {
+  // Remove existing name tags
+  document.querySelectorAll('.name-tag').forEach(tag => tag.remove());
+  
+  if (!showNameTag || !userData?.playerName) return;
+  
+  const head = coord(snake[snake.length-1]);
+  const cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size'));
+  
+  const nameTag = document.createElement('div');
+  nameTag.className = 'name-tag';
+  nameTag.textContent = userData.playerName;
+  nameTag.style.left = (head.x * cellSize + cellSize / 2) + 'px';
+  nameTag.style.top = (head.y * cellSize - 10) + 'px';
+  
+  BOARD.appendChild(nameTag);
+}
+
+function render(){
+  cells.forEach(c=>{c.className='cell';c.textContent='';c.style.backgroundImage='';});
+  
+  // Apply effect class to snake
+  let snakeClass = 'snake';
+  if (currentEffect !== 'default') {
+    snakeClass += ' ' + currentEffect + '-effect';
+  }
+  
+  // Apply custom skin if available
+  if (customSkin) {
+    snakeClass += ' custom-skin';
+  }
+  
+  for(let i=0;i<snake.length;i++){
+    let cl = snakeClass;
+    if(i===snake.length-1) cl+=' head';
+    cells[snake[i]].className='cell '+cl;
+    
+    // Apply custom skin background ONLY to head (sesuai permintaan)
+    if (customSkin && i === snake.length-1) {
+      cells[snake[i]].style.backgroundImage = `url(${customSkin})`;
+      cells[snake[i]].style.backgroundSize = 'cover';
+      cells[snake[i]].style.backgroundPosition = 'center';
+    }
+    // Body menggunakan warna default (sesuai permintaan)
+  }
+  
+  if(food!==null){
+    cells[food].className='cell food';
+    cells[food].textContent='🍆';
+  }
+  
+  SCORE.textContent=score;
+  CURRENT_EFFECT.textContent = 'Efek: ' + effects.find(e => e.id === currentEffect).name;
+  ACTIVE_EFFECT_NAME.textContent = effects.find(e => e.id === currentEffect).name;
+  renderCurrency();
+  
+  // Update name tags
+  updateNameTags();
+}
+
+function step(){
+  if(nextDir.x!==-dir.x||nextDir.y!==-dir.y) dir={...nextDir};
+  const head=coord(snake[snake.length-1]);
+  const nx=head.x+dir.x;
+  const ny=head.y+dir.y;
+  if(!inside(nx,ny)){ gameOver(); return;}
+  const ni=idx(nx,ny);
+  
+  // FIXED: Player TIDAK mati saat nabrak badan sendiri
+  // if(snake.includes(ni)) { gameOver(); return; } // DIHAPUS
+  
+  // FIXED: Hanya tambah segment ketika makan
+  if(ni===food){
+    // Makan food - tambah segment tanpa menghapus tail
+    snake.push(ni);
+    score+=10;
+    coins += 1;
+    localStorage.setItem('coins', coins);
+    
+    // Save to Firebase jika user logged in
+    if (userData) {
+      saveUserData({
+        ...userData,
+        coins: coins
+      });
+    }
+    
+    coinAnimation(nx, ny);
+    if(effectOn) {
+      eatSfx.currentTime=0;
+      eatSfx.play().catch(e => console.log('SFX play failed:', e));
+    }
+    placeFood();
+  } else {
+    // Gerak normal - pindah posisi tanpa nambah panjang
+    snake.push(ni);
+    snake.shift(); // Hapus tail hanya ketika TIDAK makan
+  }
+  render();
+}
+
+function backToLobby() {
+  GAME_SCREEN.style.display = 'none';
+  MAIN_MENU.style.display = 'block';
+  
+  // Stop game
+  running = false;
+  clearInterval(ticker);
+  if (particleInterval) clearInterval(particleInterval);
+  
+  // Update currency display
+  renderCurrency();
+}
+
+function startCountdown() {
+  let count = 5;
+  COUNTDOWN.textContent = `Kembali ke lobby dalam: ${count}`;
+  
+  countdownTimer = setInterval(() => {
+    count--;
     COUNTDOWN.textContent = `Kembali ke lobby dalam: ${count}`;
     
-    countdownTimer = setInterval(() => {
-      count--;
-      COUNTDOWN.textContent = `Kembali ke lobby dalam: ${count}`;
-      
-      if (count <= 0) {
-        clearInterval(countdownTimer);
-        backToLobby();
-      }
-    }, 1000);
-  }
-
-  function gameOver(){
-    running=false;
-    clearInterval(ticker);
-    if (particleInterval) clearInterval(particleInterval);
-    
-    // Play game over sound effect jika setting enabled
-    if(effectOn) {
-      gameOverSfx.currentTime=0;
-      gameOverSfx.play().catch(e => console.log('Game over SFX play failed:', e));
-    }
-    
-    GAMEOVER.style.display='flex';
-    
-    // Start countdown otomatis kembali ke lobby
-    startCountdown();
-  }
-
-  function startGame(){
-    // Clear countdown timer jika ada
-    if (countdownTimer) {
+    if (count <= 0) {
       clearInterval(countdownTimer);
-      countdownTimer = null;
+      backToLobby();
     }
-    
-    cols=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols'))||cols;
-    rows=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--rows'))||rows;
-    gridSize=cols*rows;
-    buildBoard();
-    
-    // FIXED: Snake selalu mulai dengan panjang 1 (hanya kepala)
-    snake=[idx(Math.floor(cols/2),Math.floor(rows/2))];
-    dir={x:1,y:0};
-    nextDir={...dir};
-    score=0;
-    placeFood();
-    render();
-    running=true;
-    GAMEOVER.style.display='none';
-    clearInterval(ticker);
-    ticker=setInterval(step,speed);
-    
-    // Start particle effect if applicable
-    startParticleEffect();
-    
-    // Initialize audio ketika game mulai
-    initAudio();
-  }
+  }, 1000);
+}
 
-  // Fashion Menu Functions
-  function initFashionMenu() {
-    EFFECTS_GRID.innerHTML = '';
-    
-    effects.forEach(effect => {
-      const isUnlocked = unlockedEffects.includes(effect.id);
-      const isActive = currentEffect === effect.id;
-      
-      const effectItem = document.createElement('div');
-      effectItem.className = `effect-item effect-${effect.id} ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`;
-      
-      effectItem.innerHTML = `
-        <div class="effect-preview">${effect.icon}</div>
-        <div class="effect-name">${effect.name}</div>
-        <div class="effect-status">${isUnlocked ? (isActive ? 'AKTIF' : 'TERBUKA') : 'TERKUNCI'}</div>
-        <div class="effect-details">${effect.description}</div>
-      `;
-      
-      if (isUnlocked) {
-        effectItem.addEventListener('click', () => {
-          selectEffect(effect.id);
-          playButtonSound();
-        });
-        
-        effectItem.addEventListener('mouseenter', () => {
-          effectItem.querySelector('.effect-details').style.display = 'block';
-        });
-        
-        effectItem.addEventListener('mouseleave', () => {
-          effectItem.querySelector('.effect-details').style.display = 'none';
-        });
-      }
-      
-      EFFECTS_GRID.appendChild(effectItem);
-    });
+function gameOver(){
+  running=false;
+  clearInterval(ticker);
+  if (particleInterval) clearInterval(particleInterval);
+  
+  // Play game over sound effect jika setting enabled
+  if(effectOn) {
+    gameOverSfx.currentTime=0;
+    gameOverSfx.play().catch(e => console.log('Game over SFX play failed:', e));
   }
+  
+  GAMEOVER.style.display='flex';
+  
+  // Start countdown otomatis kembali ke lobby
+  startCountdown();
+}
 
-  function selectEffect(effectId) {
-    currentEffect = effectId;
-    localStorage.setItem('currentEffect', effectId);
-    
-    // Update UI
-    initFashionMenu();
-    ACTIVE_EFFECT_NAME.textContent = effects.find(e => e.id === effectId).name;
-    
-    alert(`Efek ${effects.find(e => e.id === effectId).name} telah diaktifkan!`);
+function startGame(){
+  // Clear countdown timer jika ada
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
   }
+  
+  cols=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols'))||cols;
+  rows=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--rows'))||rows;
+  gridSize=cols*rows;
+  buildBoard();
+  
+  // FIXED: Snake selalu mulai dengan panjang 1 (hanya kepala)
+  snake=[idx(Math.floor(cols/2),Math.floor(rows/2))];
+  dir={x:1,y:0};
+  nextDir={...dir};
+  score=0;
+  placeFood();
+  render();
+  running=true;
+  GAMEOVER.style.display='none';
+  clearInterval(ticker);
+  ticker=setInterval(step,speed);
+  
+  // Start particle effect if applicable
+  startParticleEffect();
+  
+  // Initialize audio ketika game mulai
+  initAudio();
+}
 
-  function unlockEffect(effectId) {
-    if (!unlockedEffects.includes(effectId)) {
-      unlockedEffects.push(effectId);
-      localStorage.setItem('unlockedEffects', JSON.stringify(unlockedEffects));
-    }
-  }
-
-  // Skin Editor Functions
-  function initSkinEditor() {
-    // Reset skin editor state
-    skinZoom = 1;
-    skinPosition = { x: 0, y: 0 };
-    currentSkinImage = null;
+// Fashion Menu Functions
+function initFashionMenu() {
+  EFFECTS_GRID.innerHTML = '';
+  
+  effects.forEach(effect => {
+    const isUnlocked = unlockedEffects.includes(effect.id);
+    const isActive = currentEffect === effect.id;
     
-    // Clear preview
-    SKIN_PREVIEW.innerHTML = '<div style="color:#666;font-size:14px;">Upload gambar untuk memulai</div>';
+    const effectItem = document.createElement('div');
+    effectItem.className = `effect-item effect-${effect.id} ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`;
     
-    // Update zoom display
-    updateZoomDisplay();
+    effectItem.innerHTML = `
+      <div class="effect-preview">${effect.icon}</div>
+      <div class="effect-name">${effect.name}</div>
+      <div class="effect-status">${isUnlocked ? (isActive ? 'AKTIF' : 'TERBUKA') : 'TERKUNCI'}</div>
+      <div class="effect-details">${effect.description}</div>
+    `;
     
-    // Load existing skin if available
-    if (customSkin) {
-      loadSkinImage(customSkin);
-    }
-  }
-
-  function loadSkinImage(imageSrc) {
-    SKIN_PREVIEW.innerHTML = '';
-    currentSkinImage = document.createElement('img');
-    currentSkinImage.className = 'skin-image';
-    currentSkinImage.src = imageSrc;
-    currentSkinImage.draggable = false;
-    
-    // Set initial transform
-    updateImageTransform();
-    
-    SKIN_PREVIEW.appendChild(currentSkinImage);
-    
-    // Add drag functionality
-    addDragFunctionality();
-  }
-
-  function addDragFunctionality() {
-    if (!currentSkinImage) return;
-    
-    SKIN_PREVIEW.addEventListener('mousedown', startDrag);
-    SKIN_PREVIEW.addEventListener('touchstart', startDrag);
-    
-    function startDrag(e) {
-      e.preventDefault();
-      isDragging = true;
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      dragStart = { x: clientX - skinPosition.x, y: clientY - skinPosition.y };
-      
-      document.addEventListener('mousemove', doDrag);
-      document.addEventListener('touchmove', doDrag);
-      document.addEventListener('mouseup', stopDrag);
-      document.addEventListener('touchend', stopDrag);
-    }
-    
-    function doDrag(e) {
-      if (!isDragging) return;
-      e.preventDefault();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      
-      skinPosition.x = clientX - dragStart.x;
-      skinPosition.y = clientY - dragStart.y;
-      
-      updateImageTransform();
-    }
-    
-    function stopDrag() {
-      isDragging = false;
-      document.removeEventListener('mousemove', doDrag);
-      document.removeEventListener('touchmove', doDrag);
-      document.removeEventListener('mouseup', stopDrag);
-      document.removeEventListener('touchend', stopDrag);
-    }
-  }
-
-  function updateImageTransform() {
-    if (!currentSkinImage) return;
-    
-    currentSkinImage.style.transform = `translate(${skinPosition.x}px, ${skinPosition.y}px) scale(${skinZoom})`;
-  }
-
-  function updateZoomDisplay() {
-    ZOOM_VALUE.textContent = Math.round(skinZoom * 100) + '%';
-  }
-
-  function handleSkinUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    if (!file.type.match('image.*')) {
-      alert('Hanya file gambar yang diizinkan!');
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      loadSkinImage(e.target.result);
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function saveCustomSkin() {
-    if (!currentSkinImage) {
-      alert('Upload gambar terlebih dahulu!');
-      return;
-    }
-    
-    // Save skin data to localStorage
-    const skinData = {
-      image: currentSkinImage.src,
-      zoom: skinZoom,
-      position: skinPosition
-    };
-    
-    localStorage.setItem('customSkin', JSON.stringify(skinData));
-    customSkin = currentSkinImage.src; // Update variable
-    
-    alert('Skin berhasil disimpan! Skin akan muncul di kepala ular.');
-  }
-
-  function resetCustomSkin() {
-    customSkin = null;
-    localStorage.removeItem('customSkin');
-    initSkinEditor();
-    alert('Skin direset ke default!');
-  }
-
-  // Zoom and position control functions
-  function zoomIn() {
-    skinZoom = Math.min(3, skinZoom + 0.1);
-    updateImageTransform();
-    updateZoomDisplay();
-  }
-
-  function zoomOut() {
-    skinZoom = Math.max(0.5, skinZoom - 0.1);
-    updateImageTransform();
-    updateZoomDisplay();
-  }
-
-  function moveImage(direction) {
-    const moveAmount = 10;
-    switch(direction) {
-      case 'up':
-        skinPosition.y -= moveAmount;
-        break;
-      case 'down':
-        skinPosition.y += moveAmount;
-        break;
-      case 'left':
-        skinPosition.x -= moveAmount;
-        break;
-      case 'right':
-        skinPosition.x += moveAmount;
-        break;
-    }
-    updateImageTransform();
-  }
-
-  function centerImage() {
-    skinPosition = { x: 0, y: 0 };
-    updateImageTransform();
-  }
-
-  function resetImagePosition() {
-    skinZoom = 1;
-    skinPosition = { x: 0, y: 0 };
-    updateImageTransform();
-    updateZoomDisplay();
-  }
-
-  // Gacha functions - NEW SYSTEM with ZONK
-  function initGacha() {
-    GACHA_ITEMS.innerHTML = '';
-    
-    // Show available effects in gacha machine + ZONK
-    const gachaItems = [
-      ...effects.filter(e => e.id !== 'default'),
-      { id: 'zonk', name: 'ZONK', description: 'Hahaha gk dapet', icon: '❌', color: '#ff0000' }
-    ];
-    
-    gachaItems.forEach(effect => {
-      const item = document.createElement('div');
-      item.className = 'gacha-item';
-      item.innerHTML = effect.icon;
-      item.style.color = effect.color;
-      item.style.background = `linear-gradient(145deg, ${effect.color}22, ${effect.color}44)`;
-      GACHA_ITEMS.appendChild(item);
-    });
-  }
-
-  function spinGacha(spinCount) {
-    const cost = spinCount === 1 ? 10 : 50;
-    
-    if (coins < cost) {
-      alert('Coin tidak cukup!');
-      return;
-    }
-    
-    coins -= cost;
-    localStorage.setItem('coins', coins);
-    renderCurrency();
-    
-    // Play spin sound (muter.mp3)
-    if (effectOn) {
-      gachaSpinSfx.currentTime = 0;
-      gachaSpinSfx.play().catch(e => console.log('Spin SFX play failed:', e));
-    }
-    
-    // Disable buttons during spin
-    ONE_SPIN.disabled = true;
-    FIVE_SPIN.disabled = true;
-    
-    // Animate lever
-    GACHA_LEVER.style.transform = 'rotate(-30deg)';
-    setTimeout(() => {
-      GACHA_LEVER.style.transform = 'rotate(0deg)';
-    }, 300);
-    
-    // Animate items spinning
-    const items = GACHA_ITEMS.querySelectorAll('.gacha-item');
-    let spinDuration = 2000;
-    let startTime = Date.now();
-    
-    function animateSpin() {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / spinDuration, 1);
-      
-      // Easing function
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      
-      // Rotate and scale items
-      items.forEach((item, index) => {
-        const rotation = 360 * 3 * easeOut + (index * 72);
-        const scale = 0.8 + Math.sin(progress * Math.PI * 2 + index) * 0.4;
-        item.style.transform = `rotate(${rotation}deg) scale(${scale})`;
-        item.style.opacity = 0.5 + Math.sin(progress * Math.PI * 2 + index) * 0.5;
+    if (isUnlocked) {
+      effectItem.addEventListener('click', () => {
+        selectEffect(effect.id);
+        playButtonSound();
       });
       
-      if (progress < 1) {
-        requestAnimationFrame(animateSpin);
-      } else {
-        // Spin finished
-        finishSpin(spinCount);
-      }
+      effectItem.addEventListener('mouseenter', () => {
+        effectItem.querySelector('.effect-details').style.display = 'block';
+      });
+      
+      effectItem.addEventListener('mouseleave', () => {
+        effectItem.querySelector('.effect-details').style.display = 'none';
+      });
     }
     
-    animateSpin();
-  }
+    EFFECTS_GRID.appendChild(effectItem);
+  });
+}
 
-  function finishSpin(spinCount) {
-    // Determine result dengan kemungkinan ZONK 30%
-    const availableEffects = effects.filter(e => e.id !== 'default');
-    let result;
+function selectEffect(effectId) {
+  currentEffect = effectId;
+  localStorage.setItem('currentEffect', effectId);
+  
+  // Save to Firebase jika user logged in
+  if (userData) {
+    saveUserData({
+      ...userData,
+      currentEffect: effectId
+    });
+  }
+  
+  // Update UI
+  initFashionMenu();
+  ACTIVE_EFFECT_NAME.textContent = effects.find(e => e.id === effectId).name;
+  
+  alert(`Efek ${effects.find(e => e.id === effectId).name} telah diaktifkan!`);
+}
+
+function unlockEffect(effectId) {
+  if (!unlockedEffects.includes(effectId)) {
+    unlockedEffects.push(effectId);
+    localStorage.setItem('unlockedEffects', JSON.stringify(unlockedEffects));
     
-    if (Math.random() < 0.3) { // 30% chance ZONK
-      result = { id: 'zonk', name: 'ZONK', description: 'Hahaha gk dapet', icon: '❌', color: '#ff0000' };
-    } else {
-      result = availableEffects[Math.floor(Math.random() * availableEffects.length)];
+    // Save to Firebase jika user logged in
+    if (userData) {
+      saveUserData({
+        ...userData,
+        unlockedEffects: unlockedEffects
+      });
     }
+  }
+}
+
+// Skin Editor Functions
+function initSkinEditor() {
+  // Reset skin editor state
+  skinZoom = 1;
+  skinPosition = { x: 0, y: 0 };
+  currentSkinImage = null;
+  
+  // Clear preview
+  SKIN_PREVIEW.innerHTML = '<div style="color:#666;font-size:14px;">Upload gambar untuk memulai</div>';
+  
+  // Update zoom display
+  updateZoomDisplay();
+  
+  // Load existing skin if available
+  if (customSkin) {
+    loadSkinImage(customSkin);
+  }
+}
+
+function loadSkinImage(imageSrc) {
+  SKIN_PREVIEW.innerHTML = '';
+  currentSkinImage = document.createElement('img');
+  currentSkinImage.className = 'skin-image';
+  currentSkinImage.src = imageSrc;
+  currentSkinImage.draggable = false;
+  
+  // Set initial transform
+  updateImageTransform();
+  
+  SKIN_PREVIEW.appendChild(currentSkinImage);
+  
+  // Add drag functionality
+  addDragFunctionality();
+}
+
+function addDragFunctionality() {
+  if (!currentSkinImage) return;
+  
+  SKIN_PREVIEW.addEventListener('mousedown', startDrag);
+  SKIN_PREVIEW.addEventListener('touchstart', startDrag);
+  
+  function startDrag(e) {
+    e.preventDefault();
+    isDragging = true;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    dragStart = { x: clientX - skinPosition.x, y: clientY - skinPosition.y };
     
-    // Unlock the effect jika bukan ZONK
-    if (result.id !== 'zonk') {
-      unlockEffect(result.id);
-    }
+    document.addEventListener('mousemove', doDrag);
+    document.addEventListener('touchmove', doDrag);
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+  }
+  
+  function doDrag(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     
-    // Highlight the result
-    const items = GACHA_ITEMS.querySelectorAll('.gacha-item');
-    items.forEach(item => {
-      item.classList.remove('active');
-      if (item.innerHTML === result.icon) {
-        item.classList.add('active');
-      }
+    skinPosition.x = clientX - dragStart.x;
+    skinPosition.y = clientY - dragStart.y;
+    
+    updateImageTransform();
+  }
+  
+  function stopDrag() {
+    isDragging = false;
+    document.removeEventListener('mousemove', doDrag);
+    document.removeEventListener('touchmove', doDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('touchend', stopDrag);
+  }
+}
+
+function updateImageTransform() {
+  if (!currentSkinImage) return;
+  
+  currentSkinImage.style.transform = `translate(${skinPosition.x}px, ${skinPosition.y}px) scale(${skinZoom})`;
+}
+
+function updateZoomDisplay() {
+  ZOOM_VALUE.textContent = Math.round(skinZoom * 100) + '%';
+}
+
+function handleSkinUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  if (!file.type.match('image.*')) {
+    alert('Hanya file gambar yang diizinkan!');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    loadSkinImage(e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveCustomSkin() {
+  if (!currentSkinImage) {
+    alert('Upload gambar terlebih dahulu!');
+    return;
+  }
+  
+  // Save skin data
+  customSkin = currentSkinImage.src;
+  localStorage.setItem('customSkin', customSkin);
+  
+  // Save to Firebase jika user logged in
+  if (userData) {
+    saveUserData({
+      ...userData,
+      customSkin: customSkin
+    });
+  }
+  
+  alert('Skin berhasil disimpan! Skin akan muncul di kepala ular.');
+}
+
+function resetCustomSkin() {
+  customSkin = null;
+  localStorage.removeItem('customSkin');
+  
+  // Save to Firebase jika user logged in
+  if (userData) {
+    saveUserData({
+      ...userData,
+      customSkin: null
+    });
+  }
+  
+  initSkinEditor();
+  alert('Skin direset ke default!');
+}
+
+// Zoom and position control functions
+function zoomIn() {
+  skinZoom = Math.min(3, skinZoom + 0.1);
+  updateImageTransform();
+  updateZoomDisplay();
+}
+
+function zoomOut() {
+  skinZoom = Math.max(0.5, skinZoom - 0.1);
+  updateImageTransform();
+  updateZoomDisplay();
+}
+
+function moveImage(direction) {
+  const moveAmount = 10;
+  switch(direction) {
+    case 'up':
+      skinPosition.y -= moveAmount;
+      break;
+    case 'down':
+      skinPosition.y += moveAmount;
+      break;
+    case 'left':
+      skinPosition.x -= moveAmount;
+      break;
+    case 'right':
+      skinPosition.x += moveAmount;
+      break;
+  }
+  updateImageTransform();
+}
+
+function centerImage() {
+  skinPosition = { x: 0, y: 0 };
+  updateImageTransform();
+}
+
+function resetImagePosition() {
+  skinZoom = 1;
+  skinPosition = { x: 0, y: 0 };
+  updateImageTransform();
+  updateZoomDisplay();
+}
+
+// Gacha functions - NEW SYSTEM with ZONK
+function initGacha() {
+  GACHA_ITEMS.innerHTML = '';
+  
+  // Show available effects in gacha machine + ZONK
+  const gachaItems = [
+    ...effects.filter(e => e.id !== 'default'),
+    { id: 'zonk', name: 'ZONK', description: 'Hahaha gk dapet', icon: '❌', color: '#ff0000' }
+  ];
+  
+  gachaItems.forEach(effect => {
+    const item = document.createElement('div');
+    item.className = 'gacha-item';
+    item.innerHTML = effect.icon;
+    item.style.color = effect.color;
+    item.style.background = `linear-gradient(145deg, ${effect.color}22, ${effect.color}44)`;
+    GACHA_ITEMS.appendChild(item);
+  });
+}
+
+function spinGacha(spinCount) {
+  const cost = spinCount === 1 ? 10 : 50;
+  
+  if (coins < cost) {
+    alert('Coin tidak cukup!');
+    return;
+  }
+  
+  coins -= cost;
+  localStorage.setItem('coins', coins);
+  
+  // Save to Firebase jika user logged in
+  if (userData) {
+    saveUserData({
+      ...userData,
+      coins: coins
+    });
+  }
+  
+  renderCurrency();
+  
+  // Play spin sound (muter.mp3)
+  if (effectOn) {
+    gachaSpinSfx.currentTime = 0;
+    gachaSpinSfx.play().catch(e => console.log('Spin SFX play failed:', e));
+  }
+  
+  // Disable buttons during spin
+  ONE_SPIN.disabled = true;
+  FIVE_SPIN.disabled = true;
+  
+  // Animate lever
+  GACHA_LEVER.style.transform = 'rotate(-30deg)';
+  setTimeout(() => {
+    GACHA_LEVER.style.transform = 'rotate(0deg)';
+  }, 300);
+  
+  // Animate items spinning
+  const items = GACHA_ITEMS.querySelectorAll('.gacha-item');
+  let spinDuration = 2000;
+  let startTime = Date.now();
+  
+  function animateSpin() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / spinDuration, 1);
+    
+    // Easing function
+    const easeOut = 1 - Math.pow(1 - progress, 3);
+    
+    // Rotate and scale items
+    items.forEach((item, index) => {
+      const rotation = 360 * 3 * easeOut + (index * 72);
+      const scale = 0.8 + Math.sin(progress * Math.PI * 2 + index) * 0.4;
+      item.style.transform = `rotate(${rotation}deg) scale(${scale})`;
+      item.style.opacity = 0.5 + Math.sin(progress * Math.PI * 2 + index) * 0.5;
     });
     
-    // Show result
-    if (result.id === 'zonk') {
-      RESULT_TEXT.textContent = 'Hahaha gk dapet';
-      RESULT_TEXT.style.color = '#ff0000';
-      EFFECT_DESC.textContent = 'Coba lagi ya!';
+    if (progress < 1) {
+      requestAnimationFrame(animateSpin);
     } else {
-      RESULT_TEXT.innerHTML = `Kamu mendapatkan: <span style="color:${result.color}">${result.name}</span>`;
-      RESULT_TEXT.style.color = '#ffd60a';
-      EFFECT_DESC.textContent = result.description;
+      // Spin finished
+      finishSpin(spinCount);
     }
+  }
+  
+  animateSpin();
+}
+
+function finishSpin(spinCount) {
+  // Determine result dengan kemungkinan ZONK 30%
+  const availableEffects = effects.filter(e => e.id !== 'default');
+  let result;
+  
+  if (Math.random() < 0.3) { // 30% chance ZONK
+    result = { id: 'zonk', name: 'ZONK', description: 'Hahaha gk dapet', icon: '❌', color: '#ff0000' };
+  } else {
+    result = availableEffects[Math.floor(Math.random() * availableEffects.length)];
+  }
+  
+  // Unlock the effect jika bukan ZONK
+  if (result.id !== 'zonk') {
+    unlockEffect(result.id);
+  }
+  
+  // Highlight the result
+  const items = GACHA_ITEMS.querySelectorAll('.gacha-item');
+  items.forEach(item => {
+    item.classList.remove('active');
+    if (item.innerHTML === result.icon) {
+      item.classList.add('active');
+    }
+  });
+  
+  // Show result
+  if (result.id === 'zonk') {
+    RESULT_TEXT.textContent = 'Hahaha gk dapet';
+    RESULT_TEXT.style.color = '#ff0000';
+    EFFECT_DESC.textContent = 'Coba lagi ya!';
     
-    GACHA_RESULT.style.display = 'block';
+    // Play zonk sound
+    if (effectOn) {
+      gachaZonkSfx.currentTime = 0;
+      gachaZonkSfx.play().catch(e => console.log('Zonk SFX play failed:', e));
+    }
+  } else {
+    RESULT_TEXT.innerHTML = `Kamu mendapatkan: <span style="color:${result.color}">${result.name}</span>`;
+    RESULT_TEXT.style.color = '#ffd60a';
+    EFFECT_DESC.textContent = result.description;
     
-    // Play win sound (spin.mp3) hanya jika bukan ZONK
-    if (effectOn && result.id !== 'zonk') {
+    // Play win sound
+    if (effectOn) {
       gachaWinSfx.currentTime = 0;
       gachaWinSfx.play().catch(e => console.log('Win SFX play failed:', e));
     }
-    
-    // Re-enable buttons
-    setTimeout(() => {
-      renderCurrency();
-    }, 1000);
-    
-    // If multiple spins, continue
-    if (spinCount > 1) {
-      setTimeout(() => {
-        GACHA_RESULT.style.display = 'none';
-        spinGacha(spinCount - 1);
-      }, 2000);
-    }
   }
-
-  // Screen navigation dengan sound effect
-  PLAY_BTN.addEventListener('click', function() {
-    playButtonSound();
-    MAIN_MENU.style.display = 'none';
-    GAME_SCREEN.style.display = 'block';
-    startGame();
-  });
-
-  MENU_SETTINGS_BTN.addEventListener('click', function() {
-    playButtonSound();
-    MAIN_MENU.style.display = 'none';
-    SETTINGS_MENU.style.display = 'block';
-    initAudio();
-  });
-
-  SETTINGS_BACK_BTN.addEventListener('click', function() {
-    playButtonSound();
-    SETTINGS_MENU.style.display = 'none';
-    MAIN_MENU.style.display = 'block';
-  });
-
-  FASHION_BTN.addEventListener('click', function() {
-    playButtonSound();
-    MAIN_MENU.style.display = 'none';
-    FASHION_MENU.style.display = 'block';
-    initFashionMenu();
-    initAudio();
-  });
-
-  FASHION_BACK_BTN.addEventListener('click', function() {
-    playButtonSound();
-    FASHION_MENU.style.display = 'none';
-    MAIN_MENU.style.display = 'block';
-  });
-
-  SKIN_BTN.addEventListener('click', function() {
-    playButtonSound();
-    MAIN_MENU.style.display = 'none';
-    SKIN_MENU.style.display = 'block';
-    initSkinEditor();
-    initAudio();
-  });
-
-  SKIN_BACK_BTN.addEventListener('click', function() {
-    playButtonSound();
-    SKIN_MENU.style.display = 'none';
-    MAIN_MENU.style.display = 'block';
-  });
-
-  GACHA_BTN.addEventListener('click', function() {
-    playButtonSound();
-    MAIN_MENU.style.display = 'none';
-    GACHA_MENU.style.display = 'block';
-    GACHA_RESULT.style.display = 'none';
-    initGacha();
-    renderCurrency();
-    initAudio();
-  });
-
-  GACHA_BACK_BTN.addEventListener('click', function() {
-    playButtonSound();
-    GACHA_MENU.style.display = 'none';
-    MAIN_MENU.style.display = 'block';
-  });
-
-  // Top Up button shows Coming Soon overlay
-  TOPUP_BTN.addEventListener('click', function() {
-    playButtonSound();
-    COMING_SOON.style.display = 'flex';
-  });
-
-  CLOSE_COMING_SOON.addEventListener('click', function() {
-    playButtonSound();
-    COMING_SOON.style.display = 'none';
-  });
-
-  // Skin editor event listeners dengan sound
-  UPLOAD_BTN.addEventListener('click', function() {
-    playButtonSound();
-    SKIN_UPLOAD.click();
-  });
-
-  SKIN_UPLOAD.addEventListener('change', handleSkinUpload);
-
-  SAVE_SKIN.addEventListener('click', function() {
-    playButtonSound();
-    saveCustomSkin();
-  });
-
-  RESET_SKIN.addEventListener('click', function() {
-    playButtonSound();
-    resetCustomSkin();
-  });
-
-  // Zoom controls dengan sound
-  ZOOM_IN.addEventListener('click', function() {
-    playButtonSound();
-    zoomIn();
-  });
-
-  ZOOM_OUT.addEventListener('click', function() {
-    playButtonSound();
-    zoomOut();
-  });
-
-  // Position controls dengan sound
-  MOVE_UP.addEventListener('click', function() {
-    playButtonSound();
-    moveImage('up');
-  });
-
-  MOVE_DOWN.addEventListener('click', function() {
-    playButtonSound();
-    moveImage('down');
-  });
-
-  MOVE_LEFT.addEventListener('click', function() {
-    playButtonSound();
-    moveImage('left');
-  });
-
-  MOVE_RIGHT.addEventListener('click', function() {
-    playButtonSound();
-    moveImage('right');
-  });
-
-  CENTER_IMAGE.addEventListener('click', function() {
-    playButtonSound();
-    centerImage();
-  });
-
-  RESET_POSITION.addEventListener('click', function() {
-    playButtonSound();
-    resetImagePosition();
-  });
-
-  // Gacha event listeners dengan sound
-  ONE_SPIN.addEventListener('click', function() {
-    playButtonSound();
-    spinGacha(1);
-  });
-
-  FIVE_SPIN.addEventListener('click', function() {
-    playButtonSound();
-    spinGacha(5);
-  });
-
-  // Lever click dengan sound
-  GACHA_LEVER.addEventListener('click', function() {
-    playButtonSound();
-    if (!ONE_SPIN.disabled) {
-      spinGacha(1);
-    }
-  });
-
-  // Game controls
-  document.addEventListener('keydown',e=>{
-    const key=e.key;
-    if(key==='ArrowUp'||key==='w') nextDir={x:0,y:-1};
-    if(key==='ArrowDown'||key==='s') nextDir={x:0,y:1};
-    if(key==='ArrowLeft'||key==='a') nextDir={x:-1,y:0};
-    if(key==='ArrowRight'||key==='d') nextDir={x:1,y:0};
-    
-    // Initialize audio pada interaksi keyboard pertama
-    initAudio();
-  });
-
-  document.querySelectorAll('.arrow').forEach(b=>{
-    b.addEventListener('touchstart',e=>{
-      const d=b.getAttribute('data-dir');
-      if(d==='up') nextDir={x:0,y:-1};
-      if(d==='down') nextDir={x:0,y:1};
-      if(d==='left') nextDir={x:-1,y:0};
-      if(d==='right') nextDir={x:1,y:0};
-      e.preventDefault();
-      
-      // Initialize audio pada interaksi touch pertama
-      initAudio();
-    });
-    b.addEventListener('mousedown',e=>{
-      const d=b.getAttribute('data-dir');
-      if(d==='up') nextDir={x:0,y:-1};
-      if(d==='down') nextDir={x:0,y:1};
-      if(d==='left') nextDir={x:-1,y:0};
-      if(d==='right') nextDir={x:1,y:0};
-      
-      // Initialize audio pada interaksi mouse pertama
-      initAudio();
-    });
-  });
-
-  (function addSwipe(el){
-    let startX=0,startY=0,active=false;
-    el.addEventListener('touchstart',e=>{
-      active=true; 
-      startX=e.touches[0].clientX; 
-      startY=e.touches[0].clientY;
-      
-      // Initialize audio pada interaksi swipe pertama
-      initAudio();
-    },{passive:true});
-    el.addEventListener('touchmove',e=>{if(!active) return; e.preventDefault();},{passive:false});
-    el.addEventListener('touchend',e=>{
-      if(!active) return;
-      active=false;
-      const endX=e.changedTouches[0].clientX;
-      const endY=e.changedTouches[0].clientY;
-      const dx=endX-startX,dy=endY-startY;
-      if(Math.abs(dx)>Math.abs(dy)){
-        if(dx>20) nextDir={x:1,y:0};
-        else if(dx<-20) nextDir={x:-1,y:0};
-      }else{
-        if(dy>20) nextDir={x:0,y:1};
-        else if(dy<-20) nextDir={x:0,y:-1};
-      }
-    },{passive:true});
-  })(BOARD);
-
-  RESTART.addEventListener('click',()=>{
-    playButtonSound();
-    initAudio();
-    startGame();
-  });
-
-  MANUAL_RESTART.addEventListener('click',()=>{
-    playButtonSound();
-    if (countdownTimer) {
-      clearInterval(countdownTimer);
-    }
-    initAudio();
-    startGame();
-  });
-
-  speedInc.addEventListener('click',()=>{
-    playButtonSound();
-    speed = Math.max(50, speed - 10);
-    speedValEl.textContent = speed;
-    localStorage.setItem('speed', speed);
-    if(running){clearInterval(ticker); ticker=setInterval(step,speed);}
-  });
-
-  speedDec.addEventListener('click',()=>{
-    playButtonSound();
-    speed = Math.min(500, speed + 10);
-    speedValEl.textContent = speed;
-    localStorage.setItem('speed', speed);
-    if(running){clearInterval(ticker); ticker=setInterval(step,speed);}
-  });
-
-  musicToggle.addEventListener('change',()=>{
-    playButtonSound();
-    musicOn = musicToggle.checked;
-    localStorage.setItem('music', musicOn);
-    if(musicOn) {
-      bgMusic.play().catch(e => console.log('Music play failed:', e));
-    } else {
-      bgMusic.pause();
-    }
-  });
-
-  effectToggle.addEventListener('change',()=>{
-    playButtonSound();
-    effectOn = effectToggle.checked;
-    localStorage.setItem('effect', effectOn);
-  });
-
-  // Initialize
-  renderCurrency();
-  // Update unlocked effects based on saved data
-  effects.forEach(effect => {
-    effect.unlocked = unlockedEffects.includes(effect.id);
-  });
-  BOARD.addEventListener('click',()=>{
-    BOARD.focus();
-    initAudio();
-  });
   
-  // Load custom skin dari localStorage
-  try {
-    const savedSkinData = localStorage.getItem('customSkin');
-    if (savedSkinData) {
-      const skinData = JSON.parse(savedSkinData);
-      customSkin = skinData.image;
-    }
-  } catch (e) {
-    console.log('Error loading skin data:', e);
+  GACHA_RESULT.style.display = 'block';
+  
+  // Re-enable buttons
+  setTimeout(() => {
+    renderCurrency();
+  }, 1000);
+  
+  // If multiple spins, continue
+  if (spinCount > 1) {
+    setTimeout(() => {
+      GACHA_RESULT.style.display = 'none';
+      spinGacha(spinCount - 1);
+    }, 2000);
   }
-})();
+}
+
+// Screen navigation dengan sound effect
+PLAY_BTN.addEventListener('click', function() {
+  playButtonSound();
+  MAIN_MENU.style.display = 'none';
+  GAME_SCREEN.style.display = 'block';
+  startGame();
+});
+
+MENU_SETTINGS_BTN.addEventListener('click', function() {
+  playButtonSound();
+  MAIN_MENU.style.display = 'none';
+  SETTINGS_MENU.style.display = 'block';
+  initAudio();
+});
+
+SETTINGS_BACK_BTN.addEventListener('click', function() {
+  playButtonSound();
+  SETTINGS_MENU.style.display = 'none';
+  MAIN_MENU.style.display = 'block';
+});
+
+FASHION_BTN.addEventListener('click', function() {
+  playButtonSound();
+  MAIN_MENU.style.display = 'none';
+  FASHION_MENU.style.display = 'block';
+  initFashionMenu();
+  initAudio();
+});
+
+FASHION_BACK_BTN.addEventListener('click', function() {
+  playButtonSound();
+  FASHION_MENU.style.display = 'none';
+  MAIN_MENU.style.display = 'block';
+});
+
+SKIN_BTN.addEventListener('click', function() {
+  playButtonSound();
+  MAIN_MENU.style.display = 'none';
+  SKIN_MENU.style.display = 'block';
+  initSkinEditor();
+  initAudio();
+});
+
+SKIN_BACK_BTN.addEventListener('click', function() {
+  playButtonSound();
+  SKIN_MENU.style.display = 'none';
+  MAIN_MENU.style.display = 'block';
+});
+
+GACHA_BTN.addEventListener('click', function() {
+  playButtonSound();
+  MAIN_MENU.style.display = 'none';
+  GACHA_MENU.style.display = 'block';
+  GACHA_RESULT.style.display = 'none';
+  initGacha();
+  renderCurrency();
+  initAudio();
+});
+
+GACHA_BACK_BTN.addEventListener('click', function() {
+  playButtonSound();
+  GACHA_MENU.style.display = 'none';
+  MAIN_MENU.style.display = 'block';
+});
+
+// Top Up button shows Coming Soon overlay
+TOPUP_BTN.addEventListener('click', function() {
+  playButtonSound();
+  COMING_SOON.style.display = 'flex';
+});
+
+CLOSE_COMING_SOON.addEventListener('click', function() {
+  playButtonSound();
+  COMING_SOON.style.display = 'none';
+});
+
+// Skin editor event listeners dengan sound
+UPLOAD_BTN.addEventListener('click', function() {
+  playButtonSound();
+  SKIN_UPLOAD.click();
+});
+
+SKIN_UPLOAD.addEventListener('change', handleSkinUpload);
+
+SAVE_SKIN.addEventListener('click', function() {
+  playButtonSound();
+  saveCustomSkin();
+});
+
+RESET_SKIN.addEventListener('click', function() {
+  playButtonSound();
+  resetCustomSkin();
+});
+
+// Zoom controls dengan sound
+ZOOM_IN.addEventListener('click', function() {
+  playButtonSound();
+  zoomIn();
+});
+
+ZOOM_OUT.addEventListener('click', function() {
+  playButtonSound();
+  zoomOut();
+});
+
+// Position controls dengan sound
+MOVE_UP.addEventListener('click', function() {
+  playButtonSound();
+  moveImage('up');
+});
+
+MOVE_DOWN.addEventListener('click', function() {
+  playButtonSound();
+  moveImage('down');
+});
+
+MOVE_LEFT.addEventListener('click', function() {
+  playButtonSound();
+  moveImage('left');
+});
+
+MOVE_RIGHT.addEventListener('click', function() {
+  playButtonSound();
+  moveImage('right');
+});
+
+CENTER_IMAGE.addEventListener('click', function() {
+  playButtonSound();
+  centerImage();
+});
+
+RESET_POSITION.addEventListener('click', function() {
+  playButtonSound();
+  resetImagePosition();
+});
+
+// Gacha event listeners dengan sound
+ONE_SPIN.addEventListener('click', function() {
+  playButtonSound();
+  spinGacha(1);
+});
+
+FIVE_SPIN.addEventListener('click', function() {
+  playButtonSound();
+  spinGacha(5);
+});
+
+// Lever click dengan sound
+GACHA_LEVER.addEventListener('click', function() {
+  playButtonSound();
+  if (!ONE_SPIN.disabled) {
+    spinGacha(1);
+  }
+});
+
+// Game controls
+document.addEventListener('keydown',e=>{
+  const key=e.key;
+  if(key==='ArrowUp'||key==='w') nextDir={x:0,y:-1};
+  if(key==='ArrowDown'||key==='s') nextDir={x:0,y:1};
+  if(key==='ArrowLeft'||key==='a') nextDir={x:-1,y:0};
+  if(key==='ArrowRight'||key==='d') nextDir={x:1,y:0};
+  
+  // Initialize audio pada interaksi keyboard pertama
+  initAudio();
+});
+
+document.querySelectorAll('.arrow').forEach(b=>{
+  b.addEventListener('touchstart',e=>{
+    const d=b.getAttribute('data-dir');
+    if(d==='up') nextDir={x:0,y:-1};
+    if(d==='down') nextDir={x:0,y:1};
+    if(d==='left') nextDir={x:-1,y:0};
+    if(d==='right') nextDir={x:1,y:0};
+    e.preventDefault();
+    
+    // Initialize audio pada interaksi touch pertama
+    initAudio();
+  });
+  b.addEventListener('mousedown',e=>{
+    const d=b.getAttribute('data-dir');
+    if(d==='up') nextDir={x:0,y:-1};
+    if(d==='down') nextDir={x:0,y:1};
+    if(d==='left') nextDir={x:-1,y:0};
+    if(d==='right') nextDir={x:1,y:0};
+    
+    // Initialize audio pada interaksi mouse pertama
+    initAudio();
+  });
+});
+
+(function addSwipe(el){
+  let startX=0,startY=0,active=false;
+  el.addEventListener('touchstart',e=>{
+    active=true; 
+    startX=e.touches[0].clientX; 
+    startY=e.touches[0].clientY;
+    
+    // Initialize audio pada interaksi swipe pertama
+    initAudio();
+  },{passive:true});
+  el.addEventListener('touchmove',e=>{if(!active) return; e.preventDefault();},{passive:false});
+  el.addEventListener('touchend',e=>{
+    if(!active) return;
+    active=false;
+    const endX=e.changedTouches[0].clientX;
+    const endY=e.changedTouches[0].clientY;
+    const dx=endX-startX,dy=endY-startY;
+    if(Math.abs(dx)>Math.abs(dy)){
+      if(dx>20) nextDir={x:1,y:0};
+      else if(dx<-20) nextDir={x:-1,y:0};
+    }else{
+      if(dy>20) nextDir={x:0,y:1};
+      else if(dy<-20) nextDir={x:0,y:-1};
+    }
+  },{passive:true});
+})(BOARD);
+
+RESTART.addEventListener('click',()=>{
+  playButtonSound();
+  initAudio();
+  startGame();
+});
+
+MANUAL_RESTART.addEventListener('click',()=>{
+  playButtonSound();
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+  }
+  initAudio();
+  startGame();
+});
+
+speedInc.addEventListener('click',()=>{
+  playButtonSound();
+  speed = Math.max(50, speed - 10);
+  speedValEl.textContent = speed;
+  localStorage.setItem('speed', speed);
+  if(running){clearInterval(ticker); ticker=setInterval(step,speed);}
+});
+
+speedDec.addEventListener('click',()=>{
+  playButtonSound();
+  speed = Math.min(500, speed + 10);
+  speedValEl.textContent = speed;
+  localStorage.setItem('speed', speed);
+  if(running){clearInterval(ticker); ticker=setInterval(step,speed);}
+});
+
+musicToggle.addEventListener('change',()=>{
+  playButtonSound();
+  musicOn = musicToggle.checked;
+  localStorage.setItem('music', musicOn);
+  if(musicOn) {
+    bgMusic.play().catch(e => console.log('Music play failed:', e));
+  } else {
+    bgMusic.pause();
+  }
+});
+
+effectToggle.addEventListener('change',()=>{
+  playButtonSound();
+  effectOn = effectToggle.checked;
+  localStorage.setItem('effect', effectOn);
+});
+
+// Initialize
+renderCurrency();
+// Update unlocked effects based on saved data
+effects.forEach(effect => {
+  effect.unlocked = unlockedEffects.includes(effect.id);
+});
+BOARD.addEventListener('click',()=>{
+  BOARD.focus();
+  initAudio();
+});
+
+// Auto-save user data periodically and on unload
+setInterval(async () => {
+  if (currentUser && userData) {
+    await saveUserData(userData);
+  }
+}, 30000); // Save every 30 seconds
+
+window.addEventListener('beforeunload', async () => {
+  if (currentUser && userData) {
+    await saveUserData(userData);
+  }
+});
+
+// Show login screen first
+showScreen(LOGIN_SCREEN);
 </script>
 </body>
-  </html>
+</html>
