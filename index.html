@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ratno Fineshyt Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cell-size:28px;
+  --cols:16;
+  --rows:12;
+  --bg:#1a1a2e;
+  --snake:#00ffa1;
+  --accent:#ffd60a;
+  --panel:#0b3b5e;
+}
+html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;background: var(--bg);display:flex;align-items:center;justify-content:center;}
+.wrap{width: calc(var(--cols) * var(--cell-size) + 3rem);max-width: 95vw;background: linear-gradient(145deg,#16162a,#2a2a4d);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.5);padding:20px;position: relative;}
+
+/* Main Menu Styles */
+.main-menu{text-align:center;color:#fff;}
+.game-title{font-family: 'Press Start 2P', monospace;font-size:24px;color:var(--accent);text-shadow:0 0 10px rgba(255,214,0,0.5);margin-bottom:30px;line-height:1.4;}
+.currency-display{display:flex;justify-content:space-between;margin-bottom:30px;font-size:18px;}
+.currency-item{display:flex;align-items:center;gap:8px;padding:10px 15px;background:rgba(0,0,0,0.3);border-radius:10px;}
+.menu-buttons{display:flex;flex-direction:column;gap:15px;}
+.menu-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:18px 25px;border-radius:15px;color:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.4);transition:all 0.2s;font-family:'Press Start 2P', monospace;}
+.menu-btn:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.5);}
+.menu-btn:active{transform:translateY(0);}
+.menu-btn.play{background:linear-gradient(145deg,#00aa00,#00cc00);font-size:20px;}
+.menu-btn.settings{background:linear-gradient(145deg,#555,#666);}
+.menu-btn.gacha{background:linear-gradient(145deg,#aa00aa,#cc00cc);}
+.menu-btn.skin{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.menu-btn.fashion{background:linear-gradient(145deg,#aa8800,#ccaa00);}
+.menu-btn.topup{background:linear-gradient(145deg,#888888,#aaaaaa);}
+
+/* Settings Menu Styles */
+.settings-menu{display:none;text-align:center;color:#fff;}
+.settings-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.settings-content{display:flex;flex-direction:column;gap:20px;}
+.settings-item{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;background:rgba(0,0,0,0.3);border-radius:10px;}
+.speed-controls{display:flex;align-items:center;gap:10px;}
+.speed-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:8px 12px;border-radius:8px;color:#fff;cursor:pointer;font-size:16px;min-width:40px;}
+.settings-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Game Screen Styles */
+.game-screen{display:none;}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.title{font-family: 'Press Start 2P', monospace;font-size:22px;color: var(--accent);text-shadow: 0 0 6px rgba(0,0,0,0.7);margin-bottom:6px;line-height:1.3;}
+.info{color:#fff;font-size:18px;padding:8px 12px;background: rgba(0,0,0,0.3);border-radius:10px;box-shadow: 0 2px 6px rgba(0,0,0,0.5);margin-bottom:8px;}
+.small{font-size:14px;color:#ccc;margin-bottom:10px;}
+.board{background: #222;width: calc(var(--cols) * var(--cell-size));height: calc(var(--rows) * var(--cell-size));display:grid;grid-template-columns: repeat(var(--cols), 1fr);grid-template-rows: repeat(var(--rows), 1fr);gap:1px;border-radius:12px;overflow:hidden;margin:0 auto;position: relative;}
+.cell{width:100%;height:100%;background: #111;transition: background 0.2s;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.snake{background: var(--snake);border-radius:6px;box-shadow: 0 0 6px var(--snake);}
+.head{background: var(--accent);box-shadow: 0 0 8px var(--accent);}
+.food{animation: pulse 0.6s infinite alternate;font-size:24px;color:#ffd60a;text-shadow: 0 0 6px #ffd60a, 0 0 12px #ffd60a;}
+@keyframes pulse{0%{transform: scale(1);}50%{transform: scale(1.3);}100%{transform: scale(1);}}
+.coinAnim{position:absolute;font-size:20px;color:#ffd60a;font-weight:bold;animation: coinMove 0.8s forwards;pointer-events:none;}
+@keyframes coinMove{0%{opacity:1; transform: translateY(0);}100%{opacity:0; transform: translateY(-30px);}}
+.controls{display:flex;gap:16px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+.btn{background: linear-gradient(145deg,#444,#555);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.4);transition: transform 0.1s;font-size:16px;min-width:80px;}
+.btn:active{transform: scale(0.95);}
+.arrow-pad{display:grid;grid-template-columns:repeat(3,80px);gap:12px;align-items:center;justify-items:center;}
+.arrow{width:80px;height:80px;font-size:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;background: linear-gradient(145deg,#555,#666);color:#fff;font-weight:700;user-select:none;box-shadow:0 3px 6px rgba(0,0,0,0.5);}
+.arrow:active{transform: scale(0.95);}
+.gameover-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;color:#ff0000;font-family: 'Press Start 2P', monospace;font-size:20px;text-align:center;z-index:10;display:none;padding-top:40px;}
+.gameover-overlay button{margin-top:16px;padding:14px 24px;font-family: 'Press Start 2P', monospace;font-size:14px;background:#ff0000;color:#fff;border:none;border-radius:8px;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,0.5);}
+.shopBtn{margin-top:10px;}
+
+/* Game Over Animation */
+.cat-image {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 15px;
+  opacity: 0;
+  transform: scale(0.5) rotate(-10deg);
+  animation: catAppear 0.8s ease-out forwards;
+}
+
+@keyframes catAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-10deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.1) rotate(5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.gameover-text {
+  color: #ffd60a;
+  font-size: 14px;
+  margin-bottom: 10px;
+  text-shadow: 0 0 10px rgba(255, 214, 0, 0.5);
+}
+
+.restart-countdown {
+  color: #fff;
+  font-size: 14px;
+  margin: 8px 0;
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out 0.8s forwards;
+}
+
+.restart-btn {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUp 0.5s ease-out 1.3s forwards;
+  font-size: 14px;
+  padding: 12px 20px;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-menu input[type=checkbox]{transform:scale(1.8);margin-left:10px;}
+
+#coins, #diamonds{font-weight:bold;color:#ffd60a;font-size:18px;}
+
+/* Fashion Menu Styles */
+.fashion-menu{display:none;text-align:center;color:#fff;}
+.fashion-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.fashion-content{display:flex;flex-direction:column;gap:20px;align-items:center;}
+.effects-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin:20px 0;max-width:400px;}
+.effect-item{background:rgba(0,0,0,0.3);border-radius:12px;padding:15px;text-align:center;cursor:pointer;transition:all 0.3s;border:2px solid transparent;}
+.effect-item:hover{transform:translateY(-3px);box-shadow:0 5px 15px rgba(0,0,0,0.3);}
+.effect-item.active{border-color:#ffd60a;background:rgba(255,214,0,0.1);}
+.effect-item.locked{opacity:0.5;cursor:not-allowed;}
+.effect-preview{width:80px;height:80px;margin:0 auto 10px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:32px;}
+.effect-name{font-size:12px;margin-bottom:5px;color:#fff;}
+.effect-status{font-size:10px;color:#ccc;}
+.effect-details{display:none;margin-top:15px;padding:10px;background:rgba(0,0,0,0.5);border-radius:8px;font-size:12px;}
+.fashion-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Effect preview colors */
+.effect-fire .effect-preview{background:linear-gradient(145deg,#ff4400,#ff9900);}
+.effect-ice .effect-preview{background:linear-gradient(145deg,#00aaff,#00ffff);}
+.effect-poison .effect-preview{background:linear-gradient(145deg,#aa00ff,#ff00ff);}
+.effect-nature .effect-preview{background:linear-gradient(145deg,#00aa00,#00ff00);}
+.effect-default .effect-preview{background:linear-gradient(145deg,#444,#555);}
+
+/* Skin Editor Styles */
+.skin-menu{display:none;text-align:center;color:#fff;}
+.skin-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.skin-content{display:flex;flex-direction:column;gap:20px;align-items:center;}
+.skin-preview-container{display:flex;flex-direction:column;align-items:center;gap:15px;}
+.skin-preview{width:200px;height:200px;border:3px solid var(--accent);border-radius:12px;background:#222;display:flex;align-items:center;justify-content:center;margin:10px auto;overflow:hidden;position:relative;cursor:move;}
+.skin-image{max-width:none;position:absolute;cursor:move;user-select:none;transition:transform 0.2s;}
+.skin-controls-panel{display:flex;flex-direction:column;gap:10px;margin-top:15px;width:100%;max-width:300px;}
+.zoom-controls{display:flex;align-items:center;gap:10px;justify-content:center;}
+.zoom-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:8px 12px;border-radius:6px;color:#fff;cursor:pointer;font-size:14px;min-width:40px;}
+.zoom-value{font-size:14px;min-width:50px;text-align:center;color:#ffd60a;}
+.position-controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.position-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:8px 12px;border-radius:6px;color:#fff;cursor:pointer;font-size:12px;}
+.upload-area{width:100%;max-width:300px;padding:20px;border:2px dashed #ffd60a;border-radius:12px;text-align:center;cursor:pointer;transition:all 0.3s;}
+.upload-area:hover{background:rgba(255,214,0,0.1);}
+.upload-area.dragover{background:rgba(255,214,0,0.2);border-color:#fff;}
+.upload-text{font-size:16px;margin-bottom:10px;}
+.upload-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:10px 15px;border-radius:8px;color:#fff;cursor:pointer;font-size:14px;}
+.skin-controls{display:flex;gap:15px;margin-top:20px;}
+.skin-control-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:12px 18px;border-radius:10px;color:#fff;font-size:14px;cursor:pointer;font-family:'Press Start 2P', monospace;min-width:100px;}
+.skin-control-btn.save{background:linear-gradient(145deg,#00aa00,#00cc00);}
+.skin-control-btn.reset{background:linear-gradient(145deg,#aa0000,#cc0000);}
+.skin-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Gacha Menu Styles */
+.gacha-menu{display:none;text-align:center;color:#fff;}
+.gacha-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.gacha-content{display:flex;flex-direction:column;gap:20px;align-items:center;}
+.gacha-wheel{width:200px;height:200px;border-radius:50%;background:conic-gradient(#ff0000, #ff9900, #ffff00, #00ff00, #00ffff, #0000ff, #9900ff, #ff00ff, #ff0000);position:relative;margin:20px auto;overflow:hidden;box-shadow:0 0 20px rgba(255,255,255,0.3);}
+.gacha-wheel-inner{width:80%;height:80%;background:#1a1a2e;border-radius:50%;position:absolute;top:10%;left:10%;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Press Start 2P', monospace;font-size:14px;}
+.gacha-pointer{position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:20px solid #ffd60a;z-index:10;}
+.gacha-options{display:flex;gap:15px;margin-top:20px;}
+.gacha-option{background:linear-gradient(145deg,#444,#555);border:none;padding:12px 18px;border-radius:10px;color:#fff;font-size:14px;cursor:pointer;font-family:'Press Start 2P', monospace;min-width:120px;}
+.gacha-option:disabled{opacity:0.5;cursor:not-allowed;}
+.gacha-option.one-spin{background:linear-gradient(145deg,#aa00aa,#cc00cc);}
+.gacha-option.five-spin{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.gacha-result{display:none;margin-top:20px;padding:15px;background:rgba(0,0,0,0.3);border-radius:10px;font-size:16px;}
+.gacha-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Coming Soon Overlay */
+.coming-soon-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ffd60a;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  text-align: center;
+  z-index: 100;
+  display: none;
+}
+
+.coming-soon-overlay .close-btn {
+  margin-top: 20px;
+  padding: 12px 20px;
+  background: #ff0000;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+}
+
+/* Particle Effects */
+.particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+  animation: particleFloat 2s infinite alternate;
+}
+
+@keyframes particleFloat {
+  0% { transform: translateY(0) scale(1); opacity: 0.7; }
+  100% { transform: translateY(-5px) scale(1.2); opacity: 1; }
+}
+
+/* Effect classes for snake */
+.snake.fire-effect .head {
+  background: linear-gradient(145deg, #ff4400, #ff9900);
+  box-shadow: 0 0 12px #ff4400, 0 0 20px #ff9900;
+}
+
+.snake.ice-effect .head {
+  background: linear-gradient(145deg, #00aaff, #00ffff);
+  box-shadow: 0 0 12px #00aaff, 0 0 20px #00ffff;
+}
+
+.snake.poison-effect .head {
+  background: linear-gradient(145deg, #aa00ff, #ff00ff);
+  box-shadow: 0 0 12px #aa00ff, 0 0 20px #ff00ff;
+}
+
+.snake.nature-effect .head {
+  background: linear-gradient(145deg, #00aa00, #00ff00);
+  box-shadow: 0 0 12px #00aa00, 0 0 20px #00ff00;
+}
+
+/* Custom skin styling */
+.snake.custom-skin .head {
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+/* Responsive adjustments */
+@media (max-width:480px){
+  :root{--cell-size:24px; --cols:14; --rows:10;}
+  .wrap{padding:16px;}
+  .game-title{font-size:20px;}
+  .menu-btn{padding:15px 20px;font-size:16px;}
+  .menu-btn.play{font-size:18px;}
+  .title{font-size:18px;}
+  .info{font-size:16px;padding:6px 10px;}
+  .small{font-size:12px;}
+  .btn{padding:12px 16px;font-size:14px;min-width:70px;}
+  .arrow{width:70px;height:70px;font-size:28px;}
+  .arrow-pad{grid-template-columns:repeat(3,70px);gap:10px;}
+  .cat-image{width:70px;height:70px;}
+  .gameover-text{font-size:12px;}
+  .restart-countdown{font-size:12px;}
+  .gameover-overlay{padding-top:30px;}
+  .settings-title{font-size:18px;}
+  .gacha-wheel{width:150px;height:150px;}
+  .skin-preview{width:150px;height:150px;}
+  .effects-grid{grid-template-columns:1fr;}
+}
+
+@media (max-width:360px){
+  :root{--cell-size:22px; --cols:12; --rows:10;}
+  .game-title{font-size:18px;}
+  .menu-btn{padding:12px 16px;font-size:14px;}
+  .title{font-size:16px;}
+  .info{font-size:14px;}
+  .btn{padding:10px 14px;font-size:12px;}
+  .arrow{width:65px;height:65px;font-size:26px;}
+  .arrow-pad{grid-template-columns:repeat(3,65px);}
+  .cat-image{width:60px;height:60px;}
+  .gameover-text{font-size:11px;}
+  .restart-countdown{font-size:11px;}
+  .gameover-overlay{padding-top:25px;}
+  .settings-title{font-size:16px;}
+  .gacha-wheel{width:120px;height:120px;}
+  .gacha-wheel-inner{font-size:10px;}
+  .skin-preview{width:120px;height:120px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Main Menu -->
+  <div class="main-menu" id="mainMenu">
+    <div class="game-title">Ratno<br>Fineshyt Game</div>
+    
+    <div class="currency-display">
+      <div class="currency-item">
+        <span>🪙</span>
+        <span id="menuCoins">0</span>
+      </div>
+      <div class="currency-item">
+        <span>💎</span>
+        <span id="menuDiamonds">0</span>
+      </div>
+    </div>
+    
+    <div class="menu-buttons">
+      <button class="menu-btn play" id="playBtn">PLAY</button>
+      <button class="menu-btn settings" id="menuSettingsBtn">PENGATURAN</button>
+      <button class="menu-btn gacha" id="gachaBtn">GACHA</button>
+      <button class="menu-btn skin" id="skinBtn">CUSTOM SKIN</button>
+      <button class="menu-btn fashion" id="fashionBtn">FASHION</button>
+      <button class="menu-btn topup" id="topupBtn">TOP UP</button>
+    </div>
+  </div>
+
+  <!-- Settings Menu -->
+  <div class="settings-menu" id="settingsMenu">
+    <div class="settings-title">PENGATURAN</div>
+    
+    <div class="settings-content">
+      <div class="settings-item">
+        <span>Music</span>
+        <input type="checkbox" id="musicToggle">
+      </div>
+      
+      <div class="settings-item">
+        <span>Sound Effect</span>
+        <input type="checkbox" id="effectToggle">
+      </div>
+      
+      <div class="settings-item">
+        <span>Speed</span>
+        <div class="speed-controls">
+          <button class="speed-btn" id="speedDec">-</button>
+          <span id="speedVal">0</span>
+          <button class="speed-btn" id="speedInc">+</button>
+        </div>
+      </div>
+    </div>
+    
+    <button class="settings-back-btn" id="settingsBackBtn">BACK</button>
+  </div>
+
+  <!-- Fashion Menu -->
+  <div class="fashion-menu" id="fashionMenu">
+    <div class="fashion-title">FASHION - SKIN EFFECT</div>
+    
+    <div class="fashion-content">
+      <div style="font-size:14px;margin-bottom:15px;color:#ccc;">
+        Pilih efek yang ingin digunakan. Klik untuk melihat detail.
+      </div>
+      
+      <div class="effects-grid" id="effectsGrid">
+        <!-- Effects will be loaded here -->
+      </div>
+      
+      <div style="font-size:12px;color:#ffd60a;margin-top:10px;">
+        Efek yang aktif: <span id="activeEffectName">Default</span>
+      </div>
+    </div>
+    
+    <button class="fashion-back-btn" id="fashionBackBtn">BACK</button>
+  </div>
+
+  <!-- Skin Editor Menu -->
+  <div class="skin-menu" id="skinMenu">
+    <div class="skin-title">CUSTOM SKIN EDITOR</div>
+    
+    <div class="skin-content">
+      <div class="skin-preview-container">
+        <div>Kotak ini adalah tubuh cacing:</div>
+        <div class="skin-preview" id="skinPreview">
+          <div style="color:#666;font-size:14px;">Upload gambar untuk memulai</div>
+        </div>
+        <div class="skin-controls-panel">
+          <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOut">-</button>
+            <span class="zoom-value" id="zoomValue">100%</span>
+            <button class="zoom-btn" id="zoomIn">+</button>
+          </div>
+          <div class="position-controls">
+            <button class="position-btn" id="moveUp">↑</button>
+            <button class="position-btn" id="moveLeft">←</button>
+            <button class="position-btn" id="moveRight">→</button>
+            <button class="position-btn" id="moveDown">↓</button>
+            <button class="position-btn" id="centerImage">PUSATKAN</button>
+            <button class="position-btn" id="resetPosition">RESET</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-text">Upload gambar untuk tubuh cacing</div>
+        <input type="file" id="skinUpload" accept="image/*" style="display:none">
+        <button class="upload-btn" id="uploadBtn">PILIH GAMBAR</button>
+      </div>
+      
+      <div class="skin-controls">
+        <button class="skin-control-btn save" id="saveSkin">SAVE SKIN</button>
+        <button class="skin-control-btn reset" id="resetSkin">RESET DEFAULT</button>
+      </div>
+      
+      <div style="font-size:12px;color:#ccc;margin-top:10px;">
+        Upload gambar dan atur posisi/zoom untuk kepala cacing
+      </div>
+    </div>
+    
+    <button class="skin-back-btn" id="skinBackBtn">BACK</button>
+  </div>
+
+  <!-- Gacha Menu -->
+  <div class="gacha-menu" id="gachaMenu">
+    <div class="gacha-title">GACHA SPIN</div>
+    
+    <div class="gacha-content">
+      <div class="gacha-wheel" id="gachaWheel">
+        <div class="gacha-wheel-inner">
+          SPIN FOR<br>EFFECTS!
+        </div>
+        <div class="gacha-pointer"></div>
+      </div>
+      
+      <div class="gacha-options">
+        <button class="gacha-option one-spin" id="oneSpin">10 COINS<br>1 SPIN</button>
+        <button class="gacha-option five-spin" id="fiveSpin">50 COINS<br>5 SPINS</button>
+      </div>
+      
+      <div class="gacha-result" id="gachaResult">
+        <div id="resultText">Kamu mendapatkan: <span id="effectName"></span></div>
+        <div id="effectDescription"></div>
+      </div>
+    </div>
+    
+    <button class="gacha-back-btn" id="gachaBackBtn">BACK</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div class="game-screen" id="gameScreen">
+    <div class="header">
+      <div>
+        <div class="title">Gameplay</div>
+        <div class="small">Kontrol: swipe / tombol arah / keyboard</div>
+        <div class="small" id="currentEffect">Efek: Default</div>
+      </div>
+      <div class="hud">
+        <div class="info">Score: <span id="score">0</span></div>
+        <div class="info">Coins: <span id="coins">0</span> 🪙</div>
+        <button id="restart" class="btn">Restart</button>
+      </div>
+    </div>
+
+    <!-- Board -->
+    <div id="board" class="board" tabindex="0">
+      <div class="gameover-overlay" id="gameover">
+        <img src="assets/images/mati.png" alt="Mati" class="cat-image">
+        <div class="gameover-text">Hahahah mati</div>
+        <div class="restart-countdown" id="countdown">Kembali ke lobby dalam: 5</div>
+        <button class="restart-btn" id="manualRestart">Main Lagi</button>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div style="min-width:200px">
+        <div style="font-size:14px;margin-bottom:8px;color:#ccc">Tombol Sentuh</div>
+        <div class="arrow-pad" id="touchPad">
+          <div></div>
+          <div class="arrow" data-dir="up">▲</div>
+          <div></div>
+          <div class="arrow" data-dir="left">◀</div>
+          <div class="arrow" data-dir="down">▼</div>
+          <div class="arrow" data-dir="right">▶</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Coming Soon Overlay -->
+<div class="coming-soon-overlay" id="comingSoon">
+  <div style="font-size:24px;margin-bottom:20px;">COMING SOON</div>
+  <div style="font-size:16px;margin-bottom:20px;">Fitur Top Up akan segera hadir!</div>
+  <button class="close-btn" id="closeComingSoon">TUTUP</button>
+</div>
+
+<!-- Audio elements -->
+<audio id="bgMusic" loop preload="auto">
+  <source src="assets/sounds/music.mp3" type="audio/mpeg">
+</audio>
+<audio id="eatSfx" preload="auto">
+  <source src="assets/sounds/eat.mp3" type="audio/mpeg">
+</audio>
+<audio id="gameOverSfx" preload="auto">
+  <source src="assets/sounds/mati.mp3" type="audio/mpeg">
+</audio>
+<audio id="gachaSpinSfx" preload="auto">
+  <source src="assets/sounds/spin.mp3" type="audio/mpeg">
+</audio>
+<audio id="gachaWinSfx" preload="auto">
+  <source src="assets/sounds/win.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+(function(){
+  // Screen elements
+  const MAIN_MENU = document.getElementById('mainMenu');
+  const SETTINGS_MENU = document.getElementById('settingsMenu');
+  const FASHION_MENU = document.getElementById('fashionMenu');
+  const SKIN_MENU = document.getElementById('skinMenu');
+  const GACHA_MENU = document.getElementById('gachaMenu');
+  const GAME_SCREEN = document.getElementById('gameScreen');
+  const PLAY_BTN = document.getElementById('playBtn');
+  const MENU_SETTINGS_BTN = document.getElementById('menuSettingsBtn');
+  const SETTINGS_BACK_BTN = document.getElementById('settingsBackBtn');
+  const FASHION_BTN = document.getElementById('fashionBtn');
+  const FASHION_BACK_BTN = document.getElementById('fashionBackBtn');
+  const SKIN_BTN = document.getElementById('skinBtn');
+  const SKIN_BACK_BTN = document.getElementById('skinBackBtn');
+  const GACHA_BTN = document.getElementById('gachaBtn');
+  const GACHA_BACK_BTN = document.getElementById('gachaBackBtn');
+  const TOPUP_BTN = document.getElementById('topupBtn');
+  const COMING_SOON = document.getElementById('comingSoon');
+  const CLOSE_COMING_SOON = document.getElementById('closeComingSoon');
+  
+  // Game elements
+  const BOARD = document.getElementById('board');
+  const SCORE = document.getElementById('score');
+  const RESTART = document.getElementById('restart');
+  const GAMEOVER = document.getElementById('gameover');
+  const COUNTDOWN = document.getElementById('countdown');
+  const CURRENT_EFFECT = document.getElementById('currentEffect');
+  const MANUAL_RESTART = document.getElementById('manualRestart');
+
+  // Settings elements
+  const speedValEl = document.getElementById('speedVal');
+  const speedInc = document.getElementById('speedInc');
+  const speedDec = document.getElementById('speedDec');
+  const musicToggle = document.getElementById('musicToggle');
+  const effectToggle = document.getElementById('effectToggle');
+
+  // Fashion elements
+  const EFFECTS_GRID = document.getElementById('effectsGrid');
+  const ACTIVE_EFFECT_NAME = document.getElementById('activeEffectName');
+
+  // Skin editor elements
+  const SKIN_PREVIEW = document.getElementById('skinPreview');
+  const UPLOAD_AREA = document.getElementById('uploadArea');
+  const UPLOAD_BTN = document.getElementById('uploadBtn');
+  const SKIN_UPLOAD = document.getElementById('skinUpload');
+  const SAVE_SKIN = document.getElementById('saveSkin');
+  const RESET_SKIN = document.getElementById('resetSkin');
+  const ZOOM_IN = document.getElementById('zoomIn');
+  const ZOOM_OUT = document.getElementById('zoomOut');
+  const ZOOM_VALUE = document.getElementById('zoomValue');
+  const MOVE_UP = document.getElementById('moveUp');
+  const MOVE_LEFT = document.getElementById('moveLeft');
+  const MOVE_RIGHT = document.getElementById('moveRight');
+  const MOVE_DOWN = document.getElementById('moveDown');
+  const CENTER_IMAGE = document.getElementById('centerImage');
+  const RESET_POSITION = document.getElementById('resetPosition');
+
+  // Gacha elements
+  const GACHA_WHEEL = document.getElementById('gachaWheel');
+  const ONE_SPIN = document.getElementById('oneSpin');
+  const FIVE_SPIN = document.getElementById('fiveSpin');
+  const GACHA_RESULT = document.getElementById('gachaResult');
+  const EFFECT_NAME = document.getElementById('effectName');
+  const EFFECT_DESC = document.getElementById('effectDescription');
+
+  // Audio elements
+  const bgMusic = document.getElementById('bgMusic');
+  const eatSfx = document.getElementById('eatSfx');
+  const gameOverSfx = document.getElementById('gameOverSfx');
+  const gachaSpinSfx = document.getElementById('gachaSpinSfx');
+  const gachaWinSfx = document.getElementById('gachaWinSfx');
+
+  // Currency elements
+  const MENU_COINS = document.getElementById('menuCoins');
+  const MENU_DIAMONDS = document.getElementById('menuDiamonds');
+  const GAME_COINS = document.getElementById('coins');
+
+  let cols = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols')) || 16;
+  let rows = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--rows')) || 12;
+  let cells = [];
+  let gridSize = cols*rows;
+
+  // Load settings and currency
+  let speed = parseInt(localStorage.getItem('speed')) || 120;
+  let musicOn = localStorage.getItem('music') !== 'false'; // default true
+  let effectOn = localStorage.getItem('effect') !== 'false'; // default true
+  let coins = parseInt(localStorage.getItem('coins')) || 0;
+  let diamonds = parseInt(localStorage.getItem('diamonds')) || 0;
+  let currentEffect = localStorage.getItem('currentEffect') || 'default';
+  let customSkin = localStorage.getItem('customSkin') || null;
+  let unlockedEffects = JSON.parse(localStorage.getItem('unlockedEffects')) || ['default'];
+
+  // Skin editor variables
+  let currentSkinImage = null;
+  let skinZoom = 1;
+  let skinPosition = { x: 0, y: 0 };
+  let isDragging = false;
+  let dragStart = { x: 0, y: 0 };
+
+  // Define available effects
+  const effects = [
+    { 
+      id: 'default', 
+      name: 'Default', 
+      description: 'Efek standar tanpa partikel',
+      icon: '🐍',
+      unlocked: true
+    },
+    { 
+      id: 'fire', 
+      name: 'Fire Effect', 
+      description: 'Efek api dengan partikel merah-oranye',
+      icon: '🔥',
+      unlocked: false
+    },
+    { 
+      id: 'ice', 
+      name: 'Ice Effect', 
+      description: 'Efek es dengan partikel biru',
+      icon: '❄️',
+      unlocked: false
+    },
+    { 
+      id: 'poison', 
+      name: 'Poison Effect', 
+      description: 'Efek racun dengan partikel ungu',
+      icon: '☠️',
+      unlocked: false
+    },
+    { 
+      id: 'nature', 
+      name: 'Nature Effect', 
+      description: 'Efek alam dengan partikel hijau',
+      icon: '🌿',
+      unlocked: false
+    }
+  ];
+
+  musicToggle.checked = musicOn;
+  effectToggle.checked = effectOn;
+  speedValEl.textContent = speed;
+
+  // Audio context untuk handle autoplay
+  let audioContext = null;
+  let countdownTimer = null;
+  let particleInterval = null;
+
+  function initAudio() {
+    if (audioContext) return;
+    
+    try {
+      // Create audio context (dibutuhkan untuk autoplay di browser modern)
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Resume audio context ketika user berinteraksi
+      document.addEventListener('click', function initAudioOnce() {
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+        document.removeEventListener('click', initAudioOnce);
+      });
+      
+      // Set volume
+      bgMusic.volume = 0.7;
+      eatSfx.volume = 0.5;
+      gameOverSfx.volume = 0.6;
+      gachaSpinSfx.volume = 0.5;
+      gachaWinSfx.volume = 0.6;
+      
+      // Play music jika setting enabled
+      if (musicOn) {
+        bgMusic.play().catch(e => console.log('Audio play failed:', e));
+      }
+    } catch (e) {
+      console.log('Audio context not supported:', e);
+    }
+  }
+
+  function renderCurrency() {
+    MENU_COINS.textContent = coins;
+    MENU_DIAMONDS.textContent = diamonds;
+    GAME_COINS.textContent = coins;
+    
+    // Update gacha button states
+    ONE_SPIN.disabled = coins < 10;
+    FIVE_SPIN.disabled = coins < 50;
+  }
+
+  function buildBoard(){
+    BOARD.innerHTML='';
+    BOARD.appendChild(GAMEOVER);
+    cells=[];
+    for(let i=0;i<gridSize;i++){
+      const d=document.createElement('div');
+      d.className='cell';
+      BOARD.appendChild(d);
+      cells.push(d);
+    }
+  }
+
+  buildBoard();
+
+  function idx(x,y){return y*cols+x;}
+  function coord(i){return {x:i%cols,y:Math.floor(i/cols)};}
+  function inside(x,y){return x>=0&&y>=0&&x<cols&&y<rows;}
+
+  let snake=[idx(Math.floor(cols/2),Math.floor(rows/2))];
+  let dir={x:1,y:0};
+  let nextDir={...dir};
+  let food=null;
+  let running=false;
+  let score=0;
+  let ticker=null;
+
+  function placeFood(){
+    let empty=[];
+    for(let i=0;i<gridSize;i++) if(!snake.includes(i)) empty.push(i);
+    if(empty.length===0) return null;
+    food=empty[Math.floor(Math.random()*empty.length)];
+  }
+
+  function coinAnimation(x,y){
+    const c = document.createElement('div');
+    c.className='coinAnim';
+    c.textContent='1🪙';
+    c.style.left = (x*parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')))+'px';
+    c.style.top = (y*parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')))+'px';
+    BOARD.appendChild(c);
+    setTimeout(()=>BOARD.removeChild(c),800);
+  }
+
+  function createParticle(x, y, color) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.style.backgroundColor = color;
+    particle.style.left = (x * parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) + Math.random() * 20 - 10) + 'px';
+    particle.style.top = (y * parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) + Math.random() * 20 - 10) + 'px';
+    BOARD.appendChild(particle);
+    
+    // Remove particle after animation
+    setTimeout(() => {
+      if (particle.parentNode) {
+        particle.parentNode.removeChild(particle);
+      }
+    }, 2000);
+  }
+
+  function startParticleEffect() {
+    if (particleInterval) clearInterval(particleInterval);
+    
+    if (currentEffect === 'default') return;
+    
+    let color;
+    switch(currentEffect) {
+      case 'fire': color = '#ff4400'; break;
+      case 'ice': color = '#00aaff'; break;
+      case 'poison': color = '#aa00ff'; break;
+      case 'nature': color = '#00aa00'; break;
+      default: return;
+    }
+    
+    particleInterval = setInterval(() => {
+      if (!running) return;
+      
+      const head = coord(snake[snake.length-1]);
+      for (let i = 0; i < 3; i++) {
+        createParticle(head.x, head.y, color);
+      }
+    }, 200);
+  }
+
+  function render(){
+    cells.forEach(c=>{c.className='cell';c.textContent='';c.style.backgroundImage='';});
+    
+    // Apply effect class to snake
+    let snakeClass = 'snake';
+    if (currentEffect !== 'default') {
+      snakeClass += ' ' + currentEffect + '-effect';
+    }
+    
+    // Apply custom skin if available
+    if (customSkin) {
+      snakeClass += ' custom-skin';
+    }
+    
+    for(let i=0;i<snake.length;i++){
+      let cl = snakeClass;
+      if(i===snake.length-1) cl+=' head';
+      cells[snake[i]].className='cell '+cl;
+      
+      // Apply custom skin background ONLY to head (sesuai permintaan)
+      if (customSkin && i === snake.length-1) {
+        cells[snake[i]].style.backgroundImage = `url(${customSkin})`;
+        cells[snake[i]].style.backgroundSize = 'cover';
+        cells[snake[i]].style.backgroundPosition = 'center';
+      }
+      // Body menggunakan warna default (sesuai permintaan)
+    }
+    
+    if(food!==null){
+      cells[food].className='cell food';
+      cells[food].textContent='🍆';
+    }
+    
+    SCORE.textContent=score;
+    CURRENT_EFFECT.textContent = 'Efek: ' + effects.find(e => e.id === currentEffect).name;
+    ACTIVE_EFFECT_NAME.textContent = effects.find(e => e.id === currentEffect).name;
+    renderCurrency();
+  }
+
+  function step(){
+    if(nextDir.x!==-dir.x||nextDir.y!==-dir.y) dir={...nextDir};
+    const head=coord(snake[snake.length-1]);
+    const nx=head.x+dir.x;
+    const ny=head.y+dir.y;
+    if(!inside(nx,ny)){ gameOver(); return;}
+    const ni=idx(nx,ny);
+    
+    // FIXED: Check if snake hits itself
+    if(snake.includes(ni)) { 
+      gameOver(); 
+      return; 
+    }
+    
+    // FIXED: Hanya tambah segment ketika makan
+    if(ni===food){
+      // Makan food - tambah segment tanpa menghapus tail
+      snake.push(ni);
+      score+=10;
+      coins += 1;
+      localStorage.setItem('coins', coins);
+      coinAnimation(nx, ny);
+      if(effectOn) {
+        eatSfx.currentTime=0;
+        eatSfx.play().catch(e => console.log('SFX play failed:', e));
+      }
+      placeFood();
+    } else {
+      // Gerak normal - pindah posisi tanpa nambah panjang
+      snake.push(ni);
+      snake.shift(); // Hapus tail hanya ketika TIDAK makan
+    }
+    render();
+  }
+
+  function backToLobby() {
+    GAME_SCREEN.style.display = 'none';
+    MAIN_MENU.style.display = 'block';
+    
+    // Stop game
+    running = false;
+    clearInterval(ticker);
+    if (particleInterval) clearInterval(particleInterval);
+    
+    // Update currency display
+    renderCurrency();
+  }
+
+  function startCountdown() {
+    let count = 5;
+    COUNTDOWN.textContent = `Kembali ke lobby dalam: ${count}`;
+    
+    countdownTimer = setInterval(() => {
+      count--;
+      COUNTDOWN.textContent = `Kembali ke lobby dalam: ${count}`;
+      
+      if (count <= 0) {
+        clearInterval(countdownTimer);
+        backToLobby();
+      }
+    }, 1000);
+  }
+
+  function gameOver(){
+    running=false;
+    clearInterval(ticker);
+    if (particleInterval) clearInterval(particleInterval);
+    
+    // Play game over sound effect jika setting enabled
+    if(effectOn) {
+      gameOverSfx.currentTime=0;
+      gameOverSfx.play().catch(e => console.log('Game over SFX play failed:', e));
+    }
+    
+    GAMEOVER.style.display='flex';
+    
+    // Start countdown otomatis kembali ke lobby
+    startCountdown();
+  }
+
+  function startGame(){
+    // Clear countdown timer jika ada
+    if (countdownTimer) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+    }
+    
+    cols=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols'))||cols;
+    rows=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--rows'))||rows;
+    gridSize=cols*rows;
+    buildBoard();
+    
+    // FIXED: Snake selalu mulai dengan panjang 1 (hanya kepala)
+    snake=[idx(Math.floor(cols/2),Math.floor(rows/2))];
+    dir={x:1,y:0};
+    nextDir={...dir};
+    score=0;
+    placeFood();
+    render();
+    running=true;
+    GAMEOVER.style.display='none';
+    clearInterval(ticker);
+    ticker=setInterval(step,speed);
+    
+    // Start particle effect if applicable
+    startParticleEffect();
+    
+    // Initialize audio ketika game mulai
+    initAudio();
+  }
+
+  // Fashion Menu Functions
+  function initFashionMenu() {
+    EFFECTS_GRID.innerHTML = '';
+    
+    effects.forEach(effect => {
+      const isUnlocked = unlockedEffects.includes(effect.id);
+      const isActive = currentEffect === effect.id;
+      
+      const effectItem = document.createElement('div');
+      effectItem.className = `effect-item effect-${effect.id} ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`;
+      
+      effectItem.innerHTML = `
+        <div class="effect-preview">${effect.icon}</div>
+        <div class="effect-name">${effect.name}</div>
+        <div class="effect-status">${isUnlocked ? (isActive ? 'AKTIF' : 'TERBUKA') : 'TERKUNCI'}</div>
+        <div class="effect-details">${effect.description}</div>
+      `;
+      
+      if (isUnlocked) {
+        effectItem.addEventListener('click', () => {
+          selectEffect(effect.id);
+        });
+        
+        effectItem.addEventListener('mouseenter', () => {
+          effectItem.querySelector('.effect-details').style.display = 'block';
+        });
+        
+        effectItem.addEventListener('mouseleave', () => {
+          effectItem.querySelector('.effect-details').style.display = 'none';
+        });
+      }
+      
+      EFFECTS_GRID.appendChild(effectItem);
+    });
+  }
+
+  function selectEffect(effectId) {
+    currentEffect = effectId;
+    localStorage.setItem('currentEffect', effectId);
+    
+    // Update UI
+    initFashionMenu();
+    ACTIVE_EFFECT_NAME.textContent = effects.find(e => e.id === effectId).name;
+    
+    alert(`Efek ${effects.find(e => e.id === effectId).name} telah diaktifkan!`);
+  }
+
+  function unlockEffect(effectId) {
+    if (!unlockedEffects.includes(effectId)) {
+      unlockedEffects.push(effectId);
+      localStorage.setItem('unlockedEffects', JSON.stringify(unlockedEffects));
+    }
+  }
+
+  // Skin Editor Functions - FIXED IMPLEMENTATION
+  function initSkinEditor() {
+    // Reset skin editor state
+    skinZoom = 1;
+    skinPosition = { x: 0, y: 0 };
+    currentSkinImage = null;
+    
+    // Clear preview
+    SKIN_PREVIEW.innerHTML = '<div style="color:#666;font-size:14px;">Upload gambar untuk memulai</div>';
+    
+    // Update zoom display
+    updateZoomDisplay();
+    
+    // Load existing skin if available
+    if (customSkin) {
+      loadSkinImage(customSkin);
+    }
+  }
+
+  function loadSkinImage(imageSrc) {
+    SKIN_PREVIEW.innerHTML = '';
+    currentSkinImage = document.createElement('img');
+    currentSkinImage.className = 'skin-image';
+    currentSkinImage.src = imageSrc;
+    currentSkinImage.draggable = false;
+    
+    // Set initial transform
+    updateImageTransform();
+    
+    SKIN_PREVIEW.appendChild(currentSkinImage);
+    
+    // Add drag functionality
+    addDragFunctionality();
+  }
+
+  function addDragFunctionality() {
+    if (!currentSkinImage) return;
+    
+    SKIN_PREVIEW.addEventListener('mousedown', startDrag);
+    SKIN_PREVIEW.addEventListener('touchstart', startDrag);
+    
+    function startDrag(e) {
+      e.preventDefault();
+      isDragging = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      dragStart = { x: clientX - skinPosition.x, y: clientY - skinPosition.y };
+      
+      document.addEventListener('mousemove', doDrag);
+      document.addEventListener('touchmove', doDrag);
+      document.addEventListener('mouseup', stopDrag);
+      document.addEventListener('touchend', stopDrag);
+    }
+    
+    function doDrag(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      
+      skinPosition.x = clientX - dragStart.x;
+      skinPosition.y = clientY - dragStart.y;
+      
+      updateImageTransform();
+    }
+    
+    function stopDrag() {
+      isDragging = false;
+      document.removeEventListener('mousemove', doDrag);
+      document.removeEventListener('touchmove', doDrag);
+      document.removeEventListener('mouseup', stopDrag);
+      document.removeEventListener('touchend', stopDrag);
+    }
+  }
+
+  function updateImageTransform() {
+    if (!currentSkinImage) return;
+    
+    currentSkinImage.style.transform = `translate(${skinPosition.x}px, ${skinPosition.y}px) scale(${skinZoom})`;
+  }
+
+  function updateZoomDisplay() {
+    ZOOM_VALUE.textContent = Math.round(skinZoom * 100) + '%';
+  }
+
+  function handleSkinUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.match('image.*')) {
+      alert('Hanya file gambar yang diizinkan!');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      loadSkinImage(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function saveCustomSkin() {
+    if (!currentSkinImage) {
+      alert('Upload gambar terlebih dahulu!');
+      return;
+    }
+    
+    // Save skin data to localStorage
+    const skinData = {
+      image: currentSkinImage.src,
+      zoom: skinZoom,
+      position: skinPosition
+    };
+    
+    localStorage.setItem('customSkin', JSON.stringify(skinData));
+    customSkin = currentSkinImage.src; // Update variable
+    
+    alert('Skin berhasil disimpan! Skin akan muncul di kepala ular.');
+  }
+
+  function resetCustomSkin() {
+    customSkin = null;
+    localStorage.removeItem('customSkin');
+    initSkinEditor();
+    alert('Skin direset ke default!');
+  }
+
+  // Zoom and position control functions
+  function zoomIn() {
+    skinZoom = Math.min(3, skinZoom + 0.1);
+    updateImageTransform();
+    updateZoomDisplay();
+  }
+
+  function zoomOut() {
+    skinZoom = Math.max(0.5, skinZoom - 0.1);
+    updateImageTransform();
+    updateZoomDisplay();
+  }
+
+  function moveImage(direction) {
+    const moveAmount = 10;
+    switch(direction) {
+      case 'up':
+        skinPosition.y -= moveAmount;
+        break;
+      case 'down':
+        skinPosition.y += moveAmount;
+        break;
+      case 'left':
+        skinPosition.x -= moveAmount;
+        break;
+      case 'right':
+        skinPosition.x += moveAmount;
+        break;
+    }
+    updateImageTransform();
+  }
+
+  function centerImage() {
+    skinPosition = { x: 0, y: 0 };
+    updateImageTransform();
+  }
+
+  function resetImagePosition() {
+    skinZoom = 1;
+    skinPosition = { x: 0, y: 0 };
+    updateImageTransform();
+    updateZoomDisplay();
+  }
+
+  // Gacha functions
+  function spinGacha(spinCount) {
+    const cost = spinCount === 1 ? 10 : 50;
+    
+    if (coins < cost) {
+      alert('Coin tidak cukup!');
+      return;
+    }
+    
+    coins -= cost;
+    localStorage.setItem('coins', coins);
+    renderCurrency();
+    
+    // Play spin sound
+    if (effectOn) {
+      gachaSpinSfx.currentTime = 0;
+      gachaSpinSfx.play().catch(e => console.log('Spin SFX play failed:', e));
+    }
+    
+    // Disable buttons during spin
+    ONE_SPIN.disabled = true;
+    FIVE_SPIN.disabled = true;
+    
+    // Animate the wheel
+    const wheel = GACHA_WHEEL;
+    let rotation = 0;
+    const spinDuration = 3000; // 3 seconds
+    const startTime = Date.now();
+    
+    function animateSpin() {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / spinDuration, 1);
+      
+      // Easing function for smooth deceleration
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      rotation = 360 * 5 + easeOut * 360; // 5 full rotations + extra
+      
+      wheel.style.transform = `rotate(${rotation}deg)`;
+      
+      if (progress < 1) {
+        requestAnimationFrame(animateSpin);
+      } else {
+        // Spin finished
+        finishSpin(spinCount);
+      }
+    }
+    
+    animateSpin();
+  }
+
+  function finishSpin(spinCount) {
+    // Determine result (random for now, excluding default)
+    const availableEffects = effects.filter(e => e.id !== 'default');
+    const result = availableEffects[Math.floor(Math.random() * availableEffects.length)];
+    
+    // Unlock the effect
+    unlockEffect(result.id);
+    
+    // Show result
+    EFFECT_NAME.textContent = result.name;
+    EFFECT_DESC.textContent = result.description;
+    GACHA_RESULT.style.display = 'block';
+    
+    // Play win sound
+    if (effectOn) {
+      gachaWinSfx.currentTime = 0;
+      gachaWinSfx.play().catch(e => console.log('Win SFX play failed:', e));
+    }
+    
+    // Re-enable buttons
+    renderCurrency();
+    
+    // If multiple spins, continue
+    if (spinCount > 1) {
+      setTimeout(() => {
+        GACHA_RESULT.style.display = 'none';
+        spinGacha(spinCount - 1);
+      }, 2000);
+    }
+  }
+
+  // Screen navigation
+  PLAY_BTN.addEventListener('click', function() {
+    MAIN_MENU.style.display = 'none';
+    GAME_SCREEN.style.display = 'block';
+    startGame();
+  });
+
+  MENU_SETTINGS_BTN.addEventListener('click', function() {
+    MAIN_MENU.style.display = 'none';
+    SETTINGS_MENU.style.display = 'block';
+    initAudio();
+  });
+
+  SETTINGS_BACK_BTN.addEventListener('click', function() {
+    SETTINGS_MENU.style.display = 'none';
+    MAIN_MENU.style.display = 'block';
+  });
+
+  FASHION_BTN.addEventListener('click', function() {
+    MAIN_MENU.style.display = 'none';
+    FASHION_MENU.style.display = 'block';
+    initFashionMenu();
+    initAudio();
+  });
+
+  FASHION_BACK_BTN.addEventListener('click', function() {
+    FASHION_MENU.style.display = 'none';
+    MAIN_MENU.style.display = 'block';
+  });
+
+  SKIN_BTN.addEventListener('click', function() {
+    MAIN_MENU.style.display = 'none';
+    SKIN_MENU.style.display = 'block';
+    initSkinEditor();
+    initAudio();
+  });
+
+  SKIN_BACK_BTN.addEventListener('click', function() {
+    SKIN_MENU.style.display = 'none';
+    MAIN_MENU.style.display = 'block';
+  });
+
+  GACHA_BTN.addEventListener('click', function() {
+    MAIN_MENU.style.display = 'none';
+    GACHA_MENU.style.display = 'block';
+    GACHA_RESULT.style.display = 'none';
+    renderCurrency();
+    initAudio();
+  });
+
+  GACHA_BACK_BTN.addEventListener('click', function() {
+    GACHA_MENU.style.display = 'none';
+    MAIN_MENU.style.display = 'block';
+  });
+
+  // Top Up button shows Coming Soon overlay
+  TOPUP_BTN.addEventListener('click', function() {
+    COMING_SOON.style.display = 'flex';
+  });
+
+  CLOSE_COMING_SOON.addEventListener('click', function() {
+    COMING_SOON.style.display = 'none';
+  });
+
+  // Skin editor event listeners - FIXED
+  UPLOAD_BTN.addEventListener('click', function() {
+    SKIN_UPLOAD.click();
+  });
+
+  SKIN_UPLOAD.addEventListener('change', handleSkinUpload);
+
+  SAVE_SKIN.addEventListener('click', saveCustomSkin);
+
+  RESET_SKIN.addEventListener('click', resetCustomSkin);
+
+  // Zoom controls
+  ZOOM_IN.addEventListener('click', zoomIn);
+  ZOOM_OUT.addEventListener('click', zoomOut);
+
+  // Position controls
+  MOVE_UP.addEventListener('click', () => moveImage('up'));
+  MOVE_DOWN.addEventListener('click', () => moveImage('down'));
+  MOVE_LEFT.addEventListener('click', () => moveImage('left'));
+  MOVE_RIGHT.addEventListener('click', () => moveImage('right'));
+  CENTER_IMAGE.addEventListener('click', centerImage);
+  RESET_POSITION.addEventListener('click', resetImagePosition);
+
+  // Gacha event listeners
+  ONE_SPIN.addEventListener('click', function() {
+    spinGacha(1);
+  });
+
+  FIVE_SPIN.addEventListener('click', function() {
+    spinGacha(5);
+  });
+
+  // Game controls
+  document.addEventListener('keydown',e=>{
+    const key=e.key;
+    if(key==='ArrowUp'||key==='w') nextDir={x:0,y:-1};
+    if(key==='ArrowDown'||key==='s') nextDir={x:0,y:1};
+    if(key==='ArrowLeft'||key==='a') nextDir={x:-1,y:0};
+    if(key==='ArrowRight'||key==='d') nextDir={x:1,y:0};
+    
+    // Initialize audio pada interaksi keyboard pertama
+    initAudio();
+  });
+
+  document.querySelectorAll('.arrow').forEach(b=>{
+    b.addEventListener('touchstart',e=>{
+      const d=b.getAttribute('data-dir');
+      if(d==='up') nextDir={x:0,y:-1};
+      if(d==='down') nextDir={x:0,y:1};
+      if(d==='left') nextDir={x:-1,y:0};
+      if(d==='right') nextDir={x:1,y:0};
+      e.preventDefault();
+      
+      // Initialize audio pada interaksi touch pertama
+      initAudio();
+    });
+    b.addEventListener('mousedown',e=>{
+      const d=b.getAttribute('data-dir');
+      if(d==='up') nextDir={x:0,y:-1};
+      if(d==='down') nextDir={x:0,y:1};
+      if(d==='left') nextDir={x:-1,y:0};
+      if(d==='right') nextDir={x:1,y:0};
+      
+      // Initialize audio pada interaksi mouse pertama
+      initAudio();
+    });
+  });
+
+  (function addSwipe(el){
+    let startX=0,startY=0,active=false;
+    el.addEventListener('touchstart',e=>{
+      active=true; 
+      startX=e.touches[0].clientX; 
+      startY=e.touches[0].clientY;
+      
+      // Initialize audio pada interaksi swipe pertama
+      initAudio();
+    },{passive:true});
+    el.addEventListener('touchmove',e=>{if(!active) return; e.preventDefault();},{passive:false});
+    el.addEventListener('touchend',e=>{
+      if(!active) return;
+      active=false;
+      const endX=e.changedTouches[0].clientX;
+      const endY=e.changedTouches[0].clientY;
+      const dx=endX-startX,dy=endY-startY;
+      if(Math.abs(dx)>Math.abs(dy)){
+        if(dx>20) nextDir={x:1,y:0};
+        else if(dx<-20) nextDir={x:-1,y:0};
+      }else{
+        if(dy>20) nextDir={x:0,y:1};
+        else if(dy<-20) nextDir={x:0,y:-1};
+      }
+    },{passive:true});
+  })(BOARD);
+
+  RESTART.addEventListener('click',()=>{
+    initAudio();
+    startGame();
+  });
+
+  MANUAL_RESTART.addEventListener('click',()=>{
+    if (countdownTimer) {
+      clearInterval(countdownTimer);
+    }
+    initAudio();
+    startGame();
+  });
+
+  speedInc.addEventListener('click',()=>{
+    speed = Math.max(50, speed - 10);
+    speedValEl.textContent = speed;
+    localStorage.setItem('speed', speed);
+    if(running){clearInterval(ticker); ticker=setInterval(step,speed);}
+  });
+
+  speedDec.addEventListener('click',()=>{
+    speed = Math.min(500, speed + 10);
+    speedValEl.textContent = speed;
+    localStorage.setItem('speed', speed);
+    if(running){clearInterval(ticker); ticker=setInterval(step,speed);}
+  });
+
+  musicToggle.addEventListener('change',()=>{
+    musicOn = musicToggle.checked;
+    localStorage.setItem('music', musicOn);
+    if(musicOn) {
+      bgMusic.play().catch(e => console.log('Music play failed:', e));
+    } else {
+      bgMusic.pause();
+    }
+  });
+
+  effectToggle.addEventListener('change',()=>{
+    effectOn = effectToggle.checked;
+    localStorage.setItem('effect', effectOn);
+  });
+
+  // Initialize
+  renderCurrency();
+  // Update unlocked effects based on saved data
+  effects.forEach(effect => {
+    effect.unlocked = unlockedEffects.includes(effect.id);
+  });
+  BOARD.addEventListener('click',()=>{
+    BOARD.focus();
+    initAudio();
+  });
+  
+  // Load custom skin dari localStorage
+  try {
+    const savedSkinData = localStorage.getItem('customSkin');
+    if (savedSkinData) {
+      const skinData = JSON.parse(savedSkinData);
+      customSkin = skinData.image;
+    }
+  } catch (e) {
+    console.log('Error loading skin data:', e);
+  }
+})();
+</script>
+</body>
+  </html>
