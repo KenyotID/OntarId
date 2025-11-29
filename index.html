@@ -57,6 +57,19 @@
             color: red;
             margin: 10px 0;
             display: none;
+            background: #ffeaea;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid red;
+        }
+        .success-message {
+            color: green;
+            margin: 10px 0;
+            display: none;
+            background: #eaffea;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid green;
         }
 
         /* CSS untuk Game Screen */
@@ -150,6 +163,13 @@
             color: #4CAF50;
             margin: 10px 0;
         }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -157,6 +177,16 @@
     <div id="lobbyScreen" class="lobby-screen">
         <div class="lobby-container">
             <h1>🎮 Multiplayer Game</h1>
+            
+            <div class="instructions">
+                <strong>Sebelum main:</strong><br>
+                1. Buka <a href="https://console.firebase.google.com/u/3/project/akun-7b590/database/akun-7b590-default-rtdb/rules" target="_blank">Firebase Rules</a><br>
+                2. Ganti rules jadi:<br>
+                <code style="font-size: 10px; background: #f5f5f5; padding: 5px; display: block;">
+                { "rules": { ".read": true, ".write": true } }
+                </code>
+                3. Klik "Publish"
+            </div>
             
             <input type="text" id="playerName" class="lobby-input" placeholder="Masukkan nama kamu" maxlength="15">
             
@@ -168,6 +198,7 @@
             <button onclick="joinRoom()" class="lobby-button">🚪 Join Room</button>
             
             <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
             <div id="loadingMessage" class="loading">Loading...</div>
         </div>
     </div>
@@ -201,7 +232,7 @@
     </div>
 
     <script>
-        // Firebase Config
+        // Firebase Config - FIXED dengan databaseURL
         const firebaseConfig = {
             apiKey: "AIzaSyC3Yw5NIexJddefw-AtutQ1vPhErdfL89s",
             authDomain: "akun-7b590.firebaseapp.com",
@@ -212,23 +243,53 @@
             appId: "1:65784994154:web:f7b9fd921736462985ed13"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
         // Global variables
+        let db = null;
         let currentRoomCode = '';
         let currentPlayerId = '';
         let currentPlayerName = '';
         let currentPlayerData = {};
+
+        // Initialize Firebase
+        function initializeFirebase() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                console.log('🔥 Firebase initialized successfully');
+                showSuccess('Connected to server!');
+                return true;
+            } catch (error) {
+                console.error('❌ Firebase initialization error:', error);
+                showError('Gagal connect ke server: ' + error.message);
+                return false;
+            }
+        }
 
         // Fungsi untuk menampilkan error
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
+            
+            const successDiv = document.getElementById('successMessage');
+            successDiv.style.display = 'none';
+            
             setTimeout(() => {
                 errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Fungsi untuk menampilkan success
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.style.display = 'none';
+            
+            setTimeout(() => {
+                successDiv.style.display = 'none';
             }, 3000);
         }
 
@@ -255,6 +316,11 @@
 
         // Create Room
         function createRoom() {
+            if (!db) {
+                showError('Database belum terinisialisasi. Refresh halaman.');
+                return;
+            }
+
             const playerName = document.getElementById('playerName').value.trim();
             if (!playerName) {
                 showError('Masukkan nama dulu!');
@@ -277,30 +343,49 @@
                 lastUpdate: Date.now()
             };
 
-            console.log('Creating room:', currentRoomCode);
+            console.log('🚀 Creating room:', currentRoomCode);
 
-            // Buat room baru
-            db.ref('rooms/' + currentRoomCode).set({
-                created: Date.now(),
-                status: 'active',
-                host: currentPlayerId
-            }).then(() => {
-                // Tambah player ke room
-                return db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
-            }).then(() => {
-                console.log('Room created successfully');
-                showLoading(false);
-                setupGameListener();
-                showGameScreen();
-            }).catch((error) => {
-                console.error('Error creating room:', error);
-                showLoading(false);
-                showError('Error membuat room: ' + error.message);
-            });
+            // Test write permission dulu
+            db.ref('test').set({ test: Date.now() })
+                .then(() => {
+                    console.log('✅ Write permission OK');
+                    // Buat room baru
+                    return db.ref('rooms/' + currentRoomCode).set({
+                        created: Date.now(),
+                        status: 'active',
+                        host: currentPlayerId
+                    });
+                })
+                .then(() => {
+                    console.log('✅ Room created');
+                    // Tambah player ke room
+                    return db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
+                })
+                .then(() => {
+                    console.log('✅ Player added to room');
+                    showLoading(false);
+                    setupGameListener();
+                    showGameScreen();
+                    showSuccess('Room created: ' + currentRoomCode);
+                })
+                .catch((error) => {
+                    console.error('❌ Error creating room:', error);
+                    showLoading(false);
+                    if (error.code === 'PERMISSION_DENIED') {
+                        showError('PERMISSION_DENIED: Update Firebase Rules dulu! Buka: console.firebase.google.com → Database → Rules → Ganti jadi: { "rules": { ".read": true, ".write": true } } → Publish');
+                    } else {
+                        showError('Error membuat room: ' + error.message);
+                    }
+                });
         }
 
         // Join Room
         function joinRoom() {
+            if (!db) {
+                showError('Database belum terinisialisasi. Refresh halaman.');
+                return;
+            }
+
             const playerName = document.getElementById('playerName').value.trim();
             const roomCode = document.getElementById('roomCode').value.trim().toUpperCase();
             
@@ -315,7 +400,7 @@
             }
 
             showLoading(true);
-            console.log('Joining room:', roomCode);
+            console.log('🚀 Joining room:', roomCode);
 
             // Cek apakah room exists
             db.ref('rooms/' + roomCode).once('value').then(snapshot => {
@@ -334,7 +419,7 @@
                         lastUpdate: Date.now()
                     };
 
-                    console.log('Adding player to room:', currentPlayerId);
+                    console.log('✅ Adding player to room:', currentPlayerId);
 
                     // Join room
                     return db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
@@ -342,14 +427,19 @@
                     throw new Error('Room tidak ditemukan!');
                 }
             }).then(() => {
-                console.log('Joined room successfully');
+                console.log('✅ Joined room successfully');
                 showLoading(false);
                 setupGameListener();
                 showGameScreen();
+                showSuccess('Joined room: ' + currentRoomCode);
             }).catch((error) => {
-                console.error('Error joining room:', error);
+                console.error('❌ Error joining room:', error);
                 showLoading(false);
-                showError(error.message);
+                if (error.code === 'PERMISSION_DENIED') {
+                    showError('PERMISSION_DENIED: Update Firebase Rules dulu! Buka: console.firebase.google.com → Database → Rules → Ganti jadi: { "rules": { ".read": true, ".write": true } } → Publish');
+                } else {
+                    showError(error.message);
+                }
             });
         }
 
@@ -357,7 +447,7 @@
         function setupGameListener() {
             db.ref('rooms/' + currentRoomCode + '/players').on('value', (snapshot) => {
                 const players = snapshot.val();
-                console.log('Players update:', players);
+                console.log('🔄 Players update:', players);
                 updateGameDisplay(players);
             });
         }
@@ -366,7 +456,7 @@
         function showGameScreen() {
             document.getElementById('roomCodeDisplay').textContent = currentRoomCode;
             showScreen('game');
-            console.log('Game screen shown for room:', currentRoomCode);
+            console.log('🎮 Game screen shown for room:', currentRoomCode);
         }
 
         // Update game display
@@ -419,7 +509,7 @@
 
         // Fungsi gerak player
         function movePlayer(dx, dy) {
-            if (!currentRoomCode || !currentPlayerId) return;
+            if (!currentRoomCode || !currentPlayerId || !db) return;
             
             currentPlayerData.x += dx;
             currentPlayerData.y += dy;
@@ -429,24 +519,34 @@
             currentPlayerData.x = Math.max(0, Math.min(760, currentPlayerData.x));
             currentPlayerData.y = Math.max(0, Math.min(460, currentPlayerData.y));
             
-            db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
+            db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData)
+                .catch(error => {
+                    console.error('Error moving player:', error);
+                    if (error.code === 'PERMISSION_DENIED') {
+                        showError('Permission denied! Update Firebase Rules.');
+                    }
+                });
         }
 
         // Ganti warna player
         function changeColor() {
-            if (!currentRoomCode || !currentPlayerId) return;
+            if (!currentRoomCode || !currentPlayerId || !db) return;
             
             currentPlayerData.color = '#' + Math.floor(Math.random()*16777215).toString(16);
             currentPlayerData.lastUpdate = Date.now();
-            db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
+            db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData)
+                .catch(error => {
+                    console.error('Error changing color:', error);
+                });
         }
 
         // Keluar dari room
         function leaveRoom() {
             if (confirm('Keluar dari room?')) {
                 // Hapus player dari room
-                if (currentRoomCode && currentPlayerId) {
-                    db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).remove();
+                if (currentRoomCode && currentPlayerId && db) {
+                    db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).remove()
+                        .catch(error => console.error('Error leaving room:', error));
                 }
                 
                 // Kembali ke lobby
@@ -473,15 +573,21 @@
 
         // Cleanup ketika tutup browser
         window.addEventListener('beforeunload', () => {
-            if (currentRoomCode && currentPlayerId) {
-                db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).remove();
+            if (currentRoomCode && currentPlayerId && db) {
+                db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).remove()
+                    .catch(error => console.error('Cleanup error:', error));
             }
         });
 
         // Initialize - tampilkan lobby screen
         showScreen('lobby');
         
-        console.log('Game initialized');
+        // Initialize Firebase saat page load
+        setTimeout(() => {
+            initializeFirebase();
+        }, 1000);
+        
+        console.log('🎮 Game initialized');
     </script>
 </body>
 </html>
