@@ -53,6 +53,11 @@
             margin: 20px 0;
             color: #666;
         }
+        .error-message {
+            color: red;
+            margin: 10px 0;
+            display: none;
+        }
 
         /* CSS untuk Game Screen */
         .game-screen {
@@ -140,6 +145,11 @@
         .back-button:hover {
             background: #888 !important;
         }
+        .loading {
+            display: none;
+            color: #4CAF50;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -156,6 +166,9 @@
             
             <input type="text" id="roomCode" class="lobby-input" placeholder="Masukkan kode room" maxlength="6">
             <button onclick="joinRoom()" class="lobby-button">🚪 Join Room</button>
+            
+            <div id="errorMessage" class="error-message"></div>
+            <div id="loadingMessage" class="loading">Loading...</div>
         </div>
     </div>
 
@@ -192,6 +205,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyC3Yw5NIexJddefw-AtutQ1vPhErdfL89s",
             authDomain: "akun-7b590.firebaseapp.com",
+            databaseURL: "https://akun-7b590-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "akun-7b590",
             storageBucket: "akun-7b590.firebasestorage.app",
             messagingSenderId: "65784994154",
@@ -207,6 +221,21 @@
         let currentPlayerId = '';
         let currentPlayerName = '';
         let currentPlayerData = {};
+
+        // Fungsi untuk menampilkan error
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Fungsi untuk menampilkan loading
+        function showLoading(show) {
+            document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+        }
 
         // Fungsi untuk generate room code
         function generateRoomCode() {
@@ -228,10 +257,12 @@
         function createRoom() {
             const playerName = document.getElementById('playerName').value.trim();
             if (!playerName) {
-                alert('Masukkan nama dulu!');
+                showError('Masukkan nama dulu!');
                 return;
             }
 
+            showLoading(true);
+            
             currentRoomCode = generateRoomCode();
             currentPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
             currentPlayerName = playerName;
@@ -246,21 +277,26 @@
                 lastUpdate: Date.now()
             };
 
+            console.log('Creating room:', currentRoomCode);
+
             // Buat room baru
             db.ref('rooms/' + currentRoomCode).set({
                 created: Date.now(),
                 status: 'active',
                 host: currentPlayerId
+            }).then(() => {
+                // Tambah player ke room
+                return db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
+            }).then(() => {
+                console.log('Room created successfully');
+                showLoading(false);
+                setupGameListener();
+                showGameScreen();
+            }).catch((error) => {
+                console.error('Error creating room:', error);
+                showLoading(false);
+                showError('Error membuat room: ' + error.message);
             });
-
-            // Tambah player ke room
-            db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
-
-            // Setup real-time listener
-            setupGameListener();
-            
-            // Tampilkan game screen
-            showGameScreen();
         }
 
         // Join Room
@@ -268,10 +304,18 @@
             const playerName = document.getElementById('playerName').value.trim();
             const roomCode = document.getElementById('roomCode').value.trim().toUpperCase();
             
-            if (!playerName || !roomCode) {
-                alert('Isi nama dan kode room!');
+            if (!playerName) {
+                showError('Masukkan nama dulu!');
                 return;
             }
+            
+            if (!roomCode) {
+                showError('Masukkan kode room!');
+                return;
+            }
+
+            showLoading(true);
+            console.log('Joining room:', roomCode);
 
             // Cek apakah room exists
             db.ref('rooms/' + roomCode).once('value').then(snapshot => {
@@ -290,17 +334,22 @@
                         lastUpdate: Date.now()
                     };
 
-                    // Join room
-                    db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
+                    console.log('Adding player to room:', currentPlayerId);
 
-                    // Setup real-time listener
-                    setupGameListener();
-                    
-                    // Tampilkan game screen
-                    showGameScreen();
+                    // Join room
+                    return db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
                 } else {
-                    alert('Room tidak ditemukan!');
+                    throw new Error('Room tidak ditemukan!');
                 }
+            }).then(() => {
+                console.log('Joined room successfully');
+                showLoading(false);
+                setupGameListener();
+                showGameScreen();
+            }).catch((error) => {
+                console.error('Error joining room:', error);
+                showLoading(false);
+                showError(error.message);
             });
         }
 
@@ -308,6 +357,7 @@
         function setupGameListener() {
             db.ref('rooms/' + currentRoomCode + '/players').on('value', (snapshot) => {
                 const players = snapshot.val();
+                console.log('Players update:', players);
                 updateGameDisplay(players);
             });
         }
@@ -316,6 +366,7 @@
         function showGameScreen() {
             document.getElementById('roomCodeDisplay').textContent = currentRoomCode;
             showScreen('game');
+            console.log('Game screen shown for room:', currentRoomCode);
         }
 
         // Update game display
@@ -368,6 +419,8 @@
 
         // Fungsi gerak player
         function movePlayer(dx, dy) {
+            if (!currentRoomCode || !currentPlayerId) return;
+            
             currentPlayerData.x += dx;
             currentPlayerData.y += dy;
             currentPlayerData.lastUpdate = Date.now();
@@ -381,6 +434,8 @@
 
         // Ganti warna player
         function changeColor() {
+            if (!currentRoomCode || !currentPlayerId) return;
+            
             currentPlayerData.color = '#' + Math.floor(Math.random()*16777215).toString(16);
             currentPlayerData.lastUpdate = Date.now();
             db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
@@ -390,7 +445,9 @@
         function leaveRoom() {
             if (confirm('Keluar dari room?')) {
                 // Hapus player dari room
-                db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).remove();
+                if (currentRoomCode && currentPlayerId) {
+                    db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).remove();
+                }
                 
                 // Kembali ke lobby
                 showScreen('lobby');
@@ -398,6 +455,10 @@
                 // Reset form
                 document.getElementById('playerName').value = '';
                 document.getElementById('roomCode').value = '';
+                
+                // Reset variables
+                currentRoomCode = '';
+                currentPlayerId = '';
             }
         }
 
@@ -419,6 +480,8 @@
 
         // Initialize - tampilkan lobby screen
         showScreen('lobby');
+        
+        console.log('Game initialized');
     </script>
 </body>
 </html>
