@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ratno Fineshyt Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+/* ==================== RESET & BASE STYLES ==================== */
+:root{
+  --cell-size:28px;
+  --cols:16;
+  --rows:12;
+  --bg:#1a1a2e;
+  --snake:#00ffa1;
+  --accent:#ffd60a;
+  --panel:#0b3b5e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,body{
+  height:100%;
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow: hidden;
+}
+
+.wrap{
+  width: calc(var(--cols) * var(--cell-size) + 3rem);
+  max-width: 95vw;
+  background: linear-gradient(145deg,#16162a,#2a2a4d);
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  padding:20px;
+  position: relative;
+}
+
+/* ==================== LOGIN & REGISTER STYLES ==================== */
+.auth-menu{text-align:center;color:#fff;}
+.auth-title{font-family: 'Press Start 2P', monospace;font-size:24px;color:var(--accent);text-shadow:0 0 10px rgba(255,214,0,0.5);margin-bottom:30px;line-height:1.4;}
+.auth-form{display:flex;flex-direction:column;gap:15px;margin-bottom:20px;}
+.auth-input{background:rgba(0,0,0,0.3);border:2px solid #444;border-radius:10px;padding:14px 16px;color:#fff;font-size:16px;font-family:Arial, Helvetica, sans-serif;}
+.auth-input:focus{outline:none;border-color:#ffd60a;}
+.auth-buttons{display:flex;flex-direction:column;gap:15px;}
+.auth-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:18px 25px;border-radius:15px;color:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.4);transition:all 0.2s;font-family:'Press Start 2P', monospace;}
+.auth-btn:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.5);}
+.auth-btn:active{transform:translateY(0);}
+.auth-btn.login{background:linear-gradient(145deg,#00aa00,#00cc00);}
+.auth-btn.register{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.auth-switch{font-size:14px;color:#ccc;margin-top:15px;}
+.auth-switch a{color:#ffd60a;text-decoration:none;cursor:pointer;}
+.auth-switch a:hover{text-decoration:underline;}
+.auth-error{color:#ff4444;font-size:14px;margin-top:10px;display:none;}
+
+/* ==================== MAIN MENU STYLES ==================== */
+.main-menu{text-align:center;color:#fff;}
+.game-title{font-family: 'Press Start 2P', monospace;font-size:24px;color:var(--accent);text-shadow:0 0 10px rgba(255,214,0,0.5);margin-bottom:30px;line-height:1.4;display:flex;justify-content:space-between;align-items:center;}
+.profile-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:10px 15px;border-radius:10px;color:#fff;cursor:pointer;font-size:20px;width:50px;height:50px;display:flex;align-items:center;justify-content:center;}
+.currency-display{display:flex;justify-content:space-between;margin-bottom:30px;font-size:18px;}
+.currency-item{display:flex;align-items:center;gap:8px;padding:10px 15px;background:rgba(0,0,0,0.3);border-radius:10px;}
+.menu-buttons{display:flex;flex-direction:column;gap:15px;}
+.menu-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:18px 25px;border-radius:15px;color:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.4);transition:all 0.2s;font-family:'Press Start 2P', monospace;}
+.menu-btn:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.5);}
+.menu-btn:active{transform:translateY(0);}
+.menu-btn.play{background:linear-gradient(145deg,#00aa00,#00cc00);font-size:20px;}
+.menu-btn.settings{background:linear-gradient(145deg,#555,#666);}
+.menu-btn.gacha{background:linear-gradient(145deg,#aa00aa,#cc00cc);}
+.menu-btn.skin{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.menu-btn.fashion{background:linear-gradient(145deg,#aa8800,#ccaa00);}
+
+/* ==================== GAME SCREEN STYLES ==================== */
+.game-screen{display:none;}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.title{font-family: 'Press Start 2P', monospace;font-size:22px;color: var(--accent);text-shadow: 0 0 6px rgba(0,0,0,0.7);margin-bottom:6px;line-height:1.3;}
+.info{color:#fff;font-size:18px;padding:8px 12px;background: rgba(0,0,0,0.3);border-radius:10px;box-shadow: 0 2px 6px rgba(0,0,0,0.5);margin-bottom:8px;}
+.small{font-size:14px;color:#ccc;margin-bottom:10px;}
+.board{background: #222;width: calc(var(--cols) * var(--cell-size));height: calc(var(--rows) * var(--cell-size));display:grid;grid-template-columns: repeat(var(--cols), 1fr);grid-template-rows: repeat(var(--rows), 1fr);gap:1px;border-radius:12px;overflow:hidden;margin:0 auto;position: relative;}
+.cell{width:100%;height:100%;background: #111;transition: background 0.2s;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.snake{background: var(--snake);border-radius:6px;box-shadow: 0 0 6px var(--snake);}
+.head{background: var(--accent);box-shadow: 0 0 8px var(--accent);}
+.food{animation: pulse 0.6s infinite alternate;font-size:24px;color:#ffd60a;text-shadow: 0 0 6px #ffd60a, 0 0 12px #ffd60a;}
+@keyframes pulse{0%{transform: scale(1);}50%{transform: scale(1.3);}100%{transform: scale(1);}}
+.coinAnim{position:absolute;font-size:20px;color:#ffd60a;font-weight:bold;animation: coinMove 0.8s forwards;pointer-events:none;}
+@keyframes coinMove{0%{opacity:1; transform: translateY(0);}100%{opacity:0; transform: translateY(-30px);}}
+.controls{display:flex;gap:16px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+.btn{background: linear-gradient(145deg,#444,#555);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.4);transition: transform 0.1s;font-size:16px;min-width:80px;}
+.btn:active{transform: scale(0.95);}
+.arrow-pad{display:grid;grid-template-columns:repeat(3,80px);gap:12px;align-items:center;justify-items:center;}
+.arrow{width:80px;height:80px;font-size:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;background: linear-gradient(145deg,#555,#666);color:#fff;font-weight:700;user-select:none;box-shadow:0 3px 6px rgba(0,0,0,0.5);}
+.arrow:active{transform: scale(0.95);}
+.gameover-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;color:#ff0000;font-family: 'Press Start 2P', monospace;font-size:20px;text-align:center;z-index:10;display:none;padding-top:40px;}
+.gameover-overlay button{margin-top:16px;padding:14px 24px;font-family: 'Press Start 2P', monospace;font-size:14px;background:#ff0000;color:#fff;border:none;border-radius:8px;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,0.5);}
+
+/* ==================== OTHER MENU STYLES ==================== */
+.profile-menu,.settings-menu,.fashion-menu,.skin-menu,.gacha-menu{display:none;text-align:center;color:#fff;}
+.profile-title,.settings-title,.fashion-title,.skin-title,.gacha-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+
+.profile-content,.settings-content,.fashion-content,.skin-content,.gacha-content{display:flex;flex-direction:column;gap:20px;}
+
+.profile-back-btn,.settings-back-btn,.fashion-back-btn,.skin-back-btn,.gacha-back-btn{
+  background:linear-gradient(145deg,#555,#666);
+  border:none;
+  padding:14px 20px;
+  border-radius:12px;
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+  margin-top:20px;
+  font-family:'Press Start 2P', monospace;
+}
+
+/* Responsive */
+@media (max-width:480px){
+  :root{--cell-size:24px; --cols:14; --rows:10;}
+  .wrap{padding:16px;}
+  .game-title{font-size:20px;}
+  .menu-btn{padding:15px 20px;font-size:16px;}
+  .menu-btn.play{font-size:18px;}
+  .title{font-size:18px;}
+  .info{font-size:16px;padding:6px 10px;}
+  .small{font-size:12px;}
+  .btn{padding:12px 16px;font-size:14px;min-width:70px;}
+  .arrow{width:70px;height:70px;font-size:28px;}
+  .arrow-pad{grid-template-columns:repeat(3,70px);gap:10px;}
+}
+
+@media (max-width:360px){
+  :root{--cell-size:22px; --cols:12; --rows:10;}
+  .game-title{font-size:18px;}
+  .menu-btn{padding:12px 16px;font-size:14px;}
+  .title{font-size:16px;}
+  .info{font-size:14px;}
+  .btn{padding:10px 14px;font-size:12px;}
+  .arrow{width:65px;height:65px;font-size:26px;}
+  .arrow-pad{grid-template-columns:repeat(3,65px);}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Login Menu -->
+  <div class="auth-menu" id="loginMenu">
+    <div class="auth-title">LOGIN</div>
+    
+    <div class="auth-form">
+      <input type="text" class="auth-input" id="loginUsername" placeholder="Username">
+      <input type="password" class="auth-input" id="loginPassword" placeholder="Password">
+    </div>
+    
+    <div class="auth-buttons">
+      <button class="auth-btn login" id="loginBtn">LOGIN</button>
+    </div>
+    
+    <div class="auth-switch">
+      Belum punya akun? <a id="goToRegister">Daftar di sini</a>
+    </div>
+    
+    <div class="auth-error" id="loginError">Username atau password salah!</div>
+  </div>
+
+  <!-- Register Menu -->
+  <div class="auth-menu" id="registerMenu" style="display:none">
+    <div class="auth-title">DAFTAR</div>
+    
+    <div class="auth-form">
+      <input type="text" class="auth-input" id="registerUsername" placeholder="Username">
+      <input type="password" class="auth-input" id="registerPassword" placeholder="Password">
+      <input type="password" class="auth-input" id="registerConfirmPassword" placeholder="Konfirmasi Password">
+    </div>
+    
+    <div class="auth-buttons">
+      <button class="auth-btn register" id="registerBtn">DAFTAR</button>
+    </div>
+    
+    <div class="auth-switch">
+      Sudah punya akun? <a id="goToLogin">Login di sini</a>
+    </div>
+    
+    <div class="auth-error" id="registerError"></div>
+  </div>
+
+  <!-- Main Menu -->
+  <div class="main-menu" id="mainMenu">
+    <div class="game-title">
+      <span>Ratno<br>Fineshyt Game</span>
+      <button class="profile-btn" id="profileBtn">👤</button>
+    </div>
+    
+    <div class="currency-display">
+      <div class="currency-item">
+        <span>🪙</span>
+        <span id="menuCoins">0</span>
+      </div>
+      <div class="currency-item">
+        <span>💎</span>
+        <span id="menuDiamonds">0</span>
+      </div>
+    </div>
+    
+    <div class="menu-buttons">
+      <button class="menu-btn play" id="playBtn">PLAY</button>
+      <button class="menu-btn settings" id="menuSettingsBtn">PENGATURAN</button>
+      <button class="menu-btn gacha" id="gachaBtn">GACHA</button>
+      <button class="menu-btn skin" id="skinBtn">CUSTOM SKIN</button>
+      <button class="menu-btn fashion" id="fashionBtn">FASHION</button>
+    </div>
+  </div>
+
+  <!-- Profile Menu -->
+  <div class="profile-menu" id="profileMenu">
+    <div class="profile-title">PROFIL</div>
+    
+    <div class="profile-content">
+      <div class="profile-info">
+        <div class="profile-field">
+          <span class="profile-label">Username:</span>
+          <span class="profile-value" id="profileUsername">-</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Level:</span>
+          <span class="profile-value" id="profileLevel">1</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Coins:</span>
+          <span class="profile-value" id="profileCoins">0</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Diamonds:</span>
+          <span class="profile-value" id="profileDiamonds">0</span>
+        </div>
+      </div>
+      
+      <button class="profile-action-btn logout" id="logoutBtn">LOG OUT</button>
+    </div>
+    
+    <button class="profile-back-btn" id="profileBackBtn">BACK</button>
+  </div>
+
+  <!-- Settings Menu -->
+  <div class="settings-menu" id="settingsMenu">
+    <div class="settings-title">PENGATURAN</div>
+    
+    <div class="settings-content">
+      <div class="settings-item">
+        <span>Music</span>
+        <input type="checkbox" id="musicToggle">
+      </div>
+      
+      <div class="settings-item">
+        <span>Sound Effect</span>
+        <input type="checkbox" id="effectToggle">
+      </div>
+      
+      <div class="settings-item">
+        <span>Speed</span>
+        <div class="speed-controls">
+          <button class="speed-btn" id="speedDec">-</button>
+          <span id="speedVal">0</span>
+          <button class="speed-btn" id="speedInc">+</button>
+        </div>
+      </div>
+    </div>
+    
+    <button class="settings-back-btn" id="settingsBackBtn">BACK</button>
+  </div>
+
+  <!-- Fashion Menu -->
+  <div class="fashion-menu" id="fashionMenu">
+    <div class="fashion-title">FASHION</div>
+    
+    <div class="fashion-content">
+      <div style="font-size:14px;color:#ccc;margin-bottom:15px;">
+        Fitur Fashion akan datang soon!
+      </div>
+    </div>
+    
+    <button class="fashion-back-btn" id="fashionBackBtn">BACK</button>
+  </div>
+
+  <!-- Skin Editor Menu -->
+  <div class="skin-menu" id="skinMenu">
+    <div class="skin-title">CUSTOM SKIN</div>
+    
+    <div class="skin-content">
+      <div style="font-size:14px;color:#ccc;margin-bottom:15px;">
+        Fitur Custom Skin akan datang soon!
+      </div>
+    </div>
+    
+    <button class="skin-back-btn" id="skinBackBtn">BACK</button>
+  </div>
+
+  <!-- Gacha Menu -->
+  <div class="gacha-menu" id="gachaMenu">
+    <div class="gacha-title">GACHA</div>
+    
+    <div class="gacha-content">
+      <div style="font-size:14px;color:#ccc;margin-bottom:15px;">
+        Fitur Gacha akan datang soon!
+      </div>
+    </div>
+    
+    <button class="gacha-back-btn" id="gachaBackBtn">BACK</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div class="game-screen" id="gameScreen">
+    <div class="header">
+      <div>
+        <div class="title">Gameplay</div>
+        <div class="small">Kontrol: swipe / tombol arah / keyboard</div>
+      </div>
+      <div class="hud">
+        <div class="info">Score: <span id="score">0</span></div>
+        <div class="info">Coins: <span id="coins">0</span> 🪙</div>
+        <button id="restart" class="btn">Restart</button>
+      </div>
+    </div>
+
+    <!-- Board -->
+    <div id="board" class="board" tabindex="0">
+      <div class="gameover-overlay" id="gameover">
+        <div class="gameover-text">Hahahah mati</div>
+        <div class="restart-countdown" id="countdown">Kembali ke lobby dalam: 5</div>
+        <button class="restart-btn" id="manualRestart">Main Lagi</button>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div style="min-width:200px">
+        <div style="font-size:14px;margin-bottom:8px;color:#ccc">Tombol Sentuh</div>
+        <div class="arrow-pad" id="touchPad">
+          <div></div>
+          <div class="arrow" data-dir="up">▲</div>
+          <div></div>
+          <div class="arrow" data-dir="left">◀</div>
+          <div class="arrow" data-dir="down">▼</div>
+          <div class="arrow" data-dir="right">▶</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Audio elements -->
+<audio id="bgMusic" loop preload="auto">
+  <source src="assets/sounds/music.mp3" type="audio/mpeg">
+</audio>
+<audio id="eatSfx" preload="auto">
+  <source src="assets/sounds/eat.mp3" type="audio/mpeg">
+</audio>
+<audio id="gameOverSfx" preload="auto">
+  <source src="assets/sounds/mati.mp3" type="audio/mpeg">
+</audio>
+<audio id="buttonSfx" preload="auto">
+  <source src="assets/sounds/tombol.mp3" type="audio/mpeg">
+</audio>
+<audio id="controlSfx" preload="auto">
+  <source src="assets/sounds/tombol2.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+// ==================== GAME VARIABLES ====================
+let cols = 16;
+let rows = 12;
+let cells = [];
+let gridSize = cols * rows;
+
+// User management
+let currentUser = null;
+let users = JSON.parse(localStorage.getItem('users')) || {};
+
+// Game settings
+let speed = parseInt(localStorage.getItem('speed')) || 120;
+let musicOn = localStorage.getItem('music') !== 'false';
+let effectOn = localStorage.getItem('effect') !== 'false';
+let coins = 0;
+let diamonds = 0;
+
+// Single player game variables
+let snake = [];
+let dir = {x:1,y:0};
+let nextDir = {...dir};
+let food = null;
+let running = false;
+let score = 0;
+let ticker = null;
+
+// Audio context
+let audioContext = null;
+let countdownTimer = null;
+
+// ==================== DOM ELEMENTS ====================
+// Screens
+const LOGIN_MENU = document.getElementById('loginMenu');
+const REGISTER_MENU = document.getElementById('registerMenu');
+const MAIN_MENU = document.getElementById('mainMenu');
+const PROFILE_MENU = document.getElementById('profileMenu');
+const SETTINGS_MENU = document.getElementById('settingsMenu');
+const FASHION_MENU = document.getElementById('fashionMenu');
+const SKIN_MENU = document.getElementById('skinMenu');
+const GACHA_MENU = document.getElementById('gachaMenu');
+const GAME_SCREEN = document.getElementById('gameScreen');
+
+// Game elements
+const BOARD = document.getElementById('board');
+const SCORE = document.getElementById('score');
+const RESTART = document.getElementById('restart');
+const GAMEOVER = document.getElementById('gameover');
+const COUNTDOWN = document.getElementById('countdown');
+const MANUAL_RESTART = document.getElementById('manualRestart');
+const MENU_COINS = document.getElementById('menuCoins');
+const MENU_DIAMONDS = document.getElementById('menuDiamonds');
+const GAME_COINS = document.getElementById('coins');
+
+// Audio elements
+const bgMusic = document.getElementById('bgMusic');
+const eatSfx = document.getElementById('eatSfx');
+const gameOverSfx = document.getElementById('gameOverSfx');
+const buttonSfx = document.getElementById('buttonSfx');
+const controlSfx = document.getElementById('controlSfx');
+
+// ==================== UTILITY FUNCTIONS ====================
+function idx(x,y){return y*cols+x;}
+function coord(i){return {x:i%cols,y:Math.floor(i/cols)};}
+function inside(x,y){return x>=0&&y>=0&&x<cols&&y<rows;}
+
+function playButtonSound() {
+  if (effectOn) {
+    buttonSfx.currentTime = 0;
+    buttonSfx.play().catch(e => console.log('Button SFX play failed:', e));
+  }
+}
+
+function playControlSound() {
+  if (effectOn) {
+    controlSfx.currentTime = 0;
+    controlSfx.play().catch(e => console.log('Control SFX play failed:', e));
+  }
+}
+
+function initAudio() {
+  if (audioContext) return;
+  
+  try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    document.addEventListener('click', function initAudioOnce() {
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      document.removeEventListener('click', initAudioOnce);
+    });
+    
+    // Set volume
+    bgMusic.volume = 0.7;
+    eatSfx.volume = 0.5;
+    gameOverSfx.volume = 0.6;
+    buttonSfx.volume = 0.4;
+    controlSfx.volume = 0.4;
+    
+    if (musicOn) {
+      bgMusic.play().catch(e => console.log('Audio play failed:', e));
+    }
+  } catch (e) {
+    console.log('Audio context not supported:', e);
+  }
+}
+
+// ==================== USER MANAGEMENT ====================
+function checkLoggedInUser() {
+  const loggedInUser = localStorage.getItem('currentUser');
+  if (loggedInUser && users[loggedInUser]) {
+    currentUser = loggedInUser;
+    loadUserData();
+    showMainMenu();
+    return true;
+  }
+  return false;
+}
+
+function loadUserData() {
+  if (!currentUser || !users[currentUser]) return;
+  
+  const user = users[currentUser];
+  coins = user.coins || 0;
+  diamonds = user.diamonds || 0;
+  
+  renderCurrency();
+  updateProfileInfo();
+}
+
+function saveUserData() {
+  if (!currentUser || !users[currentUser]) return;
+  
+  users[currentUser].coins = coins;
+  users[currentUser].diamonds = diamonds;
+  
+  localStorage.setItem('users', JSON.stringify(users));
+}
+
+function updateProfileInfo() {
+  if (!currentUser || !users[currentUser]) return;
+  
+  const user = users[currentUser];
+  document.getElementById('profileUsername').textContent = currentUser;
+  document.getElementById('profileLevel').textContent = user.level || 1;
+  document.getElementById('profileCoins').textContent = coins;
+  document.getElementById('profileDiamonds').textContent = diamonds;
+}
+
+function renderCurrency() {
+  MENU_COINS.textContent = coins;
+  MENU_DIAMONDS.textContent = diamonds;
+  GAME_COINS.textContent = coins;
+}
+
+// ==================== SCREEN MANAGEMENT ====================
+function showScreen(screen) {
+  // Hide all screens
+  const screens = [LOGIN_MENU, REGISTER_MENU, MAIN_MENU, PROFILE_MENU, SETTINGS_MENU, FASHION_MENU, SKIN_MENU, GACHA_MENU, GAME_SCREEN];
+  screens.forEach(s => s.style.display = 'none');
+  
+  // Show target screen
+  screen.style.display = 'block';
+  
+  // Special cases
+  if (screen === MAIN_MENU) {
+    updateProfileInfo();
+    renderCurrency();
+  }
+}
+
+function showMainMenu() {
+  showScreen(MAIN_MENU);
+}
+
+function showLoginMenu() {
+  showScreen(LOGIN_MENU);
+  document.getElementById('loginError').style.display = 'none';
+}
+
+function showRegisterMenu() {
+  showScreen(REGISTER_MENU);
+  document.getElementById('registerError').style.display = 'none';
+}
+
+// ==================== GAME LOGIC ====================
+function buildBoard(){
+  BOARD.innerHTML='';
+  BOARD.appendChild(GAMEOVER);
+  cells=[];
+  for(let i=0;i<gridSize;i++){
+    const d=document.createElement('div');
+    d.className='cell';
+    BOARD.appendChild(d);
+    cells.push(d);
+  }
+}
+
+function placeFood(){
+  let empty=[];
+  for(let i=0;i<gridSize;i++) if(!snake.includes(i)) empty.push(i);
+  if(empty.length===0) return null;
+  food=empty[Math.floor(Math.random()*empty.length)];
+}
+
+function coinAnimation(x,y){
+  const c = document.createElement('div');
+  c.className='coinAnim';
+  c.textContent='1🪙';
+  c.style.left = (x*28)+'px';
+  c.style.top = (y*28)+'px';
+  BOARD.appendChild(c);
+  setTimeout(()=>BOARD.removeChild(c),800);
+}
+
+function render(){
+  cells.forEach(c=>{c.className='cell';c.textContent='';});
+  
+  for(let i=0;i<snake.length;i++){
+    let cl = 'snake';
+    if(i===snake.length-1) cl+=' head';
+    cells[snake[i]].className='cell '+cl;
+  }
+  
+  if(food!==null){
+    cells[food].className='cell food';
+    cells[food].textContent='🍆';
+  }
+  
+  SCORE.textContent=score;
+  renderCurrency();
+}
+
+function step(){
+  if(nextDir.x!==-dir.x||nextDir.y!==-dir.y) dir={...nextDir};
+  const head=coord(snake[snake.length-1]);
+  const nx=head.x+dir.x;
+  const ny=head.y+dir.y;
+  if(!inside(nx,ny)){ gameOver(); return;}
+  const ni=idx(nx,ny);
+  
+  if(ni===food){
+    snake.push(ni);
+    score+=10;
+    coins += 1;
+    saveUserData();
+    coinAnimation(nx, ny);
+    if(effectOn) {
+      eatSfx.currentTime=0;
+      eatSfx.play().catch(e => console.log('SFX play failed:', e));
+    }
+    placeFood();
+  } else {
+    snake.push(ni);
+    snake.shift();
+  }
+  render();
+}
+
+function backToLobby() {
+  showScreen(MAIN_MENU);
+  
+  running = false;
+  clearInterval(ticker);
+  renderCurrency();
+}
+
+function startCountdown() {
+  let count = 5;
+  COUNTDOWN.textContent = `Kembali ke lobby dalam: ${count}`;
+  
+  countdownTimer = setInterval(() => {
+    count--;
+    COUNTDOWN.textContent = `Kembali ke lobby dalam: ${count}`;
+    
+    if (count <= 0) {
+      clearInterval(countdownTimer);
+      backToLobby();
+    }
+  }, 1000);
+}
+
+function gameOver(){
+  running=false;
+  clearInterval(ticker);
+  
+  if(effectOn) {
+    gameOverSfx.currentTime=0;
+    gameOverSfx.play().catch(e => console.log('Game over SFX play failed:', e));
+  }
+  
+  GAMEOVER.style.display='flex';
+  startCountdown();
+}
+
+function startGame(){
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+  
+  buildBoard();
+  
+  snake=[idx(Math.floor(cols/2),Math.floor(rows/2))];
+  dir={x:1,y:0};
+  nextDir={...dir};
+  score=0;
+  placeFood();
+  render();
+  running=true;
+  GAMEOVER.style.display='none';
+  clearInterval(ticker);
+  ticker=setInterval(step,speed);
+  
+  initAudio();
+}
+
+// ==================== EVENT LISTENERS ====================
+// Login/Register events
+document.getElementById('loginBtn').addEventListener('click', function() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  
+  if (!username || !password) {
+    document.getElementById('loginError').textContent = 'Username dan password harus diisi!';
+    document.getElementById('loginError').style.display = 'block';
+    return;
+  }
+  
+  if (!users[username] || users[username].password !== password) {
+    document.getElementById('loginError').style.display = 'block';
+    return;
+  }
+  
+  currentUser = username;
+  localStorage.setItem('currentUser', username);
+  loadUserData();
+  showMainMenu();
+  playButtonSound();
+});
+
+document.getElementById('registerBtn').addEventListener('click', function() {
+  const username = document.getElementById('registerUsername').value.trim();
+  const password = document.getElementById('registerPassword').value.trim();
+  const confirmPassword = document.getElementById('registerConfirmPassword').value.trim();
+  
+  if (!username || !password || !confirmPassword) {
+    document.getElementById('registerError').textContent = 'Semua field harus diisi!';
+    document.getElementById('registerError').style.display = 'block';
+    return;
+  }
+  
+  if (password !== confirmPassword) {
+    document.getElementById('registerError').textContent = 'Password tidak cocok!';
+    document.getElementById('registerError').style.display = 'block';
+    return;
+  }
+  
+  if (users[username]) {
+    document.getElementById('registerError').textContent = 'Username sudah digunakan!';
+    document.getElementById('registerError').style.display = 'block';
+    return;
+  }
+  
+  users[username] = {
+    password: password,
+    coins: 0,
+    diamonds: 0,
+    level: 1
+  };
+  
+  localStorage.setItem('users', JSON.stringify(users));
+  alert('Pendaftaran berhasil! Silakan login.');
+  showLoginMenu();
+  playButtonSound();
+});
+
+document.getElementById('goToRegister').addEventListener('click', function() {
+  showRegisterMenu();
+  playButtonSound();
+});
+
+document.getElementById('goToLogin').addEventListener('click', function() {
+  showLoginMenu();
+  playButtonSound();
+});
+
+// Main menu events
+document.getElementById('playBtn').addEventListener('click', function() {
+  showScreen(GAME_SCREEN);
+  startGame();
+  playButtonSound();
+});
+
+document.getElementById('profileBtn').addEventListener('click', function() {
+  showScreen(PROFILE_MENU);
+  updateProfileInfo();
+  playButtonSound();
+});
+
+document.getElementById('menuSettingsBtn').addEventListener('click', function() {
+  showScreen(SETTINGS_MENU);
+  // Load current settings
+  document.getElementById('musicToggle').checked = musicOn;
+  document.getElementById('effectToggle').checked = effectOn;
+  document.getElementById('speedVal').textContent = speed;
+  playButtonSound();
+});
+
+document.getElementById('gachaBtn').addEventListener('click', function() {
+  showScreen(GACHA_MENU);
+  playButtonSound();
+});
+
+document.getElementById('skinBtn').addEventListener('click', function() {
+  showScreen(SKIN_MENU);
+  playButtonSound();
+});
+
+document.getElementById('fashionBtn').addEventListener('click', function() {
+  showScreen(FASHION_MENU);
+  playButtonSound();
+});
+
+// Back button events
+document.getElementById('profileBackBtn').addEventListener('click', function() {
+  showMainMenu();
+  playButtonSound();
+});
+
+document.getElementById('settingsBackBtn').addEventListener('click', function() {
+  showMainMenu();
+  playButtonSound();
+});
+
+document.getElementById('fashionBackBtn').addEventListener('click', function() {
+  showMainMenu();
+  playButtonSound();
+});
+
+document.getElementById('skinBackBtn').addEventListener('click', function() {
+  showMainMenu();
+  playButtonSound();
+});
+
+document.getElementById('gachaBackBtn').addEventListener('click', function() {
+  showMainMenu();
+  playButtonSound();
+});
+
+// Logout event
+document.getElementById('logoutBtn').addEventListener('click', function() {
+  if (confirm('Yakin ingin logout?')) {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    showLoginMenu();
+    playButtonSound();
+  }
+});
+
+// Settings events
+document.getElementById('speedInc').addEventListener('click', function() {
+  speed = Math.max(50, speed - 10);
+  document.getElementById('speedVal').textContent = speed;
+  localStorage.setItem('speed', speed);
+  if(running){clearInterval(ticker); ticker=setInterval(step,speed);}
+  playButtonSound();
+});
+
+document.getElementById('speedDec').addEventListener('click', function() {
+  speed = Math.min(500, speed + 10);
+  document.getElementById('speedVal').textContent = speed;
+  localStorage.setItem('speed', speed);
+  if(running){clearInterval(ticker); ticker=setInterval(step,speed);}
+  playButtonSound();
+});
+
+document.getElementById('musicToggle').addEventListener('change', function() {
+  musicOn = this.checked;
+  localStorage.setItem('music', musicOn);
+  if(musicOn) {
+    bgMusic.play().catch(e => console.log('Music play failed:', e));
+  } else {
+    bgMusic.pause();
+  }
+  playButtonSound();
+});
+
+document.getElementById('effectToggle').addEventListener('change', function() {
+  effectOn = this.checked;
+  localStorage.setItem('effect', effectOn);
+  playButtonSound();
+});
+
+// Game controls
+document.addEventListener('keydown', e => {
+  const key = e.key;
+  let directionChanged = false;
+  
+  if(key==='ArrowUp'||key==='w') {
+    nextDir={x:0,y:-1};
+    directionChanged = true;
+  }
+  if(key==='ArrowDown'||key==='s') {
+    nextDir={x:0,y:1};
+    directionChanged = true;
+  }
+  if(key==='ArrowLeft'||key==='a') {
+    nextDir={x:-1,y:0};
+    directionChanged = true;
+  }
+  if(key==='ArrowRight'||key==='d') {
+    nextDir={x:1,y:0};
+    directionChanged = true;
+  }
+  
+  if (directionChanged && effectOn) {
+    playControlSound();
+  }
+  
+  initAudio();
+});
+
+document.querySelectorAll('.arrow').forEach(b => {
+  b.addEventListener('touchstart', e => {
+    const d = b.getAttribute('data-dir');
+    if(d==='up') nextDir={x:0,y:-1};
+    if(d==='down') nextDir={x:0,y:1};
+    if(d==='left') nextDir={x:-1,y:0};
+    if(d==='right') nextDir={x:1,y:0};
+    
+    if (effectOn) {
+      playControlSound();
+    }
+    
+    e.preventDefault();
+    initAudio();
+  });
+  
+  b.addEventListener('mousedown', e => {
+    const d = b.getAttribute('data-dir');
+    if(d==='up') nextDir={x:0,y:-1};
+    if(d==='down') nextDir={x:0,y:1};
+    if(d==='left') nextDir={x:-1,y:0};
+    if(d==='right') nextDir={x:1,y:0};
+    
+    if (effectOn) {
+      playControlSound();
+    }
+    
+    initAudio();
+  });
+});
+
+// Swipe controls
+(function addSwipe(el){
+  let startX=0,startY=0,active=false;
+  el.addEventListener('touchstart', e => {
+    active=true; 
+    startX=e.touches[0].clientX; 
+    startY=e.touches[0].clientY;
+    initAudio();
+  },{passive:true});
+  
+  el.addEventListener('touchmove', e => {
+    if(!active) return; 
+    e.preventDefault();
+  },{passive:false});
+  
+  el.addEventListener('touchend', e => {
+    if(!active) return;
+    active=false;
+    const endX=e.changedTouches[0].clientX;
+    const endY=e.changedTouches[0].clientY;
+    const dx=endX-startX,dy=endY-startY;
+    if(Math.abs(dx)>Math.abs(dy)){
+      if(dx>20) {
+        nextDir={x:1,y:0};
+        if (effectOn) playControlSound();
+      }
+      else if(dx<-20) {
+        nextDir={x:-1,y:0};
+        if (effectOn) playControlSound();
+      }
+    }else{
+      if(dy>20) {
+        nextDir={x:0,y:1};
+        if (effectOn) playControlSound();
+      }
+      else if(dy<-20) {
+        nextDir={x:0,y:-1};
+        if (effectOn) playControlSound();
+      }
+    }
+  },{passive:true});
+})(BOARD);
+
+// Restart buttons
+RESTART.addEventListener('click', () => {
+  startGame();
+  playButtonSound();
+});
+
+MANUAL_RESTART.addEventListener('click', () => {
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+  }
+  startGame();
+  playButtonSound();
+});
+
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize game board
+  buildBoard();
+  
+  // Check if user is logged in
+  if (!checkLoggedInUser()) {
+    showLoginMenu();
+  }
+  
+  // Focus board for keyboard controls
+  BOARD.addEventListener('click', () => {
+    BOARD.focus();
+    initAudio();
+  });
+  
+  console.log('🎮 Game initialized!');
+});
+</script>
+</body>
+</html>
