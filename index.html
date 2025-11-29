@@ -1,68 +1,194 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Multiplayer Game - akun-7b590</title>
+    <title>Multiplayer Room Game</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 20px; 
-            background: #f5f5f5;
+        /* CSS untuk Lobby */
+        .lobby-screen {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .player { 
-            padding: 12px; 
-            margin: 8px; 
-            background: white; 
+        .lobby-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .lobby-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border-left: 4px solid #007cba;
+            font-size: 16px;
+            box-sizing: border-box;
         }
-        button { 
-            padding: 12px 20px; 
-            margin: 5px; 
-            font-size: 16px; 
-            background: #007cba;
+        .lobby-button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .lobby-button:hover {
+            background: #45a049;
+        }
+        .divider {
+            margin: 20px 0;
+            color: #666;
+        }
+
+        /* CSS untuk Game Screen */
+        .game-screen {
+            display: none;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #16213e;
+            border-radius: 10px;
+        }
+        .game-area {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            background: #0f3460;
+            border: 3px solid #e94560;
+            border-radius: 10px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        .player {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+            transition: all 0.3s ease;
+            border: 2px solid white;
+        }
+        .player-name {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            white-space: nowrap;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .controls button {
+            padding: 12px 20px;
+            margin: 5px;
+            font-size: 16px;
+            background: #e94560;
             color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
         }
-        button:hover {
-            background: #005a87;
+        .controls button:hover {
+            background: #ff6b81;
         }
-        #gameArea {
-            background: white;
-            padding: 20px;
+        .players-list {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #16213e;
+            padding: 15px;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            min-width: 200px;
         }
-        .myPlayer {
-            background: #e3f2fd !important;
-            border-left: 4px solid #ff6b6b !important;
+        .back-button {
+            background: #666 !important;
+        }
+        .back-button:hover {
+            background: #888 !important;
         }
     </style>
 </head>
 <body>
-    <div id="gameArea">
-        <h1>🎮 Game Multiplayer Real-time</h1>
-        <div id="gameInfo"></div>
-        
-        <h3>🎯 Kontrol Gerak:</h3>
-        <button onclick="moveLeft()">⬅ Kiri</button>
-        <button onclick="moveRight()">Kanan ➡</button>
-        <button onclick="moveUp()">⬆ Atas</button>
-        <button onclick="moveDown()">⬇ Bawah</button>
-        <br><br>
-        <button onclick="changeName()">✏️ Ganti Nama</button>
-        <button onclick="addScore()">⭐ Tambah Score</button>
+    <!-- Lobby Screen -->
+    <div id="lobbyScreen" class="lobby-screen">
+        <div class="lobby-container">
+            <h1>🎮 Multiplayer Game</h1>
+            
+            <input type="text" id="playerName" class="lobby-input" placeholder="Masukkan nama kamu" maxlength="15">
+            
+            <button onclick="createRoom()" class="lobby-button">🆕 Create Room</button>
+            
+            <div class="divider">atau</div>
+            
+            <input type="text" id="roomCode" class="lobby-input" placeholder="Masukkan kode room" maxlength="6">
+            <button onclick="joinRoom()" class="lobby-button">🚪 Join Room</button>
+        </div>
     </div>
 
-    <div id="playersList"></div>
+    <!-- Game Screen -->
+    <div id="gameScreen" class="game-screen">
+        <div class="header">
+            <h1>🎮 Room: <span id="roomCodeDisplay"></span></h1>
+            <div>
+                <span id="playerCount">Players: 0</span>
+                <button onclick="leaveRoom()" class="controls back-button" style="margin-left: 15px;">← Keluar</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="movePlayer(-30, 0)">⬅ Kiri</button>
+            <button onclick="movePlayer(30, 0)">Kanan ➡</button>
+            <button onclick="movePlayer(0, -30)">⬆ Atas</button>
+            <button onclick="movePlayer(0, 30)">⬇ Bawah</button>
+            <button onclick="changeColor()">🎨 Ganti Warna</button>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <!-- Players akan muncul di sini -->
+        </div>
+
+        <div class="players-list" id="playersList">
+            <h3>👥 Players in Room:</h3>
+            <div id="playersInfo"></div>
+        </div>
+    </div>
 
     <script>
-        // 🔥 CONFIG FIREBASE KAMU
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyC3Yw5NIexJddefw-AtutQ1vPhErdfL89s",
             authDomain: "akun-7b590.firebaseapp.com",
@@ -76,107 +202,223 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Player data
-        const playerId = 'player_' + Math.random().toString(36).substr(2, 9);
-        let myPlayer = {
-            x: Math.floor(Math.random() * 500),
-            y: Math.floor(Math.random() * 300),
-            name: 'Player_' + playerId.substr(7, 4),
-            color: '#' + Math.floor(Math.random()*16777215).toString(16),
-            score: 0,
-            lastUpdate: Date.now()
-        };
+        // Global variables
+        let currentRoomCode = '';
+        let currentPlayerId = '';
+        let currentPlayerName = '';
+        let currentPlayerData = {};
 
-        // Simpan player pertama kali
-        db.ref('players/' + playerId).set(myPlayer);
-        console.log('Player created:', playerId);
-
-        // Listen untuk perubahan real-time
-        db.ref('players').on('value', (snapshot) => {
-            const players = snapshot.val();
-            console.log('Players update:', players);
-            updateDisplay(players);
-        });
-
-        // Fungsi gerak
-        function moveLeft() { updatePosition(-30, 0); }
-        function moveRight() { updatePosition(30, 0); }
-        function moveUp() { updatePosition(0, -30); }
-        function moveDown() { updatePosition(0, 30); }
-
-        function updatePosition(dx, dy) {
-            myPlayer.x += dx;
-            myPlayer.y += dy;
-            myPlayer.lastUpdate = Date.now();
-            db.ref('players/' + playerId).set(myPlayer);
+        // Fungsi untuk generate room code
+        function generateRoomCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
         }
 
-        function addScore() {
-            myPlayer.score += 1;
-            myPlayer.lastUpdate = Date.now();
-            db.ref('players/' + playerId).set(myPlayer);
-        }
-
-        function changeName() {
-            const newName = prompt('Masukkan nama baru:', myPlayer.name);
-            if (newName && newName.trim() !== '') {
-                myPlayer.name = newName.trim();
-                myPlayer.lastUpdate = Date.now();
-                db.ref('players/' + playerId).set(myPlayer);
+        // Fungsi untuk beralih screen
+        function showScreen(screen) {
+            if (screen === 'lobby') {
+                document.getElementById('lobbyScreen').style.display = 'flex';
+                document.getElementById('gameScreen').style.display = 'none';
+            } else {
+                document.getElementById('lobbyScreen').style.display = 'none';
+                document.getElementById('gameScreen').style.display = 'block';
             }
         }
 
-        // Update tampilan
-        function updateDisplay(players) {
-            if (!players) {
-                document.getElementById('playersList').innerHTML = '<p>No players online</p>';
+        // Create Room
+        function createRoom() {
+            const playerName = document.getElementById('playerName').value.trim();
+            if (!playerName) {
+                alert('Masukkan nama dulu!');
                 return;
             }
 
-            let html = `<h3>👥 Pemain Online: ${Object.keys(players).length}</h3>`;
+            currentRoomCode = generateRoomCode();
+            currentPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            currentPlayerName = playerName;
             
-            // Convert to array dan urutkan by score
-            const playersArray = Object.entries(players).map(([id, data]) => ({ id, ...data }));
-            playersArray.sort((a, b) => b.score - a.score);
-            
-            playersArray.forEach(player => {
-                const isMe = player.id === playerId;
-                const playerClass = isMe ? 'player myPlayer' : 'player';
-                
-                html += `
-                    <div class="${playerClass}" style="border-left-color: ${player.color}">
-                        <strong>${player.name} ${isMe ? '🎯 (YOU)' : ''}</strong><br>
-                        🎯 Position: ${player.x}, ${player.y}<br>
-                        ⭐ Score: <strong>${player.score}</strong><br>
-                        <small>🆔 ${player.id.substr(0, 10)}...</small>
-                    </div>
-                `;
+            // Buat data player
+            currentPlayerData = {
+                name: playerName,
+                x: 100,
+                y: 100,
+                color: '#' + Math.floor(Math.random()*16777215).toString(16),
+                isHost: true,
+                lastUpdate: Date.now()
+            };
+
+            // Buat room baru
+            db.ref('rooms/' + currentRoomCode).set({
+                created: Date.now(),
+                status: 'active',
+                host: currentPlayerId
             });
+
+            // Tambah player ke room
+            db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
+
+            // Setup real-time listener
+            setupGameListener();
             
-            document.getElementById('playersList').innerHTML = html;
-            
-            // Update game info
-            document.getElementById('gameInfo').innerHTML = 
-                `<div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <strong>🎮 Player Kamu:</strong> ${myPlayer.name}<br>
-                    <strong>📍 Posisi:</strong> ${myPlayer.x}, ${myPlayer.y}<br>
-                    <strong>⭐ Score:</strong> ${myPlayer.score}<br>
-                    <strong>🆔 ID:</strong> ${playerId}
-                </div>`;
+            // Tampilkan game screen
+            showGameScreen();
         }
 
-        // Cleanup ketika tutup tab
+        // Join Room
+        function joinRoom() {
+            const playerName = document.getElementById('playerName').value.trim();
+            const roomCode = document.getElementById('roomCode').value.trim().toUpperCase();
+            
+            if (!playerName || !roomCode) {
+                alert('Isi nama dan kode room!');
+                return;
+            }
+
+            // Cek apakah room exists
+            db.ref('rooms/' + roomCode).once('value').then(snapshot => {
+                if (snapshot.exists()) {
+                    currentRoomCode = roomCode;
+                    currentPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+                    currentPlayerName = playerName;
+                    
+                    // Buat data player
+                    currentPlayerData = {
+                        name: playerName,
+                        x: Math.floor(Math.random() * 600) + 100,
+                        y: Math.floor(Math.random() * 300) + 100,
+                        color: '#' + Math.floor(Math.random()*16777215).toString(16),
+                        isHost: false,
+                        lastUpdate: Date.now()
+                    };
+
+                    // Join room
+                    db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
+
+                    // Setup real-time listener
+                    setupGameListener();
+                    
+                    // Tampilkan game screen
+                    showGameScreen();
+                } else {
+                    alert('Room tidak ditemukan!');
+                }
+            });
+        }
+
+        // Setup real-time listener untuk game
+        function setupGameListener() {
+            db.ref('rooms/' + currentRoomCode + '/players').on('value', (snapshot) => {
+                const players = snapshot.val();
+                updateGameDisplay(players);
+            });
+        }
+
+        // Tampilkan game screen
+        function showGameScreen() {
+            document.getElementById('roomCodeDisplay').textContent = currentRoomCode;
+            showScreen('game');
+        }
+
+        // Update game display
+        function updateGameDisplay(players) {
+            const gameArea = document.getElementById('gameArea');
+            const playersInfo = document.getElementById('playersInfo');
+            
+            // Clear existing players
+            gameArea.innerHTML = '';
+            playersInfo.innerHTML = '';
+
+            if (!players) {
+                playersInfo.innerHTML = '<p>No players in room</p>';
+                document.getElementById('playerCount').textContent = 'Players: 0';
+                return;
+            }
+
+            const playerCount = Object.keys(players).length;
+            document.getElementById('playerCount').textContent = `Players: ${playerCount}`;
+
+            // Render semua players
+            for (let playerId in players) {
+                const player = players[playerId];
+                const isMe = playerId === currentPlayerId;
+
+                // Tambah ke game area
+                const playerElement = document.createElement('div');
+                playerElement.className = 'player';
+                playerElement.style.left = player.x + 'px';
+                playerElement.style.top = player.y + 'px';
+                playerElement.style.backgroundColor = player.color;
+                playerElement.innerHTML = `
+                    <div class="player-name">${player.name} ${isMe ? ' (YOU)' : ''}</div>
+                    <div style="font-size: 10px;">${player.isHost ? '👑' : '👤'}</div>
+                `;
+                gameArea.appendChild(playerElement);
+
+                // Tambah ke players list
+                const playerInfo = document.createElement('div');
+                playerInfo.style.margin = '5px 0';
+                playerInfo.style.padding = '5px';
+                playerInfo.style.background = isMe ? '#e94560' : 'transparent';
+                playerInfo.style.borderRadius = '4px';
+                playerInfo.innerHTML = `
+                    ${player.isHost ? '👑' : '👤'} ${player.name} ${isMe ? ' (YOU)' : ''}
+                `;
+                playersInfo.appendChild(playerInfo);
+            }
+        }
+
+        // Fungsi gerak player
+        function movePlayer(dx, dy) {
+            currentPlayerData.x += dx;
+            currentPlayerData.y += dy;
+            currentPlayerData.lastUpdate = Date.now();
+            
+            // Pastikan tidak keluar dari batas
+            currentPlayerData.x = Math.max(0, Math.min(760, currentPlayerData.x));
+            currentPlayerData.y = Math.max(0, Math.min(460, currentPlayerData.y));
+            
+            db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
+        }
+
+        // Ganti warna player
+        function changeColor() {
+            currentPlayerData.color = '#' + Math.floor(Math.random()*16777215).toString(16);
+            currentPlayerData.lastUpdate = Date.now();
+            db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).set(currentPlayerData);
+        }
+
+        // Keluar dari room
+        function leaveRoom() {
+            if (confirm('Keluar dari room?')) {
+                // Hapus player dari room
+                db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).remove();
+                
+                // Kembali ke lobby
+                showScreen('lobby');
+                
+                // Reset form
+                document.getElementById('playerName').value = '';
+                document.getElementById('roomCode').value = '';
+            }
+        }
+
+        // Event listeners untuk Enter key
+        document.getElementById('playerName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') createRoom();
+        });
+        
+        document.getElementById('roomCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') joinRoom();
+        });
+
+        // Cleanup ketika tutup browser
         window.addEventListener('beforeunload', () => {
-            db.ref('players/' + playerId).remove();
-            console.log('Player removed:', playerId);
+            if (currentRoomCode && currentPlayerId) {
+                db.ref('rooms/' + currentRoomCode + '/players/' + currentPlayerId).remove();
+            }
         });
 
-        // Juga cleanup kalau refresh page
-        window.addEventListener('pagehide', () => {
-            db.ref('players/' + playerId).remove();
-        });
-
-        console.log('Game started! Open this in multiple tabs to test multiplayer.');
+        // Initialize - tampilkan lobby screen
+        showScreen('lobby');
     </script>
 </body>
 </html>
