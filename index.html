@@ -1,0 +1,2767 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ratno Fineshyt Game - MULTIPLAYER</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+<style>
+:root{
+  --cell-size:28px;
+  --cols:16;
+  --rows:12;
+  --bg:#1a1a2e;
+  --snake:#00ffa1;
+  --accent:#ffd60a;
+  --panel:#0b3b5e;
+}
+html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;background: var(--bg);display:flex;align-items:center;justify-content:center;}
+.wrap{width: calc(var(--cols) * var(--cell-size) + 3rem);max-width: 95vw;background: linear-gradient(145deg,#16162a,#2a2a4d);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.5);padding:20px;position: relative;}
+
+/* Login/Register Styles */
+.auth-menu{text-align:center;color:#fff;}
+.auth-title{font-family: 'Press Start 2P', monospace;font-size:24px;color:var(--accent);text-shadow:0 0 10px rgba(255,214,0,0.5);margin-bottom:30px;line-height:1.4;}
+.auth-form{display:flex;flex-direction:column;gap:15px;margin-bottom:20px;}
+.auth-input{background:rgba(0,0,0,0.3);border:2px solid #444;border-radius:10px;padding:14px 16px;color:#fff;font-size:16px;font-family:Arial, Helvetica, sans-serif;}
+.auth-input:focus{outline:none;border-color:#ffd60a;}
+.auth-buttons{display:flex;flex-direction:column;gap:15px;}
+.auth-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:18px 25px;border-radius:15px;color:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.4);transition:all 0.2s;font-family:'Press Start 2P', monospace;}
+.auth-btn:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.5);}
+.auth-btn:active{transform:translateY(0);}
+.auth-btn.login{background:linear-gradient(145deg,#00aa00,#00cc00);}
+.auth-btn.register{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.auth-switch{font-size:14px;color:#ccc;margin-top:15px;}
+.auth-switch a{color:#ffd60a;text-decoration:none;cursor:pointer;}
+.auth-switch a:hover{text-decoration:underline;}
+.auth-error{color:#ff4444;font-size:14px;margin-top:10px;display:none;}
+
+/* Main Menu Styles */
+.main-menu{text-align:center;color:#fff;display:none;}
+.game-title{font-family: 'Press Start 2P', monospace;font-size:24px;color:var(--accent);text-shadow:0 0 10px rgba(255,214,0,0.5);margin-bottom:30px;line-height:1.4;display:flex;justify-content:space-between;align-items:center;}
+.profile-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:10px 15px;border-radius:10px;color:#fff;cursor:pointer;font-size:20px;width:50px;height:50px;display:flex;align-items:center;justify-content:center;}
+.currency-display{display:flex;justify-content:space-between;margin-bottom:30px;font-size:18px;}
+.currency-item{display:flex;align-items:center;gap:8px;padding:10px 15px;background:rgba(0,0,0,0.3);border-radius:10px;}
+.menu-buttons{display:flex;flex-direction:column;gap:15px;}
+.menu-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:18px 25px;border-radius:15px;color:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.4);transition:all 0.2s;font-family:'Press Start 2P', monospace;}
+.menu-btn:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.5);}
+.menu-btn:active{transform:translateY(0);}
+.menu-btn.play{background:linear-gradient(145deg,#00aa00,#00cc00);font-size:20px;}
+.menu-btn.multiplayer{background:linear-gradient(145deg,#aa5500,#cc7700);}
+.menu-btn.settings{background:linear-gradient(145deg,#555,#666);}
+.menu-btn.gacha{background:linear-gradient(145deg,#aa00aa,#cc00cc);}
+.menu-btn.skin{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.menu-btn.fashion{background:linear-gradient(145deg,#aa8800,#ccaa00);}
+
+/* Multiplayer Menu Styles */
+.multiplayer-menu{text-align:center;color:#fff;display:none;}
+.multiplayer-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.multiplayer-content{display:flex;flex-direction:column;gap:20px;align-items:center;}
+.multiplayer-options{display:flex;flex-direction:column;gap:15px;width:100%;max-width:300px;}
+.menu-btn.multiplayer-create{background:linear-gradient(145deg,#00aa00,#00cc00);}
+.menu-btn.multiplayer-join{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.menu-btn.start-game{background:linear-gradient(145deg,#ffd60a,#ffaa00);color:#000;}
+.menu-btn.leave-room{background:linear-gradient(145deg,#aa0000,#cc0000);}
+.room-info{width:100%;max-width:400px;display:none;}
+.room-header{background:rgba(0,0,0,0.3);padding:15px;border-radius:10px;margin-bottom:15px;}
+.room-settings{background:rgba(0,0,0,0.3);padding:15px;border-radius:10px;margin-bottom:15px;display:none;}
+.score-controls{display:flex;align-items:center;gap:10px;}
+.players-list{background:rgba(0,0,0,0.3);padding:15px;border-radius:10px;margin-bottom:15px;min-height:100px;}
+.player-item{display:flex;justify-content:space-between;align-items:center;padding:8px;margin:5px 0;background:rgba(255,255,255,0.1);border-radius:5px;}
+.player-host{color:#ffd60a;}
+.multiplayer-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Profile Menu Styles */
+.profile-menu{display:none;text-align:center;color:#fff;}
+.profile-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.profile-content{display:flex;flex-direction:column;gap:20px;}
+.profile-info{background:rgba(0,0,0,0.3);border-radius:12px;padding:15px;text-align:left;}
+.profile-field{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 0;}
+.profile-field:last-child{margin-bottom:0;}
+.profile-label{font-size:14px;color:#ccc;}
+.profile-value{font-size:16px;color:#ffd60a;}
+.profile-actions{display:flex;flex-direction:column;gap:10px;}
+.profile-action-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:12px 18px;border-radius:10px;color:#fff;font-size:14px;cursor:pointer;font-family:'Press Start 2P', monospace;}
+.profile-action-btn.change-name{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.profile-action-btn.change-password{background:linear-gradient(145deg,#aa00aa,#cc00cc);}
+.profile-action-btn.logout{background:linear-gradient(145deg,#aa0000,#cc0000);}
+.profile-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Change Name/Password Forms */
+.change-form{display:none;flex-direction:column;gap:15px;margin-top:15px;padding:15px;background:rgba(0,0,0,0.3);border-radius:10px;}
+.change-form-buttons{display:flex;gap:10px;}
+.change-form-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:10px 15px;border-radius:8px;color:#fff;font-size:12px;cursor:pointer;flex:1;}
+.change-form-btn.confirm{background:linear-gradient(145deg,#00aa00,#00cc00);}
+.change-form-btn.cancel{background:linear-gradient(145deg,#aa0000,#cc0000);}
+
+/* Settings Menu Styles */
+.settings-menu{display:none;text-align:center;color:#fff;}
+.settings-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.settings-content{display:flex;flex-direction:column;gap:20px;}
+.settings-item{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;background:rgba(0,0,0,0.3);border-radius:10px;}
+.speed-controls{display:flex;align-items:center;gap:10px;}
+.speed-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:8px 12px;border-radius:8px;color:#fff;cursor:pointer;font-size:16px;min-width:40px;}
+.settings-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Game Screen Styles */
+.game-screen{display:none;}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.title{font-family: 'Press Start 2P', monospace;font-size:22px;color: var(--accent);text-shadow: 0 0 6px rgba(0,0,0,0.7);margin-bottom:6px;line-height:1.3;}
+.info{color:#fff;font-size:18px;padding:8px 12px;background: rgba(0,0,0,0.3);border-radius:10px;box-shadow: 0 2px 6px rgba(0,0,0,0.5);margin-bottom:8px;}
+.small{font-size:14px;color:#ccc;margin-bottom:10px;}
+.board{background: #222;width: calc(var(--cols) * var(--cell-size));height: calc(var(--rows) * var(--cell-size));display:grid;grid-template-columns: repeat(var(--cols), 1fr);grid-template-rows: repeat(var(--rows), 1fr);gap:1px;border-radius:12px;overflow:hidden;margin:0 auto;position: relative;}
+.cell{width:100%;height:100%;background: #111;transition: background 0.2s;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.snake{background: var(--snake);border-radius:6px;box-shadow: 0 0 6px var(--snake);}
+.head{background: var(--accent);box-shadow: 0 0 8px var(--accent);}
+.food{animation: pulse 0.6s infinite alternate;font-size:24px;color:#ffd60a;text-shadow: 0 0 6px #ffd60a, 0 0 12px #ffd60a;}
+@keyframes pulse{0%{transform: scale(1);}50%{transform: scale(1.3);}100%{transform: scale(1);}}
+.coinAnim{position:absolute;font-size:20px;color:#ffd60a;font-weight:bold;animation: coinMove 0.8s forwards;pointer-events:none;}
+@keyframes coinMove{0%{opacity:1; transform: translateY(0);}100%{opacity:0; transform: translateY(-30px);}}
+.controls{display:flex;gap:16px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+.btn{background: linear-gradient(145deg,#444,#555);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.4);transition: transform 0.1s;font-size:16px;min-width:80px;}
+.btn:active{transform: scale(0.95);}
+.arrow-pad{display:grid;grid-template-columns:repeat(3,80px);gap:12px;align-items:center;justify-items:center;}
+.arrow{width:80px;height:80px;font-size:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;background: linear-gradient(145deg,#555,#666);color:#fff;font-weight:700;user-select:none;box-shadow:0 3px 6px rgba(0,0,0,0.5);}
+.arrow:active{transform: scale(0.95);}
+.gameover-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;color:#ff0000;font-family: 'Press Start 2P', monospace;font-size:20px;text-align:center;z-index:10;display:none;padding-top:40px;}
+.gameover-overlay button{margin-top:16px;padding:14px 24px;font-family: 'Press Start 2P', monospace;font-size:14px;background:#ff0000;color:#fff;border:none;border-radius:8px;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,0.5);}
+.shopBtn{margin-top:10px;}
+
+/* Name Tag Styling */
+.name-tag {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffd60a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  z-index: 5;
+  pointer-events: none;
+  transform: translateY(-20px);
+  font-family: 'Press Start 2P', monospace;
+}
+
+/* Game Over Animation */
+.cat-image {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 15px;
+  opacity: 0;
+  transform: scale(0.5) rotate(-10deg);
+  animation: catAppear 0.8s ease-out forwards;
+}
+
+@keyframes catAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-10deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.1) rotate(5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.gameover-text {
+  color: #ffd60a;
+  font-size: 14px;
+  margin-bottom: 10px;
+  text-shadow: 0 0 10px rgba(255, 214, 0, 0.5);
+}
+
+.restart-countdown {
+  color: #fff;
+  font-size: 14px;
+  margin: 8px 0;
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out 0.8s forwards;
+}
+
+.restart-btn {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUp 0.5s ease-out 1.3s forwards;
+  font-size: 14px;
+  padding: 12px 20px;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-menu input[type=checkbox]{transform:scale(1.8);margin-left:10px;}
+
+#coins, #diamonds{font-weight:bold;color:#ffd60a;font-size:18px;}
+
+/* Fashion Menu Styles */
+.fashion-menu{display:none;text-align:center;color:#fff;}
+.fashion-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.fashion-content{display:flex;flex-direction:column;gap:20px;align-items:center;}
+.effects-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin:20px 0;max-width:400px;}
+.effect-item{background:rgba(0,0,0,0.3);border-radius:12px;padding:15px;text-align:center;cursor:pointer;transition:all 0.3s;border:2px solid transparent;}
+.effect-item:hover{transform:translateY(-3px);box-shadow:0 5px 15px rgba(0,0,0,0.3);}
+.effect-item.active{border-color:#ffd60a;background:rgba(255,214,0,0.1);}
+.effect-item.locked{opacity:0.5;cursor:not-allowed;}
+.effect-preview{width:80px;height:80px;margin:0 auto 10px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:32px;}
+.effect-name{font-size:12px;margin-bottom:5px;color:#fff;}
+.effect-status{font-size:10px;color:#ccc;}
+.effect-details{display:none;margin-top:15px;padding:10px;background:rgba(0,0,0,0.5);border-radius:8px;font-size:12px;}
+.fashion-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Effect preview colors */
+.effect-fire .effect-preview{background:linear-gradient(145deg,#ff4400,#ff9900);}
+.effect-ice .effect-preview{background:linear-gradient(145deg,#00aaff,#00ffff);}
+.effect-poison .effect-preview{background:linear-gradient(145deg,#aa00ff,#ff00ff);}
+.effect-nature .effect-preview{background:linear-gradient(145deg,#00aa00,#00ff00);}
+.effect-default .effect-preview{background:linear-gradient(145deg,#444,#555);}
+
+/* Skin Editor Styles */
+.skin-menu{display:none;text-align:center;color:#fff;}
+.skin-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.skin-content{display:flex;flex-direction:column;gap:20px;align-items:center;}
+.skin-preview-container{display:flex;flex-direction:column;align-items:center;gap:15px;}
+.skin-preview{width:200px;height:200px;border:3px solid var(--accent);border-radius:12px;background:#222;display:flex;align-items:center;justify-content:center;margin:10px auto;overflow:hidden;position:relative;cursor:move;}
+.skin-image{max-width:none;position:absolute;cursor:move;user-select:none;transition:transform 0.2s;}
+.skin-controls-panel{display:flex;flex-direction:column;gap:10px;margin-top:15px;width:100%;max-width:300px;}
+.zoom-controls{display:flex;align-items:center;gap:10px;justify-content:center;}
+.zoom-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:8px 12px;border-radius:6px;color:#fff;cursor:pointer;font-size:14px;min-width:40px;}
+.zoom-value{font-size:14px;min-width:50px;text-align:center;color:#ffd60a;}
+.position-controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.position-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:8px 12px;border-radius:6px;color:#fff;cursor:pointer;font-size:12px;}
+.upload-area{width:100%;max-width:300px;padding:20px;border:2px dashed #ffd60a;border-radius:12px;text-align:center;cursor:pointer;transition:all 0.3s;}
+.upload-area:hover{background:rgba(255,214,0,0.1);}
+.upload-area.dragover{background:rgba(255,214,0,0.2);border-color:#fff;}
+.upload-text{font-size:16px;margin-bottom:10px;}
+.upload-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:10px 15px;border-radius:8px;color:#fff;cursor:pointer;font-size:14px;}
+.skin-controls{display:flex;gap:15px;margin-top:20px;}
+.skin-control-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:12px 18px;border-radius:10px;color:#fff;font-size:14px;cursor:pointer;font-family:'Press Start 2P', monospace;min-width:100px;}
+.skin-control-btn.save{background:linear-gradient(145deg,#00aa00,#00cc00);}
+.skin-control-btn.reset{background:linear-gradient(145deg,#aa0000,#cc0000);}
+.skin-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Gacha Menu Styles */
+.gacha-menu{display:none;text-align:center;color:#fff;}
+.gacha-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.gacha-content{display:flex;flex-direction:column;gap:20px;align-items:center;}
+.gacha-machine{width:300px;height:400px;background:linear-gradient(145deg,#333,#555);border-radius:20px;padding:20px;position:relative;overflow:hidden;border:4px solid #ffd60a;box-shadow:0 10px 30px rgba(0,0,0,0.5);}
+.gacha-display{width:100%;height:200px;background:#1a1a2e;border-radius:10px;margin-bottom:20px;overflow:hidden;position:relative;border:2px solid #ffd60a;}
+.gacha-items{display:flex;justify-content:space-around;align-items:center;height:100%;padding:0 10px;}
+.gacha-item{width:80px;height:80px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:40px;transition:all 0.3s;opacity:0.7;}
+.gacha-item.active{transform:scale(1.2);opacity:1;box-shadow:0 0 20px currentColor;}
+.gacha-lever{width:60px;height:180px;background:linear-gradient(145deg,#666,#888);position:absolute;right:30px;bottom:20px;border-radius:10px;cursor:pointer;transition:transform 0.3s;}
+.gacha-lever:active{transform:rotate(-30deg);}
+.gacha-lever-handle{width:40px;height:20px;background:#ffd60a;position:absolute;top:10px;left:10px;border-radius:5px;}
+.gacha-options{display:flex;gap:15px;margin-top:20px;}
+.gacha-option{background:linear-gradient(145deg,#444,#555);border:none;padding:12px 18px;border-radius:10px;color:#fff;font-size:14px;cursor:pointer;font-family:'Press Start 2P', monospace;min-width:120px;}
+.gacha-option:disabled{opacity:0.5;cursor:not-allowed;}
+.gacha-option.one-spin{background:linear-gradient(145deg,#aa00aa,#cc00cc);}
+.gacha-option.five-spin{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.gacha-result{display:none;margin-top:20px;padding:15px;background:rgba(0,0,0,0.3);border-radius:10px;font-size:16px;}
+.gacha-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Particle Effects */
+.particle {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
+  animation: particleFloat 1.5s ease-out forwards;
+}
+
+@keyframes particleFloat {
+  0% { 
+    transform: translateY(0) scale(0.6) rotate(0deg); 
+    opacity: 0.8; 
+  }
+  50% { 
+    transform: translateY(-12px) scale(0.8) rotate(180deg); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateY(-24px) scale(0.4) rotate(360deg); 
+    opacity: 0; 
+  }
+}
+
+/* Effect classes for snake dengan glow lebih kecil */
+.snake.fire-effect .head {
+  background: linear-gradient(145deg, #ff4400, #ff9900);
+  box-shadow: 0 0 4px #ff4400, 0 0 6px #ff9900;
+}
+
+.snake.ice-effect .head {
+  background: linear-gradient(145deg, #00aaff, #00ffff);
+  box-shadow: 0 0 4px #00aaff, 0 0 6px #00ffff;
+}
+
+.snake.poison-effect .head {
+  background: linear-gradient(145deg, #aa00ff, #ff00ff);
+  box-shadow: 0 0 4px #aa00ff, 0 0 6px #ff00ff;
+}
+
+.snake.nature-effect .head {
+  background: linear-gradient(145deg, #00aa00, #00ff00);
+  box-shadow: 0 0 4px #00aa00, 0 0 6px #00ff00;
+}
+
+/* Custom skin styling */
+.snake.custom-skin .head {
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+/* Responsive adjustments */
+@media (max-width:480px){
+  :root{--cell-size:24px; --cols:14; --rows:10;}
+  .wrap{padding:16px;}
+  .game-title{font-size:20px;}
+  .menu-btn{padding:15px 20px;font-size:16px;}
+  .menu-btn.play{font-size:18px;}
+  .title{font-size:18px;}
+  .info{font-size:16px;padding:6px 10px;}
+  .small{font-size:12px;}
+  .btn{padding:12px 16px;font-size:14px;min-width:70px;}
+  .arrow{width:70px;height:70px;font-size:28px;}
+  .arrow-pad{grid-template-columns:repeat(3,70px);gap:10px;}
+  .cat-image{width:70px;height:70px;}
+  .gameover-text{font-size:12px;}
+  .restart-countdown{font-size:12px;}
+  .gameover-overlay{padding-top:30px;}
+  .settings-title{font-size:18px;}
+  .gacha-machine{width:250px;height:350px;}
+  .gacha-item{width:60px;height:60px;font-size:30px;}
+  .skin-preview{width:150px;height:150px;}
+  .effects-grid{grid-template-columns:1fr;}
+}
+
+@media (max-width:360px){
+  :root{--cell-size:22px; --cols:12; --rows:10;}
+  .game-title{font-size:18px;}
+  .menu-btn{padding:12px 16px;font-size:14px;}
+  .title{font-size:16px;}
+  .info{font-size:14px;}
+  .btn{padding:10px 14px;font-size:12px;}
+  .arrow{width:65px;height:65px;font-size:26px;}
+  .arrow-pad{grid-template-columns:repeat(3,65px);}
+  .cat-image{width:60px;height:60px;}
+  .gameover-text{font-size:11px;}
+  .restart-countdown{font-size:11px;}
+  .gameover-overlay{padding-top:25px;}
+  .settings-title{font-size:16px;}
+  .gacha-machine{width:220px;height:320px;}
+  .gacha-item{width:50px;height:50px;font-size:25px;}
+  .skin-preview{width:120px;height:120px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Login Menu -->
+  <div class="auth-menu" id="loginMenu">
+    <div class="auth-title">LOGIN</div>
+    
+    <div class="auth-form">
+      <input type="text" class="auth-input" id="loginUsername" placeholder="Username">
+      <input type="password" class="auth-input" id="loginPassword" placeholder="Password">
+    </div>
+    
+    <div class="auth-buttons">
+      <button class="auth-btn login" id="loginBtn">LOGIN</button>
+    </div>
+    
+    <div class="auth-switch">
+      Belum punya akun? <a id="goToRegister">Daftar di sini</a>
+    </div>
+    
+    <div class="auth-error" id="loginError">Username atau password salah!</div>
+  </div>
+
+  <!-- Register Menu -->
+  <div class="auth-menu" id="registerMenu" style="display:none">
+    <div class="auth-title">DAFTAR</div>
+    
+    <div class="auth-form">
+      <input type="text" class="auth-input" id="registerUsername" placeholder="Username">
+      <input type="password" class="auth-input" id="registerPassword" placeholder="Password">
+      <input type="password" class="auth-input" id="registerConfirmPassword" placeholder="Konfirmasi Password">
+    </div>
+    
+    <div class="auth-buttons">
+      <button class="auth-btn register" id="registerBtn">DAFTAR</button>
+    </div>
+    
+    <div class="auth-switch">
+      Sudah punya akun? <a id="goToLogin">Login di sini</a>
+    </div>
+    
+    <div class="auth-error" id="registerError"></div>
+  </div>
+
+  <!-- Main Menu -->
+  <div class="main-menu" id="mainMenu">
+    <div class="game-title">
+      <span>Ratno<br>Fineshyt Game</span>
+      <button class="profile-btn" id="profileBtn">👤</button>
+    </div>
+    
+    <div class="currency-display">
+      <div class="currency-item">
+        <span>🪙</span>
+        <span id="menuCoins">0</span>
+      </div>
+      <div class="currency-item">
+        <span>💎</span>
+        <span id="menuDiamonds">0</span>
+      </div>
+    </div>
+    
+    <div class="menu-buttons">
+      <button class="menu-btn play" id="playBtn">PLAY (SOLO)</button>
+      <button class="menu-btn multiplayer" id="multiplayerBtn">MULTIPLAYER</button>
+      <button class="menu-btn settings" id="menuSettingsBtn">PENGATURAN</button>
+      <button class="menu-btn gacha" id="gachaBtn">GACHA</button>
+      <button class="menu-btn skin" id="skinBtn">CUSTOM SKIN</button>
+      <button class="menu-btn fashion" id="fashionBtn">FASHION</button>
+    </div>
+  </div>
+
+  <!-- Multiplayer Menu -->
+  <div class="multiplayer-menu" id="multiplayerMenu">
+    <div class="multiplayer-title">MULTIPLAYER ROOM</div>
+    
+    <div class="multiplayer-content">
+      <div class="multiplayer-options" id="multiplayerOptions">
+        <button class="menu-btn multiplayer-create" id="createRoomBtn">BUAT ROOM BARU</button>
+        <div style="color:#ccc;margin:10px 0;">ATAU</div>
+        <input type="text" class="auth-input" id="roomCodeInput" placeholder="Masukkan Kode Room" maxlength="6">
+        <button class="menu-btn multiplayer-join" id="joinRoomBtn">JOIN ROOM</button>
+      </div>
+      
+      <div class="room-info" id="roomInfo">
+        <div class="room-header">
+          <h3>Room: <span id="roomCodeDisplay"></span></h3>
+          <div>Status: <span id="roomStatus">Waiting...</span></div>
+          <div>Players: <span id="playerCount">1</span>/4</div>
+          <div>Max Score: <span id="maxScoreValue">50</span></div>
+        </div>
+        
+        <div class="room-settings" id="roomSettings">
+          <div class="settings-item">
+            <span>Max Score:</span>
+            <div class="score-controls">
+              <button class="speed-btn" id="scoreDec">-</button>
+              <span id="maxScoreDisplay">50</span>
+              <button class="speed-btn" id="scoreInc">+</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="players-list">
+          <h4>Players in Room:</h4>
+          <div id="playersListContainer"></div>
+        </div>
+        
+        <div class="room-controls">
+          <button class="menu-btn start-game" id="startGameBtn">START GAME (2-4 Players)</button>
+          <button class="menu-btn leave-room" id="leaveRoomBtn">KELUAR ROOM</button>
+        </div>
+      </div>
+    </div>
+    
+    <button class="multiplayer-back-btn" id="multiplayerBackBtn">BACK TO MAIN MENU</button>
+  </div>
+
+  <!-- Profile Menu -->
+  <div class="profile-menu" id="profileMenu">
+    <div class="profile-title">PROFIL</div>
+    
+    <div class="profile-content">
+      <div class="profile-info">
+        <div class="profile-field">
+          <span class="profile-label">Username:</span>
+          <span class="profile-value" id="profileUsername">-</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Level:</span>
+          <span class="profile-value" id="profileLevel">1</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Coins:</span>
+          <span class="profile-value" id="profileCoins">0</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Diamonds:</span>
+          <span class="profile-value" id="profileDiamonds">0</span>
+        </div>
+      </div>
+      
+      <div class="change-form" id="changeNameForm">
+        <input type="text" class="auth-input" id="newUsername" placeholder="Username Baru">
+        <div class="change-form-buttons">
+          <button class="change-form-btn confirm" id="confirmNameChange">GANTI</button>
+          <button class="change-form-btn cancel" id="cancelNameChange">BATAL</button>
+        </div>
+      </div>
+      
+      <div class="change-form" id="changePasswordForm">
+        <input type="password" class="auth-input" id="currentPassword" placeholder="Password Saat Ini">
+        <input type="password" class="auth-input" id="newPassword" placeholder="Password Baru">
+        <input type="password" class="auth-input" id="confirmNewPassword" placeholder="Konfirmasi Password Baru">
+        <div class="change-form-buttons">
+          <button class="change-form-btn confirm" id="confirmPasswordChange">GANTI</button>
+          <button class="change-form-btn cancel" id="cancelPasswordChange">BATAL</button>
+        </div>
+      </div>
+      
+      <div class="profile-actions">
+        <button class="profile-action-btn change-name" id="changeNameBtn">UBAH USERNAME</button>
+        <button class="profile-action-btn change-password" id="changePasswordBtn">GANTI PASSWORD</button>
+        <button class="profile-action-btn logout" id="logoutBtn">LOG OUT</button>
+      </div>
+    </div>
+    
+    <button class="profile-back-btn" id="profileBackBtn">BACK</button>
+  </div>
+
+  <!-- Settings Menu -->
+  <div class="settings-menu" id="settingsMenu">
+    <div class="settings-title">PENGATURAN</div>
+    
+    <div class="settings-content">
+      <div class="settings-item">
+        <span>Music</span>
+        <input type="checkbox" id="musicToggle">
+      </div>
+      
+      <div class="settings-item">
+        <span>Sound Effect</span>
+        <input type="checkbox" id="effectToggle">
+      </div>
+      
+      <div class="settings-item">
+        <span>Name Tag</span>
+        <input type="checkbox" id="nameTagToggle">
+      </div>
+      
+      <div class="settings-item">
+        <span>Speed</span>
+        <div class="speed-controls">
+          <button class="speed-btn" id="speedDec">-</button>
+          <span id="speedVal">0</span>
+          <button class="speed-btn" id="speedInc">+</button>
+        </div>
+      </div>
+    </div>
+    
+    <button class="settings-back-btn" id="settingsBackBtn">BACK</button>
+  </div>
+
+  <!-- Fashion Menu -->
+  <div class="fashion-menu" id="fashionMenu">
+    <div class="fashion-title">FASHION - SKIN EFFECT</div>
+    
+    <div class="fashion-content">
+      <div style="font-size:14px;margin-bottom:15px;color:#ccc;">
+        Pilih efek yang ingin digunakan. Klik untuk melihat detail.
+      </div>
+      
+      <div class="effects-grid" id="effectsGrid">
+        <!-- Effects will be loaded here -->
+      </div>
+      
+      <div style="font-size:12px;color:#ffd60a;margin-top:10px;">
+        Efek yang aktif: <span id="activeEffectName">Default</span>
+      </div>
+    </div>
+    
+    <button class="fashion-back-btn" id="fashionBackBtn">BACK</button>
+  </div>
+
+  <!-- Skin Editor Menu -->
+  <div class="skin-menu" id="skinMenu">
+    <div class="skin-title">CUSTOM SKIN EDITOR</div>
+    
+    <div class="skin-content">
+      <div class="skin-preview-container">
+        <div>Kotak ini adalah tubuh cacing:</div>
+        <div class="skin-preview" id="skinPreview">
+          <div style="color:#666;font-size:14px;">Upload gambar untuk memulai</div>
+        </div>
+        <div class="skin-controls-panel">
+          <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOut">-</button>
+            <span class="zoom-value" id="zoomValue">100%</span>
+            <button class="zoom-btn" id="zoomIn">+</button>
+          </div>
+          <div class="position-controls">
+            <button class="position-btn" id="moveUp">↑</button>
+            <button class="position-btn" id="moveLeft">←</button>
+            <button class="position-btn" id="moveRight">→</button>
+            <button class="position-btn" id="moveDown">↓</button>
+            <button class="position-btn" id="centerImage">PUSATKAN</button>
+            <button class="position-btn" id="resetPosition">RESET</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-text">Upload gambar untuk tubuh cacing</div>
+        <input type="file" id="skinUpload" accept="image/*" style="display:none">
+        <button class="upload-btn" id="uploadBtn">PILIH GAMBAR</button>
+      </div>
+      
+      <div class="skin-controls">
+        <button class="skin-control-btn save" id="saveSkin">SAVE SKIN</button>
+        <button class="skin-control-btn reset" id="resetSkin">RESET DEFAULT</button>
+      </div>
+      
+      <div style="font-size:12px;color:#ccc;margin-top:10px;">
+        Upload gambar dan atur posisi/zoom untuk kepala cacing
+      </div>
+    </div>
+    
+    <button class="skin-back-btn" id="skinBackBtn">BACK</button>
+  </div>
+
+  <!-- Gacha Menu -->
+  <div class="gacha-menu" id="gachaMenu">
+    <div class="gacha-title">GACHA SPIN</div>
+    
+    <div class="gacha-content">
+      <div class="gacha-machine">
+        <div class="gacha-display">
+          <div class="gacha-items" id="gachaItems">
+            <!-- Items will be loaded here -->
+          </div>
+        </div>
+        <div class="gacha-lever" id="gachaLever">
+          <div class="gacha-lever-handle"></div>
+        </div>
+      </div>
+      
+      <div class="gacha-options">
+        <button class="gacha-option one-spin" id="oneSpin">10 COINS<br>1 SPIN</button>
+        <button class="gacha-option five-spin" id="fiveSpin">50 COINS<br>5 SPINS</button>
+      </div>
+      
+      <div class="gacha-result" id="gachaResult">
+        <div id="resultText"></div>
+        <div id="effectDescription"></div>
+      </div>
+    </div>
+    
+    <button class="gacha-back-btn" id="gachaBackBtn">BACK</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div class="game-screen" id="gameScreen">
+    <div class="header">
+      <div>
+        <div class="title">Gameplay</div>
+        <div class="small">Kontrol: swipe / tombol arah / keyboard</div>
+        <div class="small" id="currentEffect">Efek: Default</div>
+      </div>
+      <div class="hud">
+        <div class="info">Score: <span id="score">0</span></div>
+        <div class="info">Coins: <span id="coins">0</span> 🪙</div>
+        <button id="restart" class="btn">Restart</button>
+      </div>
+    </div>
+
+    <!-- Board -->
+    <div id="board" class="board" tabindex="0">
+      <div class="gameover-overlay" id="gameover">
+        <img src="assets/images/mati.png" alt="Game Over" class="cat-image" id="gameoverImage">
+        <div class="gameover-text" id="gameoverText">Hahahah mati</div>
+        <div class="restart-countdown" id="countdown">Kembali ke lobby dalam: 5</div>
+        <button class="restart-btn" id="manualRestart">Main Lagi</button>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div style="min-width:200px">
+        <div style="font-size:14px;margin-bottom:8px;color:#ccc">Tombol Sentuh</div>
+        <div class="arrow-pad" id="touchPad">
+          <div></div>
+          <div class="arrow" data-dir="up">▲</div>
+          <div></div>
+          <div class="arrow" data-dir="left">◀</div>
+          <div class="arrow" data-dir="down">▼</div>
+          <div class="arrow" data-dir="right">▶</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Audio elements -->
+<audio id="bgMusic" loop preload="auto">
+  <source src="assets/sounds/music.mp3" type="audio/mpeg">
+</audio>
+<audio id="eatSfx" preload="auto">
+  <source src="assets/sounds/eat.mp3" type="audio/mpeg">
+</audio>
+<audio id="gameOverSfx" preload="auto">
+  <source src="assets/sounds/mati.mp3" type="audio/mpeg">
+</audio>
+<audio id="buttonSfx" preload="auto">
+  <source src="assets/sounds/tombol.mp3" type="audio/mpeg">
+</audio>
+<audio id="gachaWinSfx" preload="auto">
+  <source src="assets/sounds/win.mp3" type="audio/mpeg">
+</audio>
+<audio id="gachaZonkSfx" preload="auto">
+  <source src="assets/sounds/zonk.mp3" type="audio/mpeg">
+</audio>
+<audio id="gachaSpinSfx" preload="auto">
+  <source src="assets/sounds/muter.mp3" type="audio/mpeg">
+</audio>
+<audio id="controlSfx" preload="auto">
+  <source src="assets/sounds/tombol2.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+(function(){
+  // ================= MULTIPLAYER CONFIG =================
+  const firebaseConfig = {
+      apiKey: "AIzaSyC3Yw5NIexJddefw-AtutQ1vPhErdfL89s",
+      authDomain: "akun-7b590.firebaseapp.com",
+      databaseURL: "https://akun-7b590-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "akun-7b590",
+      storageBucket: "akun-7b590.firebasestorage.app",
+      messagingSenderId: "65784994154",
+      appId: "1:65784994154:web:f7b9fd921736462985ed13"
+  };
+
+  // Screen elements
+  const LOGIN_MENU = document.getElementById('loginMenu');
+  const REGISTER_MENU = document.getElementById('registerMenu');
+  const MAIN_MENU = document.getElementById('mainMenu');
+  const MULTIPLAYER_MENU = document.getElementById('multiplayerMenu');
+  const PROFILE_MENU = document.getElementById('profileMenu');
+  const SETTINGS_MENU = document.getElementById('settingsMenu');
+  const FASHION_MENU = document.getElementById('fashionMenu');
+  const SKIN_MENU = document.getElementById('skinMenu');
+  const GACHA_MENU = document.getElementById('gachaMenu');
+  const GAME_SCREEN = document.getElementById('gameScreen');
+  
+  // Login/Register elements
+  const LOGIN_BTN = document.getElementById('loginBtn');
+  const REGISTER_BTN = document.getElementById('registerBtn');
+  const GO_TO_REGISTER = document.getElementById('goToRegister');
+  const GO_TO_LOGIN = document.getElementById('goToLogin');
+  const LOGIN_USERNAME = document.getElementById('loginUsername');
+  const LOGIN_PASSWORD = document.getElementById('loginPassword');
+  const REGISTER_USERNAME = document.getElementById('registerUsername');
+  const REGISTER_PASSWORD = document.getElementById('registerPassword');
+  const REGISTER_CONFIRM_PASSWORD = document.getElementById('registerConfirmPassword');
+  const LOGIN_ERROR = document.getElementById('loginError');
+  const REGISTER_ERROR = document.getElementById('registerError');
+  
+  // Multiplayer elements
+  const CREATE_ROOM_BTN = document.getElementById('createRoomBtn');
+  const JOIN_ROOM_BTN = document.getElementById('joinRoomBtn');
+  const ROOM_CODE_INPUT = document.getElementById('roomCodeInput');
+  const ROOM_INFO = document.getElementById('roomInfo');
+  const ROOM_CODE_DISPLAY = document.getElementById('roomCodeDisplay');
+  const ROOM_STATUS = document.getElementById('roomStatus');
+  const PLAYER_COUNT = document.getElementById('playerCount');
+  const PLAYERS_LIST_CONTAINER = document.getElementById('playersListContainer');
+  const START_GAME_BTN = document.getElementById('startGameBtn');
+  const LEAVE_ROOM_BTN = document.getElementById('leaveRoomBtn');
+  const MULTIPLAYER_BACK_BTN = document.getElementById('multiplayerBackBtn');
+  
+  // Profile elements
+  const PROFILE_BTN = document.getElementById('profileBtn');
+  const PROFILE_BACK_BTN = document.getElementById('profileBackBtn');
+  const PROFILE_USERNAME = document.getElementById('profileUsername');
+  const PROFILE_LEVEL = document.getElementById('profileLevel');
+  const PROFILE_COINS = document.getElementById('profileCoins');
+  const PROFILE_DIAMONDS = document.getElementById('profileDiamonds');
+  const CHANGE_NAME_BTN = document.getElementById('changeNameBtn');
+  const CHANGE_PASSWORD_BTN = document.getElementById('changePasswordBtn');
+  const LOGOUT_BTN = document.getElementById('logoutBtn');
+  const CHANGE_NAME_FORM = document.getElementById('changeNameForm');
+  const CHANGE_PASSWORD_FORM = document.getElementById('changePasswordForm');
+  const NEW_USERNAME = document.getElementById('newUsername');
+  const CURRENT_PASSWORD = document.getElementById('currentPassword');
+  const NEW_PASSWORD = document.getElementById('newPassword');
+  const CONFIRM_NEW_PASSWORD = document.getElementById('confirmNewPassword');
+  const CONFIRM_NAME_CHANGE = document.getElementById('confirmNameChange');
+  const CANCEL_NAME_CHANGE = document.getElementById('cancelNameChange');
+  const CONFIRM_PASSWORD_CHANGE = document.getElementById('confirmPasswordChange');
+  const CANCEL_PASSWORD_CHANGE = document.getElementById('cancelPasswordChange');
+  
+  // Game elements
+  const PLAY_BTN = document.getElementById('playBtn');
+  const MULTIPLAYER_BTN = document.getElementById('multiplayerBtn');
+  const MENU_SETTINGS_BTN = document.getElementById('menuSettingsBtn');
+  const SETTINGS_BACK_BTN = document.getElementById('settingsBackBtn');
+  const FASHION_BTN = document.getElementById('fashionBtn');
+  const FASHION_BACK_BTN = document.getElementById('fashionBackBtn');
+  const SKIN_BTN = document.getElementById('skinBtn');
+  const SKIN_BACK_BTN = document.getElementById('skinBackBtn');
+  const GACHA_BTN = document.getElementById('gachaBtn');
+  const GACHA_BACK_BTN = document.getElementById('gachaBackBtn');
+  
+  const BOARD = document.getElementById('board');
+  const SCORE = document.getElementById('score');
+  const RESTART = document.getElementById('restart');
+  const GAMEOVER = document.getElementById('gameover');
+  const COUNTDOWN = document.getElementById('countdown');
+  const CURRENT_EFFECT = document.getElementById('currentEffect');
+  const MANUAL_RESTART = document.getElementById('manualRestart');
+
+  // Settings elements
+  const speedValEl = document.getElementById('speedVal');
+  const speedInc = document.getElementById('speedInc');
+  const speedDec = document.getElementById('speedDec');
+  const musicToggle = document.getElementById('musicToggle');
+  const effectToggle = document.getElementById('effectToggle');
+  const nameTagToggle = document.getElementById('nameTagToggle');
+
+  // Fashion elements
+  const EFFECTS_GRID = document.getElementById('effectsGrid');
+  const ACTIVE_EFFECT_NAME = document.getElementById('activeEffectName');
+
+  // Skin editor elements
+  const SKIN_PREVIEW = document.getElementById('skinPreview');
+  const UPLOAD_AREA = document.getElementById('uploadArea');
+  const UPLOAD_BTN = document.getElementById('uploadBtn');
+  const SKIN_UPLOAD = document.getElementById('skinUpload');
+  const SAVE_SKIN = document.getElementById('saveSkin');
+  const RESET_SKIN = document.getElementById('resetSkin');
+  const ZOOM_IN = document.getElementById('zoomIn');
+  const ZOOM_OUT = document.getElementById('zoomOut');
+  const ZOOM_VALUE = document.getElementById('zoomValue');
+  const MOVE_UP = document.getElementById('moveUp');
+  const MOVE_LEFT = document.getElementById('moveLeft');
+  const MOVE_RIGHT = document.getElementById('moveRight');
+  const MOVE_DOWN = document.getElementById('moveDown');
+  const CENTER_IMAGE = document.getElementById('centerImage');
+  const RESET_POSITION = document.getElementById('resetPosition');
+
+  // Gacha elements
+  const GACHA_ITEMS = document.getElementById('gachaItems');
+  const GACHA_LEVER = document.getElementById('gachaLever');
+  const ONE_SPIN = document.getElementById('oneSpin');
+  const FIVE_SPIN = document.getElementById('fiveSpin');
+  const GACHA_RESULT = document.getElementById('gachaResult');
+  const RESULT_TEXT = document.getElementById('resultText');
+  const EFFECT_DESC = document.getElementById('effectDescription');
+
+  // Audio elements
+  const bgMusic = document.getElementById('bgMusic');
+  const eatSfx = document.getElementById('eatSfx');
+  const gameOverSfx = document.getElementById('gameOverSfx');
+  const buttonSfx = document.getElementById('buttonSfx');
+  const gachaWinSfx = document.getElementById('gachaWinSfx');
+  const gachaZonkSfx = document.getElementById('gachaZonkSfx');
+  const gachaSpinSfx = document.getElementById('gachaSpinSfx');
+  const controlSfx = document.getElementById('controlSfx');
+
+  // Currency elements
+  const MENU_COINS = document.getElementById('menuCoins');
+  const MENU_DIAMONDS = document.getElementById('menuDiamonds');
+  const GAME_COINS = document.getElementById('coins');
+
+  let cols = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols')) || 16;
+  let rows = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--rows')) || 12;
+  let cells = [];
+  let gridSize = cols*rows;
+
+  // User management
+  let currentUser = null;
+  let users = JSON.parse(localStorage.getItem('users')) || {};
+  
+  // Load settings and currency
+  let speed = parseInt(localStorage.getItem('speed')) || 120;
+  let musicOn = localStorage.getItem('music') !== 'false';
+  let effectOn = localStorage.getItem('effect') !== 'false';
+  let nameTagOn = localStorage.getItem('nameTag') !== 'false';
+  let coins = 0;
+  let diamonds = 0;
+  let currentEffect = localStorage.getItem('currentEffect') || 'default';
+  let customSkin = localStorage.getItem('customSkin') || null;
+  let unlockedEffects = JSON.parse(localStorage.getItem('unlockedEffects')) || ['default'];
+
+  // ================= MULTIPLAYER VARIABLES =================
+  let db = null;
+  let currentRoomCode = '';
+  let currentPlayerId = '';
+  let isHost = false;
+  let multiplayerSnakes = {};
+  let multiplayerFood = [];
+  let roomPlayers = {};
+  let maxScore = 50;
+  let gameWinner = null;
+  let isMultiplayerGame = false;
+
+  // Skin editor variables
+  let currentSkinImage = null;
+  let skinZoom = 1;
+  let skinPosition = { x: 0, y: 0 };
+  let isDragging = false;
+  let dragStart = { x: 0, y: 0 };
+
+  // Define available effects
+  const effects = [
+    { 
+      id: 'default', 
+      name: 'Default', 
+      description: 'Efek standar tanpa partikel',
+      icon: '🐍',
+      color: '#00ffa1',
+      unlocked: true
+    },
+    { 
+      id: 'fire', 
+      name: 'Fire Effect', 
+      description: 'Efek api dengan partikel merah-oranye',
+      icon: '🔥',
+      color: '#ff4400',
+      unlocked: false
+    },
+    { 
+      id: 'ice', 
+      name: 'Ice Effect', 
+      description: 'Efek es dengan partikel biru',
+      icon: '❄️',
+      color: '#00aaff',
+      unlocked: false
+    },
+    { 
+      id: 'poison', 
+      name: 'Poison Effect', 
+      description: 'Efek racun dengan partikel ungu',
+      icon: '☠️',
+      color: '#aa00ff',
+      unlocked: false
+    },
+    { 
+      id: 'nature', 
+      name: 'Nature Effect', 
+      description: 'Efek alam dengan partikel hijau',
+      icon: '🌿',
+      color: '#00aa00',
+      unlocked: false
+    }
+  ];
+
+  // Initialize settings
+  musicToggle.checked = musicOn;
+  effectToggle.checked = effectOn;
+  nameTagToggle.checked = nameTagOn;
+  speedValEl.textContent = speed;
+
+  // Audio context untuk handle autoplay
+  let audioContext = null;
+  let countdownTimer = null;
+  let particleInterval = null;
+  let nameTagElement = null;
+
+  // ================= MULTIPLAYER FUNCTIONS =================
+
+  function initializeMultiplayer() {
+      try {
+          firebase.initializeApp(firebaseConfig);
+          db = firebase.database();
+          console.log('🔥 Firebase Multiplayer Initialized');
+          return true;
+      } catch (error) {
+          console.error('❌ Firebase Error:', error);
+          return false;
+      }
+  }
+
+  function createRoom() {
+      if (!initializeMultiplayer()) {
+          alert('Gagal connect ke server multiplayer!');
+          return;
+      }
+
+      currentRoomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      currentPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+      isHost = true;
+
+      const playerData = {
+          name: currentUser,
+          x: Math.floor(cols / 2),
+          y: Math.floor(rows / 2),
+          direction: { x: 1, y: 0 },
+          snake: [idx(Math.floor(cols/2), Math.floor(rows/2))],
+          score: 0,
+          isHost: true,
+          color: '#' + Math.floor(Math.random()*16777215).toString(16),
+          effect: currentEffect,
+          lastUpdate: Date.now(),
+          isAlive: true
+      };
+
+      // Create room dengan max score setting
+      db.ref('snakeRooms/' + currentRoomCode).set({
+          created: Date.now(),
+          status: 'waiting',
+          host: currentPlayerId,
+          food: [],
+          maxScore: maxScore,
+          players: {},
+          winner: null
+      }).then(() => {
+          return db.ref('snakeRooms/' + currentRoomCode + '/players/' + currentPlayerId).set(playerData);
+      }).then(() => {
+          showRoomScreen();
+          setupRoomListener();
+      }).catch(error => {
+          alert('Gagal membuat room: ' + error.message);
+      });
+  }
+
+  function joinRoom() {
+      const roomCode = ROOM_CODE_INPUT.value.trim().toUpperCase();
+      if (!roomCode) {
+          alert('Masukkan kode room!');
+          return;
+      }
+
+      if (!initializeMultiplayer()) {
+          alert('Gagal connect ke server multiplayer!');
+          return;
+      }
+
+      currentRoomCode = roomCode;
+      currentPlayerId = 'player_' + Math.random().toString(36).substr(2, 9);
+      isHost = false;
+
+      const playerData = {
+          name: currentUser,
+          x: Math.floor(Math.random() * (cols - 4)) + 2,
+          y: Math.floor(Math.random() * (rows - 4)) + 2,
+          direction: { x: 1, y: 0 },
+          snake: [idx(Math.floor(cols/2), Math.floor(rows/2))],
+          score: 0,
+          isHost: false,
+          color: '#' + Math.floor(Math.random()*16777215).toString(16),
+          effect: currentEffect,
+          lastUpdate: Date.now(),
+          isAlive: true
+      };
+
+      // Check if room exists
+      db.ref('snakeRooms/' + currentRoomCode).once('value').then(snapshot => {
+          if (snapshot.exists()) {
+              return db.ref('snakeRooms/' + currentRoomCode + '/players/' + currentPlayerId).set(playerData);
+          } else {
+              throw new Error('Room tidak ditemukan!');
+          }
+      }).then(() => {
+          showRoomScreen();
+          setupRoomListener();
+      }).catch(error => {
+          alert('Gagal join room: ' + error.message);
+      });
+  }
+
+  function setupRoomListener() {
+      db.ref('snakeRooms/' + currentRoomCode).on('value', (snapshot) => {
+          const roomData = snapshot.val();
+          if (!roomData) {
+              alert('Room sudah dihapus!');
+              backToMultiplayerMenu();
+              return;
+          }
+          
+          updateRoomUI(roomData);
+          
+          if (roomData.status === 'playing') {
+              startMultiplayerGame(roomData);
+          }
+          
+          if (roomData.status === 'finished' && roomData.winner) {
+              const isWinner = (roomData.winner === currentPlayerId);
+              showMultiplayerGameOver(isWinner);
+          }
+      });
+  }
+
+  function updateRoomUI(roomData) {
+      ROOM_CODE_DISPLAY.textContent = currentRoomCode;
+      ROOM_STATUS.textContent = roomData.status;
+      maxScore = roomData.maxScore || 50;
+      
+      // Update max score display
+      document.getElementById('maxScoreValue').textContent = maxScore;
+      document.getElementById('maxScoreDisplay').textContent = maxScore;
+      
+      // Show/hide settings untuk host
+      document.getElementById('roomSettings').style.display = isHost ? 'block' : 'none';
+      
+      // Update players list
+      PLAYERS_LIST_CONTAINER.innerHTML = '';
+      
+      if (roomData.players) {
+          const playerCount = Object.keys(roomData.players).length;
+          PLAYER_COUNT.textContent = playerCount + '/4';
+          
+          for (let playerId in roomData.players) {
+              const player = roomData.players[playerId];
+              const playerItem = document.createElement('div');
+              playerItem.className = 'player-item';
+              playerItem.innerHTML = `
+                  <span class="${player.isHost ? 'player-host' : ''}">
+                      ${player.isHost ? '👑 ' : '👤 '}${player.name}
+                  </span>
+                  <span>Score: ${player.score || 0}</span>
+              `;
+              PLAYERS_LIST_CONTAINER.appendChild(playerItem);
+          }
+          
+          // Show start button untuk host ketika ada 2-4 players
+          START_GAME_BTN.style.display = 
+              (isHost && playerCount >= 2 && playerCount <= 4) ? 'block' : 'none';
+      }
+  }
+
+  function startMultiplayerGame(roomData) {
+      multiplayerSnakes = {};
+      multiplayerFood = roomData.food || [];
+      isMultiplayerGame = true;
+      gameWinner = null;
+      
+      // Convert player data to snake objects
+      if (roomData.players) {
+          for (let playerId in roomData.players) {
+              const player = roomData.players[playerId];
+              multiplayerSnakes[playerId] = {
+                  body: player.snake,
+                  direction: player.direction,
+                  color: player.color,
+                  name: player.name,
+                  effect: player.effect,
+                  score: player.score || 0,
+                  isAlive: true
+              };
+          }
+      }
+      
+      // Start the game
+      GAME_SCREEN.style.display = 'block';
+      MULTIPLAYER_MENU.style.display = 'none';
+      startGame();
+  }
+
+  function showRoomScreen() {
+      document.getElementById('multiplayerOptions').style.display = 'none';
+      ROOM_INFO.style.display = 'block';
+  }
+
+  function backToMultiplayerMenu() {
+      document.getElementById('multiplayerOptions').style.display = 'block';
+      ROOM_INFO.style.display = 'none';
+      ROOM_CODE_INPUT.value = '';
+  }
+
+  function leaveRoom() {
+      if (currentRoomCode && currentPlayerId && db) {
+          db.ref('snakeRooms/' + currentRoomCode + '/players/' + currentPlayerId).remove()
+              .catch(error => console.error('Error leaving room:', error));
+      }
+      
+      currentRoomCode = '';
+      currentPlayerId = '';
+      isHost = false;
+      isMultiplayerGame = false;
+      
+      backToMultiplayerMenu();
+  }
+
+  function updatePlayerData(ateFood) {
+      if (!currentRoomCode || !currentPlayerId || !db) return;
+      
+      const head = coord(snake[snake.length-1]);
+      const playerData = {
+          name: currentUser,
+          x: head.x,
+          y: head.y,
+          direction: dir,
+          snake: snake,
+          score: score,
+          isHost: isHost,
+          color: multiplayerSnakes[currentPlayerId]?.color || '#00ffa1',
+          effect: currentEffect,
+          lastUpdate: Date.now(),
+          isAlive: true
+      };
+      
+      db.ref('snakeRooms/' + currentRoomCode + '/players/' + currentPlayerId).set(playerData)
+          .catch(error => console.error('Error updating player:', error));
+          
+      // Check for winner setelah update score
+      if (ateFood && score >= maxScore) {
+          declareWinner(currentPlayerId);
+      }
+  }
+
+  function handleMultiplayerDeath() {
+      if (currentRoomCode && currentPlayerId && db) {
+          // Update player status jadi dead
+          db.ref('snakeRooms/' + currentRoomCode + '/players/' + currentPlayerId).update({
+              isAlive: false,
+              lastUpdate: Date.now()
+          });
+      }
+      
+      // Tampilkan game over screen untuk player ini
+      showMultiplayerGameOver(false);
+  }
+
+  function checkForWinner() {
+      if (!currentRoomCode || !db || gameWinner) return;
+      
+      db.ref('snakeRooms/' + currentRoomCode).once('value').then(snapshot => {
+          const roomData = snapshot.val();
+          if (!roomData || !roomData.players) return;
+          
+          let alivePlayers = 0;
+          let lastAlivePlayer = null;
+          let maxScorePlayer = null;
+          let maxScoreValue = 0;
+          
+          // Check kondisi menang
+          for (let playerId in roomData.players) {
+              const player = roomData.players[playerId];
+              
+              // Check score tertinggi
+              if (player.score > maxScoreValue) {
+                  maxScoreValue = player.score;
+                  maxScorePlayer = playerId;
+              }
+              
+              // Check player yang masih alive
+              if (player.isAlive !== false) {
+                  alivePlayers++;
+                  lastAlivePlayer = playerId;
+              }
+          }
+          
+          // Jika hanya tersisa 1 player yang alive
+          if (alivePlayers === 1 && lastAlivePlayer) {
+              declareWinner(lastAlivePlayer);
+              return;
+          }
+          
+          // Jika ada player yang mencapai max score
+          if (maxScoreValue >= maxScore && maxScorePlayer) {
+              declareWinner(maxScorePlayer);
+              return;
+          }
+          
+          // Jika semua player mati
+          if (alivePlayers === 0) {
+              // Cari player dengan score tertinggi
+              declareWinner(maxScorePlayer);
+          }
+      });
+  }
+
+  function declareWinner(winnerPlayerId) {
+      if (gameWinner) return;
+      
+      gameWinner = winnerPlayerId;
+      
+      // Update room dengan pemenang
+      if (currentRoomCode && db) {
+          db.ref('snakeRooms/' + currentRoomCode).update({
+              status: 'finished',
+              winner: winnerPlayerId
+          });
+      }
+      
+      // Tampilkan game over screen untuk semua player
+      const isWinner = (winnerPlayerId === currentPlayerId);
+      showMultiplayerGameOver(isWinner);
+  }
+
+  function showMultiplayerGameOver(isWinner) {
+      running = false;
+      clearInterval(ticker);
+      if (particleInterval) clearInterval(particleInterval);
+      
+      // Update game over screen untuk multiplayer
+      const gameoverImg = document.getElementById('gameoverImage');
+      const gameoverText = document.getElementById('gameoverText');
+      
+      if (isWinner) {
+          gameoverImg.src = 'assets/images/menang.png';
+          gameoverImg.alt = 'Menang';
+          gameoverText.textContent = 'Gg bro menang';
+          gameoverText.style.color = '#ffd60a';
+          
+          if (effectOn) {
+              gachaWinSfx.currentTime = 0;
+              gachaWinSfx.play().catch(e => console.log('Win SFX play failed:', e));
+          }
+      } else {
+          gameoverImg.src = 'assets/images/kalah.png';
+          gameoverImg.alt = 'Kalah';
+          gameoverText.textContent = 'hahah kalah Gblk!!';
+          gameoverText.style.color = '#ff4444';
+          
+          if (effectOn) {
+              gachaZonkSfx.currentTime = 0;
+              gachaZonkSfx.play().catch(e => console.log('Lose SFX play failed:', e));
+          }
+      }
+      
+      GAMEOVER.style.display = 'flex';
+      startCountdown();
+  }
+
+  // ================= GAME FUNCTIONS =================
+
+  function playControlSound() {
+      if (effectOn) {
+          controlSfx.currentTime = 0;
+          controlSfx.play().catch(e => console.log('Control SFX play failed:', e));
+      }
+  }
+
+  function checkLoggedInUser() {
+      const loggedInUser = localStorage.getItem('currentUser');
+      if (loggedInUser && users[loggedInUser]) {
+          currentUser = loggedInUser;
+          loadUserData();
+          showMainMenu();
+          return true;
+      }
+      return false;
+  }
+
+  function loadUserData() {
+      if (!currentUser || !users[currentUser]) return;
+      
+      const user = users[currentUser];
+      coins = user.coins || 0;
+      diamonds = user.diamonds || 0;
+      currentEffect = user.currentEffect || 'default';
+      customSkin = user.customSkin || null;
+      unlockedEffects = user.unlockedEffects || ['default'];
+      
+      // Update UI
+      renderCurrency();
+      updateProfileInfo();
+  }
+
+  function saveUserData() {
+      if (!currentUser || !users[currentUser]) return;
+      
+      users[currentUser].coins = coins;
+      users[currentUser].diamonds = diamonds;
+      users[currentUser].currentEffect = currentEffect;
+      users[currentUser].customSkin = customSkin;
+      users[currentUser].unlockedEffects = unlockedEffects;
+      
+      localStorage.setItem('users', JSON.stringify(users));
+  }
+
+  function updateProfileInfo() {
+      if (!currentUser || !users[currentUser]) return;
+      
+      const user = users[currentUser];
+      PROFILE_USERNAME.textContent = currentUser;
+      PROFILE_LEVEL.textContent = user.level || 1;
+      PROFILE_COINS.textContent = coins;
+      PROFILE_DIAMONDS.textContent = diamonds;
+  }
+
+  function showMainMenu() {
+      LOGIN_MENU.style.display = 'none';
+      REGISTER_MENU.style.display = 'none';
+      MAIN_MENU.style.display = 'block';
+      updateProfileInfo();
+      renderCurrency();
+  }
+
+  function showLoginMenu() {
+      LOGIN_MENU.style.display = 'block';
+      REGISTER_MENU.style.display = 'none';
+      MAIN_MENU.style.display = 'none';
+      LOGIN_ERROR.style.display = 'none';
+  }
+
+  function showRegisterMenu() {
+      LOGIN_MENU.style.display = 'none';
+      REGISTER_MENU.style.display = 'block';
+      MAIN_MENU.style.display = 'none';
+      REGISTER_ERROR.style.display = 'none';
+  }
+
+  function registerUser(username, password) {
+      if (users[username]) {
+          REGISTER_ERROR.textContent = 'Username sudah digunakan!';
+          REGISTER_ERROR.style.display = 'block';
+          return false;
+      }
+      
+      users[username] = {
+          password: password,
+          coins: 0,
+          diamonds: 0,
+          level: 1,
+          currentEffect: 'default',
+          customSkin: null,
+          unlockedEffects: ['default']
+      };
+      
+      localStorage.setItem('users', JSON.stringify(users));
+      return true;
+  }
+
+  function loginUser(username, password) {
+      if (!users[username] || users[username].password !== password) {
+          LOGIN_ERROR.style.display = 'block';
+          return false;
+      }
+      
+      currentUser = username;
+      localStorage.setItem('currentUser', username);
+      loadUserData();
+      showMainMenu();
+      return true;
+  }
+
+  function logoutUser() {
+      currentUser = null;
+      localStorage.removeItem('currentUser');
+      showLoginMenu();
+  }
+
+  function changeUsername(newUsername) {
+      if (users[newUsername]) {
+          alert('Username sudah digunakan!');
+          return false;
+      }
+      
+      // Update user data
+      users[newUsername] = users[currentUser];
+      delete users[currentUser];
+      
+      // Update current user
+      currentUser = newUsername;
+      localStorage.setItem('currentUser', newUsername);
+      localStorage.setItem('users', JSON.stringify(users));
+      
+      updateProfileInfo();
+      return true;
+  }
+
+  function changePassword(currentPassword, newPassword) {
+      if (users[currentUser].password !== currentPassword) {
+          alert('Password saat ini salah!');
+          return false;
+      }
+      
+      users[currentUser].password = newPassword;
+      localStorage.setItem('users', JSON.stringify(users));
+      return true;
+  }
+
+  function initAudio() {
+      if (audioContext) return;
+      
+      try {
+          // Create audio context (dibutuhkan untuk autoplay di browser modern)
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          
+          // Resume audio context ketika user berinteraksi
+          document.addEventListener('click', function initAudioOnce() {
+              if (audioContext.state === 'suspended') {
+                  audioContext.resume();
+              }
+              document.removeEventListener('click', initAudioOnce);
+          });
+          
+          // Set volume
+          bgMusic.volume = 0.7;
+          eatSfx.volume = 0.5;
+          gameOverSfx.volume = 0.6;
+          buttonSfx.volume = 0.4;
+          gachaWinSfx.volume = 0.6;
+          gachaZonkSfx.volume = 0.6;
+          gachaSpinSfx.volume = 0.5;
+          controlSfx.volume = 0.4;
+          
+          // Play music jika setting enabled
+          if (musicOn) {
+              bgMusic.play().catch(e => console.log('Audio play failed:', e));
+          }
+      } catch (e) {
+          console.log('Audio context not supported:', e);
+      }
+  }
+
+  function playButtonSound() {
+      if (effectOn) {
+          buttonSfx.currentTime = 0;
+          buttonSfx.play().catch(e => console.log('Button SFX play failed:', e));
+      }
+  }
+
+  function renderCurrency() {
+      MENU_COINS.textContent = coins;
+      MENU_DIAMONDS.textContent = diamonds;
+      GAME_COINS.textContent = coins;
+      
+      // Update gacha button states
+      ONE_SPIN.disabled = coins < 10;
+      FIVE_SPIN.disabled = coins < 50;
+  }
+
+  function buildBoard(){
+      BOARD.innerHTML='';
+      BOARD.appendChild(GAMEOVER);
+      cells=[];
+      for(let i=0;i<gridSize;i++){
+          const d=document.createElement('div');
+          d.className='cell';
+          BOARD.appendChild(d);
+          cells.push(d);
+      }
+  }
+
+  buildBoard();
+
+  function idx(x,y){return y*cols+x;}
+  function coord(i){return {x:i%cols,y:Math.floor(i/cols)};}
+  function inside(x,y){return x>=0&&y>=0&&x<cols&&y<rows;}
+
+  let snake=[idx(Math.floor(cols/2),Math.floor(rows/2))];
+  let dir={x:1,y:0};
+  let nextDir={...dir};
+  let food=null;
+  let running=false;
+  let score=0;
+  let ticker=null;
+
+  function placeFood(){
+      let empty=[];
+      for(let i=0;i<gridSize;i++) if(!snake.includes(i)) empty.push(i);
+      if(empty.length===0) return null;
+      food=empty[Math.floor(Math.random()*empty.length)];
+  }
+
+  function coinAnimation(x,y){
+      const c = document.createElement('div');
+      c.className='coinAnim';
+      c.textContent='1🪙';
+      c.style.left = (x*parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')))+'px';
+      c.style.top = (y*parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')))+'px';
+      BOARD.appendChild(c);
+      setTimeout(()=>BOARD.removeChild(c),800);
+  }
+
+  function updateNameTag() {
+      if (!nameTagOn || !currentUser) {
+          if (nameTagElement) {
+              nameTagElement.remove();
+              nameTagElement = null;
+          }
+          return;
+      }
+      
+      const head = coord(snake[snake.length-1]);
+      const cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size'));
+      
+      if (!nameTagElement) {
+          nameTagElement = document.createElement('div');
+          nameTagElement.className = 'name-tag';
+          nameTagElement.textContent = currentUser;
+          BOARD.appendChild(nameTagElement);
+      }
+      
+      nameTagElement.style.left = (head.x * cellSize + cellSize/2 - nameTagElement.offsetWidth/2) + 'px';
+      nameTagElement.style.top = (head.y * cellSize - 20) + 'px';
+  }
+
+  function createParticle(x, y, effectType) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      
+      // Set ukuran LEBIH KECIL LAGI
+      const size = 6 + Math.random() * 6; // 6-12px (lebih kecil dari sebelumnya)
+      particle.style.width = size + 'px';
+      particle.style.height = size + 'px';
+      
+      // Set bentuk berdasarkan efek
+      switch(effectType) {
+          case 'fire':
+              particle.style.background = 'radial-gradient(circle, #ff9900, #ff4400)';
+              particle.style.borderRadius = '50% 50% 20% 80%';
+              particle.style.boxShadow = '0 0 4px #ff4400';
+              break;
+          case 'ice':
+              particle.style.background = 'radial-gradient(circle, #00ffff, #00aaff)';
+              particle.style.borderRadius = '60% 40% 30% 70%';
+              particle.style.boxShadow = '0 0 3px #00aaff';
+              break;
+          case 'poison':
+              particle.style.background = 'radial-gradient(circle, #ff00ff, #aa00ff)';
+              particle.style.borderRadius = '50% 20% 80% 30%';
+              particle.style.boxShadow = '0 0 3px #aa00ff';
+              break;
+          case 'nature':
+              particle.style.background = 'radial-gradient(circle, #00ff00, #00aa00)';
+              particle.style.borderRadius = '70% 30% 50% 50%';
+              particle.style.boxShadow = '0 0 3px #00aa00';
+              particle.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
+              break;
+          default:
+              particle.style.background = 'radial-gradient(circle, #ffffff, #cccccc)';
+              particle.style.borderRadius = '50%';
+      }
+      
+      particle.style.left = (x * parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) + Math.random() * 12 - 6) + 'px';
+      particle.style.top = (y * parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) + Math.random() * 12 - 6) + 'px';
+      BOARD.appendChild(particle);
+      
+      // Remove particle after animation
+      setTimeout(() => {
+          if (particle.parentNode) {
+              particle.parentNode.removeChild(particle);
+          }
+      }, 1500);
+  }
+
+  function startParticleEffect() {
+      if (particleInterval) clearInterval(particleInterval);
+      
+      if (currentEffect === 'default') return;
+      
+      particleInterval = setInterval(() => {
+          if (!running) return;
+          
+          const head = coord(snake[snake.length-1]);
+          for (let i = 0; i < 2; i++) {
+              createParticle(head.x, head.y, currentEffect);
+          }
+      }, 300);
+  }
+
+  function render(){
+      cells.forEach(c=>{c.className='cell';c.textContent='';c.style.backgroundImage='';});
+      
+      // Apply effect class to snake
+      let snakeClass = 'snake';
+      if (currentEffect !== 'default') {
+          snakeClass += ' ' + currentEffect + '-effect';
+      }
+      
+      // Apply custom skin if available
+      if (customSkin) {
+          snakeClass += ' custom-skin';
+      }
+      
+      for(let i=0;i<snake.length;i++){
+          let cl = snakeClass;
+          if(i===snake.length-1) cl+=' head';
+          cells[snake[i]].className='cell '+cl;
+          
+          // Apply custom skin background ONLY to head (sesuai permintaan)
+          if (customSkin && i === snake.length-1) {
+              cells[snake[i]].style.backgroundImage = `url(${customSkin})`;
+              cells[snake[i]].style.backgroundSize = 'cover';
+              cells[snake[i]].style.backgroundPosition = 'center';
+          }
+          // Body menggunakan warna default (sesuai permintaan)
+      }
+      
+      if(food!==null){
+          cells[food].className='cell food';
+          cells[food].textContent='🍆';
+      }
+      
+      SCORE.textContent=score;
+      CURRENT_EFFECT.textContent = 'Efek: ' + effects.find(e => e.id === currentEffect).name;
+      ACTIVE_EFFECT_NAME.textContent = effects.find(e => e.id === currentEffect).name;
+      renderCurrency();
+      
+      // Update name tag
+      updateNameTag();
+  }
+
+  function step(){
+      if(nextDir.x!==-dir.x||nextDir.y!==-dir.y) dir={...nextDir};
+      const head=coord(snake[snake.length-1]);
+      const nx=head.x+dir.x;
+      const ny=head.y+dir.y;
+      
+      if(!inside(nx,ny)){ 
+          if (isMultiplayerGame) {
+              handleMultiplayerDeath();
+          } else {
+              gameOver();
+          }
+          return;
+      }
+      const ni=idx(nx,ny);
+      
+      // Check collision dengan snake lain di multiplayer
+      if (isMultiplayerGame) {
+          for (let playerId in multiplayerSnakes) {
+              if (playerId !== currentPlayerId && multiplayerSnakes[playerId].isAlive) {
+                  const otherSnake = multiplayerSnakes[playerId].body;
+                  if (otherSnake.includes(ni)) {
+                      handleMultiplayerDeath();
+                      return;
+                  }
+              }
+          }
+      }
+      
+      // FIXED: Hanya tambah segment ketika makan
+      if(ni===food){
+          snake.push(ni);
+          score+=10;
+          coins += 1;
+          saveUserData();
+          coinAnimation(nx, ny);
+          if(effectOn) {
+              eatSfx.currentTime=0;
+              eatSfx.play().catch(e => console.log('SFX play failed:', e));
+          }
+          placeFood();
+          
+          // Check win condition
+          if (isMultiplayerGame && score >= maxScore) {
+              declareWinner(currentPlayerId);
+              return;
+          }
+      } else {
+          snake.push(ni);
+          snake.shift();
+      }
+      
+      // Update multiplayer data jika dalam room
+      if (currentRoomCode) {
+          updatePlayerData(ni===food);
+      }
+      
+      render();
+      
+      // Check jika ada pemenang dari player lain
+      if (isMultiplayerGame) {
+          checkForWinner();
+      }
+  }
+
+  function backToLobby() {
+      GAME_SCREEN.style.display = 'none';
+      MAIN_MENU.style.display = 'block';
+      
+      // Stop game
+      running = false;
+      clearInterval(ticker);
+      if (particleInterval) clearInterval(particleInterval);
+      
+      // Update currency display
+      renderCurrency();
+  }
+
+  function startCountdown() {
+      let count = 5;
+      COUNTDOWN.textContent = `Kembali ke lobby dalam: ${count}`;
+      
+      countdownTimer = setInterval(() => {
+          count--;
+          COUNTDOWN.textContent = `Kembali ke lobby dalam: ${count}`;
+          
+          if (count <= 0) {
+              clearInterval(countdownTimer);
+              backToLobby();
+          }
+      }, 1000);
+  }
+
+  function gameOver(){
+      running=false;
+      clearInterval(ticker);
+      if (particleInterval) clearInterval(particleInterval);
+      
+      // Play game over sound effect jika setting enabled
+      if(effectOn) {
+          gameOverSfx.currentTime=0;
+          gameOverSfx.play().catch(e => console.log('Game over SFX play failed:', e));
+      }
+      
+      GAMEOVER.style.display='flex';
+      
+      // Start countdown otomatis kembali ke lobby
+      startCountdown();
+  }
+
+  function startGame(){
+      // Clear countdown timer jika ada
+      if (countdownTimer) {
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+      }
+      
+      cols=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols'))||cols;
+      rows=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--rows'))||rows;
+      gridSize=cols*rows;
+      buildBoard();
+      
+      // FIXED: Snake selalu mulai dengan panjang 1 (hanya kepala)
+      snake=[idx(Math.floor(cols/2),Math.floor(rows/2))];
+      dir={x:1,y:0};
+      nextDir={...dir};
+      score=0;
+      placeFood();
+      render();
+      running=true;
+      GAMEOVER.style.display='none';
+      clearInterval(ticker);
+      ticker=setInterval(step,speed);
+      
+      // Start particle effect if applicable
+      startParticleEffect();
+      
+      // Initialize audio ketika game mulai
+      initAudio();
+  }
+
+  // Fashion Menu Functions
+  function initFashionMenu() {
+      EFFECTS_GRID.innerHTML = '';
+      
+      effects.forEach(effect => {
+          const isUnlocked = unlockedEffects.includes(effect.id);
+          const isActive = currentEffect === effect.id;
+          
+          const effectItem = document.createElement('div');
+          effectItem.className = `effect-item effect-${effect.id} ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`;
+          
+          effectItem.innerHTML = `
+              <div class="effect-preview">${effect.icon}</div>
+              <div class="effect-name">${effect.name}</div>
+              <div class="effect-status">${isUnlocked ? (isActive ? 'AKTIF' : 'TERBUKA') : 'TERKUNCI'}</div>
+              <div class="effect-details">${effect.description}</div>
+          `;
+          
+          if (isUnlocked) {
+              effectItem.addEventListener('click', () => {
+                  selectEffect(effect.id);
+                  playButtonSound();
+              });
+              
+              effectItem.addEventListener('mouseenter', () => {
+                  effectItem.querySelector('.effect-details').style.display = 'block';
+              });
+              
+              effectItem.addEventListener('mouseleave', () => {
+                  effectItem.querySelector('.effect-details').style.display = 'none';
+              });
+          }
+          
+          EFFECTS_GRID.appendChild(effectItem);
+      });
+  }
+
+  function selectEffect(effectId) {
+      currentEffect = effectId;
+      saveUserData();
+      
+      // Update UI
+      initFashionMenu();
+      ACTIVE_EFFECT_NAME.textContent = effects.find(e => e.id === effectId).name;
+      
+      alert(`Efek ${effects.find(e => e.id === effectId).name} telah diaktifkan!`);
+  }
+
+  function unlockEffect(effectId) {
+      if (!unlockedEffects.includes(effectId)) {
+          unlockedEffects.push(effectId);
+          saveUserData();
+      }
+  }
+
+  // Skin Editor Functions
+  function initSkinEditor() {
+      // Reset skin editor state
+      skinZoom = 1;
+      skinPosition = { x: 0, y: 0 };
+      currentSkinImage = null;
+      
+      // Clear preview
+      SKIN_PREVIEW.innerHTML = '<div style="color:#666;font-size:14px;">Upload gambar untuk memulai</div>';
+      
+      // Update zoom display
+      updateZoomDisplay();
+      
+      // Load existing skin if available
+      if (customSkin) {
+          loadSkinImage(customSkin);
+      }
+  }
+
+  function loadSkinImage(imageSrc) {
+      SKIN_PREVIEW.innerHTML = '';
+      currentSkinImage = document.createElement('img');
+      currentSkinImage.className = 'skin-image';
+      currentSkinImage.src = imageSrc;
+      currentSkinImage.draggable = false;
+      
+      // Set initial transform
+      updateImageTransform();
+      
+      SKIN_PREVIEW.appendChild(currentSkinImage);
+      
+      // Add drag functionality
+      addDragFunctionality();
+  }
+
+  function addDragFunctionality() {
+      if (!currentSkinImage) return;
+      
+      SKIN_PREVIEW.addEventListener('mousedown', startDrag);
+      SKIN_PREVIEW.addEventListener('touchstart', startDrag);
+      
+      function startDrag(e) {
+          e.preventDefault();
+          isDragging = true;
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          dragStart = { x: clientX - skinPosition.x, y: clientY - skinPosition.y };
+          
+          document.addEventListener('mousemove', doDrag);
+          document.addEventListener('touchmove', doDrag);
+          document.addEventListener('mouseup', stopDrag);
+          document.addEventListener('touchend', stopDrag);
+      }
+      
+      function doDrag(e) {
+          if (!isDragging) return;
+          e.preventDefault();
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          
+          skinPosition.x = clientX - dragStart.x;
+          skinPosition.y = clientY - dragStart.y;
+          
+          updateImageTransform();
+      }
+      
+      function stopDrag() {
+          isDragging = false;
+          document.removeEventListener('mousemove', doDrag);
+          document.removeEventListener('touchmove', doDrag);
+          document.removeEventListener('mouseup', stopDrag);
+          document.removeEventListener('touchend', stopDrag);
+      }
+  }
+
+  function updateImageTransform() {
+      if (!currentSkinImage) return;
+      
+      currentSkinImage.style.transform = `translate(${skinPosition.x}px, ${skinPosition.y}px) scale(${skinZoom})`;
+  }
+
+  function updateZoomDisplay() {
+      ZOOM_VALUE.textContent = Math.round(skinZoom * 100) + '%';
+  }
+
+  function handleSkinUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (!file.type.match('image.*')) {
+          alert('Hanya file gambar yang diizinkan!');
+          return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+          loadSkinImage(e.target.result);
+      };
+      reader.readAsDataURL(file);
+  }
+
+  function saveCustomSkin() {
+      if (!currentSkinImage) {
+          alert('Upload gambar terlebih dahulu!');
+          return;
+      }
+      
+      // Save skin data to user data
+      customSkin = currentSkinImage.src;
+      saveUserData();
+      
+      alert('Skin berhasil disimpan! Skin akan muncul di kepala ular.');
+  }
+
+  function resetCustomSkin() {
+      customSkin = null;
+      saveUserData();
+      initSkinEditor();
+      alert('Skin direset ke default!');
+  }
+
+  // Zoom and position control functions
+  function zoomIn() {
+      skinZoom = Math.min(3, skinZoom + 0.1);
+      updateImageTransform();
+      updateZoomDisplay();
+  }
+
+  function zoomOut() {
+      skinZoom = Math.max(0.5, skinZoom - 0.1);
+      updateImageTransform();
+      updateZoomDisplay();
+  }
+
+  function moveImage(direction) {
+      const moveAmount = 10;
+      switch(direction) {
+          case 'up':
+              skinPosition.y -= moveAmount;
+              break;
+          case 'down':
+              skinPosition.y += moveAmount;
+              break;
+          case 'left':
+              skinPosition.x -= moveAmount;
+              break;
+          case 'right':
+              skinPosition.x += moveAmount;
+              break;
+      }
+      updateImageTransform();
+  }
+
+  function centerImage() {
+      skinPosition = { x: 0, y: 0 };
+      updateImageTransform();
+  }
+
+  function resetImagePosition() {
+      skinZoom = 1;
+      skinPosition = { x: 0, y: 0 };
+      updateImageTransform();
+      updateZoomDisplay();
+  }
+
+  // Gacha functions
+  function initGacha() {
+      GACHA_ITEMS.innerHTML = '';
+      
+      // Show available effects in gacha machine + ZONK
+      const gachaItems = [
+          ...effects.filter(e => e.id !== 'default'),
+          { id: 'zonk', name: 'ZONK', description: 'Hahaha gk dapet', icon: '❌', color: '#ff0000' }
+      ];
+      
+      gachaItems.forEach(effect => {
+          const item = document.createElement('div');
+          item.className = 'gacha-item';
+          item.innerHTML = effect.icon;
+          item.style.color = effect.color;
+          item.style.background = `linear-gradient(145deg, ${effect.color}22, ${effect.color}44)`;
+          GACHA_ITEMS.appendChild(item);
+      });
+  }
+
+  function spinGacha(spinCount) {
+      const cost = spinCount === 1 ? 10 : 50;
+      
+      if (coins < cost) {
+          alert('Coin tidak cukup!');
+          return;
+      }
+      
+      coins -= cost;
+      saveUserData();
+      renderCurrency();
+      
+      // Play spin sound (muter.mp3)
+      if (effectOn) {
+          gachaSpinSfx.currentTime = 0;
+          gachaSpinSfx.play().catch(e => console.log('Spin SFX play failed:', e));
+      }
+      
+      // Disable buttons during spin
+      ONE_SPIN.disabled = true;
+      FIVE_SPIN.disabled = true;
+      
+      // Animate lever
+      GACHA_LEVER.style.transform = 'rotate(-30deg)';
+      setTimeout(() => {
+          GACHA_LEVER.style.transform = 'rotate(0deg)';
+      }, 300);
+      
+      // Animate items spinning
+      const items = GACHA_ITEMS.querySelectorAll('.gacha-item');
+      let spinDuration = 2000;
+      let startTime = Date.now();
+      
+      function animateSpin() {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / spinDuration, 1);
+          
+          // Easing function
+          const easeOut = 1 - Math.pow(1 - progress, 3);
+          
+          // Rotate and scale items
+          items.forEach((item, index) => {
+              const rotation = 360 * 3 * easeOut + (index * 72);
+              const scale = 0.8 + Math.sin(progress * Math.PI * 2 + index) * 0.4;
+              item.style.transform = `rotate(${rotation}deg) scale(${scale})`;
+              item.style.opacity = 0.5 + Math.sin(progress * Math.PI * 2 + index) * 0.5;
+          });
+          
+          if (progress < 1) {
+              requestAnimationFrame(animateSpin);
+          } else {
+              // Spin finished
+              finishSpin(spinCount);
+          }
+      }
+      
+      animateSpin();
+  }
+
+  function finishSpin(spinCount) {
+      // Determine result dengan kemungkinan ZONK 30%
+      const availableEffects = effects.filter(e => e.id !== 'default');
+      let result;
+      
+      if (Math.random() < 0.3) { // 30% chance ZONK
+          result = { id: 'zonk', name: 'ZONK', description: 'Hahaha gk dapet', icon: '❌', color: '#ff0000' };
+      } else {
+          result = availableEffects[Math.floor(Math.random() * availableEffects.length)];
+      }
+      
+      // Unlock the effect jika bukan ZONK
+      if (result.id !== 'zonk') {
+          unlockEffect(result.id);
+      }
+      
+      // Highlight the result
+      const items = GACHA_ITEMS.querySelectorAll('.gacha-item');
+      items.forEach(item => {
+          item.classList.remove('active');
+          if (item.innerHTML === result.icon) {
+              item.classList.add('active');
+          }
+      });
+      
+      // Show result
+      if (result.id === 'zonk') {
+          RESULT_TEXT.textContent = 'Hahaha gk dapet';
+          RESULT_TEXT.style.color = '#ff0000';
+          EFFECT_DESC.textContent = 'Coba lagi ya!';
+          
+          // Play zonk sound
+          if (effectOn) {
+              gachaZonkSfx.currentTime = 0;
+              gachaZonkSfx.play().catch(e => console.log('Zonk SFX play failed:', e));
+          }
+      } else {
+          RESULT_TEXT.innerHTML = `Kamu mendapatkan: <span style="color:${result.color}">${result.name}</span>`;
+          RESULT_TEXT.style.color = '#ffd60a';
+          EFFECT_DESC.textContent = result.description;
+          
+          // Play win sound
+          if (effectOn) {
+              gachaWinSfx.currentTime = 0;
+              gachaWinSfx.play().catch(e => console.log('Win SFX play failed:', e));
+          }
+      }
+      
+      GACHA_RESULT.style.display = 'block';
+      
+      // Re-enable buttons
+      setTimeout(() => {
+          renderCurrency();
+      }, 1000);
+      
+      // If multiple spins, continue
+      if (spinCount > 1) {
+          setTimeout(() => {
+              GACHA_RESULT.style.display = 'none';
+              spinGacha(spinCount - 1);
+          }, 2000);
+      }
+  }
+
+  // ================= EVENT LISTENERS =================
+
+  // Multiplayer Event Listeners
+  MULTIPLAYER_BTN.addEventListener('click', function() {
+      playButtonSound();
+      MAIN_MENU.style.display = 'none';
+      MULTIPLAYER_MENU.style.display = 'block';
+      initAudio();
+  });
+
+  MULTIPLAYER_BACK_BTN.addEventListener('click', function() {
+      playButtonSound();
+      MULTIPLAYER_MENU.style.display = 'none';
+      MAIN_MENU.style.display = 'block';
+  });
+
+  CREATE_ROOM_BTN.addEventListener('click', function() {
+      playButtonSound();
+      createRoom();
+  });
+
+  JOIN_ROOM_BTN.addEventListener('click', function() {
+      playButtonSound();
+      joinRoom();
+  });
+
+  START_GAME_BTN.addEventListener('click', function() {
+      playButtonSound();
+      
+      // Generate initial food
+      const foodPositions = [];
+      for (let i = 0; i < 5; i++) {
+          let empty = [];
+          for (let j = 0; j < gridSize; j++) {
+              let occupied = false;
+              // Check semua snake position
+              for (let playerId in multiplayerSnakes) {
+                  if (multiplayerSnakes[playerId].body.includes(j)) {
+                      occupied = true;
+                      break;
+                  }
+              }
+              if (!occupied && !foodPositions.includes(j)) empty.push(j);
+          }
+          if (empty.length > 0) {
+              foodPositions.push(empty[Math.floor(Math.random() * empty.length)]);
+          }
+      }
+      
+      // Update room status to playing
+      db.ref('snakeRooms/' + currentRoomCode).update({
+          status: 'playing',
+          food: foodPositions
+      });
+  });
+
+  LEAVE_ROOM_BTN.addEventListener('click', function() {
+      playButtonSound();
+      leaveRoom();
+  });
+
+  // Score controls untuk host
+  document.getElementById('scoreInc').addEventListener('click', function() {
+      playButtonSound();
+      if (isHost && currentRoomCode) {
+          maxScore = Math.min(100, maxScore + 10);
+          document.getElementById('maxScoreDisplay').textContent = maxScore;
+          document.getElementById('maxScoreValue').textContent = maxScore;
+          
+          // Update di Firebase
+          db.ref('snakeRooms/' + currentRoomCode).update({
+              maxScore: maxScore
+          });
+      }
+  });
+
+  document.getElementById('scoreDec').addEventListener('click', function() {
+      playButtonSound();
+      if (isHost && currentRoomCode) {
+          maxScore = Math.max(10, maxScore - 10);
+          document.getElementById('maxScoreDisplay').textContent = maxScore;
+          document.getElementById('maxScoreValue').textContent = maxScore;
+          
+          // Update di Firebase
+          db.ref('snakeRooms/' + currentRoomCode).update({
+              maxScore: maxScore
+          });
+      }
+  });
+
+  // Login/Register Event Listeners
+  LOGIN_BTN.addEventListener('click', function() {
+      playButtonSound();
+      const username = LOGIN_USERNAME.value.trim();
+      const password = LOGIN_PASSWORD.value.trim();
+      
+      if (!username || !password) {
+          LOGIN_ERROR.textContent = 'Username dan password harus diisi!';
+          LOGIN_ERROR.style.display = 'block';
+          return;
+      }
+      
+      if (loginUser(username, password)) {
+          playButtonSound();
+      }
+  });
+
+  REGISTER_BTN.addEventListener('click', function() {
+      playButtonSound();
+      const username = REGISTER_USERNAME.value.trim();
+      const password = REGISTER_PASSWORD.value.trim();
+      const confirmPassword = REGISTER_CONFIRM_PASSWORD.value.trim();
+      
+      if (!username || !password || !confirmPassword) {
+          REGISTER_ERROR.textContent = 'Semua field harus diisi!';
+          REGISTER_ERROR.style.display = 'block';
+          return;
+      }
+      
+      if (password !== confirmPassword) {
+          REGISTER_ERROR.textContent = 'Password tidak cocok!';
+          REGISTER_ERROR.style.display = 'block';
+          return;
+      }
+      
+      if (registerUser(username, password)) {
+          alert('Pendaftaran berhasil! Silakan login.');
+          showLoginMenu();
+      }
+  });
+
+  GO_TO_REGISTER.addEventListener('click', function() {
+      playButtonSound();
+      showRegisterMenu();
+  });
+
+  GO_TO_LOGIN.addEventListener('click', function() {
+      playButtonSound();
+      showLoginMenu();
+  });
+
+  // Profile event listeners
+  PROFILE_BTN.addEventListener('click', function() {
+      playButtonSound();
+      MAIN_MENU.style.display = 'none';
+      PROFILE_MENU.style.display = 'block';
+      updateProfileInfo();
+      initAudio();
+  });
+
+  PROFILE_BACK_BTN.addEventListener('click', function() {
+      playButtonSound();
+      PROFILE_MENU.style.display = 'none';
+      MAIN_MENU.style.display = 'block';
+  });
+
+  CHANGE_NAME_BTN.addEventListener('click', function() {
+      playButtonSound();
+      CHANGE_NAME_FORM.style.display = 'flex';
+      CHANGE_PASSWORD_FORM.style.display = 'none';
+      NEW_USERNAME.value = currentUser;
+  });
+
+  CHANGE_PASSWORD_BTN.addEventListener('click', function() {
+      playButtonSound();
+      CHANGE_PASSWORD_FORM.style.display = 'flex';
+      CHANGE_NAME_FORM.style.display = 'none';
+      CURRENT_PASSWORD.value = '';
+      NEW_PASSWORD.value = '';
+      CONFIRM_NEW_PASSWORD.value = '';
+  });
+
+  LOGOUT_BTN.addEventListener('click', function() {
+      playButtonSound();
+      if (confirm('Yakin ingin logout?')) {
+          logoutUser();
+      }
+  });
+
+  CONFIRM_NAME_CHANGE.addEventListener('click', function() {
+      playButtonSound();
+      const newUsername = NEW_USERNAME.value.trim();
+      
+      if (!newUsername) {
+          alert('Username tidak boleh kosong!');
+          return;
+      }
+      
+      if (changeUsername(newUsername)) {
+          alert('Username berhasil diubah!');
+          CHANGE_NAME_FORM.style.display = 'none';
+          updateProfileInfo();
+      }
+  });
+
+  CANCEL_NAME_CHANGE.addEventListener('click', function() {
+      playButtonSound();
+      CHANGE_NAME_FORM.style.display = 'none';
+  });
+
+  CONFIRM_PASSWORD_CHANGE.addEventListener('click', function() {
+      playButtonSound();
+      const currentPass = CURRENT_PASSWORD.value;
+      const newPass = NEW_PASSWORD.value;
+      const confirmPass = CONFIRM_NEW_PASSWORD.value;
+      
+      if (!currentPass || !newPass || !confirmPass) {
+          alert('Semua field harus diisi!');
+          return;
+      }
+      
+      if (newPass !== confirmPass) {
+          alert('Password baru tidak cocok!');
+          return;
+      }
+      
+      if (changePassword(currentPass, newPass)) {
+          alert('Password berhasil diubah!');
+          CHANGE_PASSWORD_FORM.style.display = 'none';
+      }
+  });
+
+  CANCEL_PASSWORD_CHANGE.addEventListener('click', function() {
+      playButtonSound();
+      CHANGE_PASSWORD_FORM.style.display = 'none';
+  });
+
+  // Screen navigation dengan sound effect
+  PLAY_BTN.addEventListener('click', function() {
+      playButtonSound();
+      MAIN_MENU.style.display = 'none';
+      GAME_SCREEN.style.display = 'block';
+      startGame();
+  });
+
+  MENU_SETTINGS_BTN.addEventListener('click', function() {
+      playButtonSound();
+      MAIN_MENU.style.display = 'none';
+      SETTINGS_MENU.style.display = 'block';
+      initAudio();
+  });
+
+  SETTINGS_BACK_BTN.addEventListener('click', function() {
+      playButtonSound();
+      SETTINGS_MENU.style.display = 'none';
+      MAIN_MENU.style.display = 'block';
+  });
+
+  FASHION_BTN.addEventListener('click', function() {
+      playButtonSound();
+      MAIN_MENU.style.display = 'none';
+      FASHION_MENU.style.display = 'block';
+      initFashionMenu();
+      initAudio();
+  });
+
+  FASHION_BACK_BTN.addEventListener('click', function() {
+      playButtonSound();
+      FASHION_MENU.style.display = 'none';
+      MAIN_MENU.style.display = 'block';
+  });
+
+  SKIN_BTN.addEventListener('click', function() {
+      playButtonSound();
+      MAIN_MENU.style.display = 'none';
+      SKIN_MENU.style.display = 'block';
+      initSkinEditor();
+      initAudio();
+  });
+
+  SKIN_BACK_BTN.addEventListener('click', function() {
+      playButtonSound();
+      SKIN_MENU.style.display = 'none';
+      MAIN_MENU.style.display = 'block';
+  });
+
+  GACHA_BTN.addEventListener('click', function() {
+      playButtonSound();
+      MAIN_MENU.style.display = 'none';
+      GACHA_MENU.style.display = 'block';
+      GACHA_RESULT.style.display = 'none';
+      initGacha();
+      renderCurrency();
+      initAudio();
+  });
+
+  GACHA_BACK_BTN.addEventListener('click', function() {
+      playButtonSound();
+      GACHA_MENU.style.display = 'none';
+      MAIN_MENU.style.display = 'block';
+  });
+
+  // Skin editor event listeners dengan sound
+  UPLOAD_BTN.addEventListener('click', function() {
+      playButtonSound();
+      SKIN_UPLOAD.click();
+  });
+
+  SKIN_UPLOAD.addEventListener('change', handleSkinUpload);
+
+  SAVE_SKIN.addEventListener('click', function() {
+      playButtonSound();
+      saveCustomSkin();
+  });
+
+  RESET_SKIN.addEventListener('click', function() {
+      playButtonSound();
+      resetCustomSkin();
+  });
+
+  // Zoom controls dengan sound
+  ZOOM_IN.addEventListener('click', function() {
+      playButtonSound();
+      zoomIn();
+  });
+
+  ZOOM_OUT.addEventListener('click', function() {
+      playButtonSound();
+      zoomOut();
+  });
+
+  // Position controls dengan sound
+  MOVE_UP.addEventListener('click', function() {
+      playButtonSound();
+      moveImage('up');
+  });
+
+  MOVE_DOWN.addEventListener('click', function() {
+      playButtonSound();
+      moveImage('down');
+  });
+
+  MOVE_LEFT.addEventListener('click', function() {
+      playButtonSound();
+      moveImage('left');
+  });
+
+  MOVE_RIGHT.addEventListener('click', function() {
+      playButtonSound();
+      moveImage('right');
+  });
+
+  CENTER_IMAGE.addEventListener('click', function() {
+      playButtonSound();
+      centerImage();
+  });
+
+  RESET_POSITION.addEventListener('click', function() {
+      playButtonSound();
+      resetImagePosition();
+  });
+
+  // Gacha event listeners dengan sound
+  ONE_SPIN.addEventListener('click', function() {
+      playButtonSound();
+      spinGacha(1);
+  });
+
+  FIVE_SPIN.addEventListener('click', function() {
+      playButtonSound();
+      spinGacha(5);
+  });
+
+  // Lever click dengan sound
+  GACHA_LEVER.addEventListener('click', function() {
+      playButtonSound();
+      if (!ONE_SPIN.disabled) {
+          spinGacha(1);
+      }
+  });
+
+  // Game controls - UPDATED dengan suara kontrol
+  document.addEventListener('keydown',e=>{
+      const key=e.key;
+      let directionChanged = false;
+      
+      if(key==='ArrowUp'||key==='w') {
+          nextDir={x:0,y:-1};
+          directionChanged = true;
+      }
+      if(key==='ArrowDown'||key==='s') {
+          nextDir={x:0,y:1};
+          directionChanged = true;
+      }
+      if(key==='ArrowLeft'||key==='a') {
+          nextDir={x:-1,y:0};
+          directionChanged = true;
+      }
+      if(key==='ArrowRight'||key==='d') {
+          nextDir={x:1,y:0};
+          directionChanged = true;
+      }
+      
+      // Play control sound jika direction berubah
+      if (directionChanged && effectOn) {
+          playControlSound();
+      }
+      
+      // Initialize audio pada interaksi keyboard pertama
+      initAudio();
+  });
+
+  document.querySelectorAll('.arrow').forEach(b=>{
+      b.addEventListener('touchstart',e=>{
+          const d=b.getAttribute('data-dir');
+          if(d==='up') nextDir={x:0,y:-1};
+          if(d==='down') nextDir={x:0,y:1};
+          if(d==='left') nextDir={x:-1,y:0};
+          if(d==='right') nextDir={x:1,y:0};
+          
+          // Play control sound untuk tombol sentuh
+          if (effectOn) {
+              playControlSound();
+          }
+          
+          e.preventDefault();
+          
+          // Initialize audio pada interaksi touch pertama
+          initAudio();
+      });
+      b.addEventListener('mousedown',e=>{
+          const d=b.getAttribute('data-dir');
+          if(d==='up') nextDir={x:0,y:-1};
+          if(d==='down') nextDir={x:0,y:1};
+          if(d==='left') nextDir={x:-1,y:0};
+          if(d==='right') nextDir={x:1,y:0};
+          
+          // Play control sound untuk tombol mouse
+          if (effectOn) {
+              playControlSound();
+          }
+          
+          // Initialize audio pada interaksi mouse pertama
+          initAudio();
+      });
+  });
+
+  (function addSwipe(el){
+      let startX=0,startY=0,active=false;
+      el.addEventListener('touchstart',e=>{
+          active=true; 
+          startX=e.touches[0].clientX; 
+          startY=e.touches[0].clientY;
+          
+          // Initialize audio pada interaksi swipe pertama
+          initAudio();
+      },{passive:true});
+      el.addEventListener('touchmove',e=>{if(!active) return; e.preventDefault();},{passive:false});
+      el.addEventListener('touchend',e=>{
+          if(!active) return;
+          active=false;
+          const endX=e.changedTouches[0].clientX;
+          const endY=e.changedTouches[0].clientY;
+          const dx=endX-startX,dy=endY-startY;
+          if(Math.abs(dx)>Math.abs(dy)){
+              if(dx>20) {
+                  nextDir={x:1,y:0};
+                  if (effectOn) playControlSound();
+              }
+              else if(dx<-20) {
+                  nextDir={x:-1,y:0};
+                  if (effectOn) playControlSound();
+              }
+          }else{
+              if(dy>20) {
+                  nextDir={x:0,y:1};
+                  if (effectOn) playControlSound();
+              }
+              else if(dy<-20) {
+                  nextDir={x:0,y:-1};
+                  if (effectOn) playControlSound();
+              }
+          }
+      },{passive:true});
+  })(BOARD);
+
+  RESTART.addEventListener('click',()=>{
+      playButtonSound();
+      initAudio();
+      startGame();
+  });
+
+  MANUAL_RESTART.addEventListener('click',()=>{
+      playButtonSound();
+      if (countdownTimer) {
+          clearInterval(countdownTimer);
+      }
+      initAudio();
+      startGame();
+  });
+
+  speedInc.addEventListener('click',()=>{
+      playButtonSound();
+      speed = Math.max(50, speed - 10);
+      speedValEl.textContent = speed;
+      localStorage.setItem('speed', speed);
+      if(running){clearInterval(ticker); ticker=setInterval(step,speed);}
+  });
+
+  speedDec.addEventListener('click',()=>{
+      playButtonSound();
+      speed = Math.min(500, speed + 10);
+      speedValEl.textContent = speed;
+      localStorage.setItem('speed', speed);
+      if(running){clearInterval(ticker); ticker=setInterval(step,speed);}
+  });
+
+  musicToggle.addEventListener('change',()=>{
+      playButtonSound();
+      musicOn = musicToggle.checked;
+      localStorage.setItem('music', musicOn);
+      if(musicOn) {
+          bgMusic.play().catch(e => console.log('Music play failed:', e));
+      } else {
+          bgMusic.pause();
+      }
+  });
+
+  effectToggle.addEventListener('change',()=>{
+      playButtonSound();
+      effectOn = effectToggle.checked;
+      localStorage.setItem('effect', effectOn);
+  });
+
+  nameTagToggle.addEventListener('change',()=>{
+      playButtonSound();
+      nameTagOn = nameTagToggle.checked;
+      localStorage.setItem('nameTag', nameTagOn);
+      updateNameTag();
+  });
+
+  // Initialize
+  if (!checkLoggedInUser()) {
+      showLoginMenu();
+  }
+  
+  // Update unlocked effects based on saved data
+  effects.forEach(effect => {
+      effect.unlocked = unlockedEffects.includes(effect.id);
+  });
+  BOARD.addEventListener('click',()=>{
+      BOARD.focus();
+      initAudio();
+  });
+  
+  // Load custom skin dari user data
+  try {
+      if (customSkin) {
+          // Already loaded in loadUserData()
+      }
+  } catch (e) {
+      console.log('Error loading skin data:', e);
+  }
+})();
+</script>
+</body>
+</html>
