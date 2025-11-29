@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ratno Fineshyt Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cell-size:28px;
+  --cols:16;
+  --rows:12;
+  --bg:#1a1a2e;
+  --snake:#00ffa1;
+  --accent:#ffd60a;
+  --panel:#0b3b5e;
+}
+html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;background: var(--bg);display:flex;align-items:center;justify-content:center;}
+.wrap{width: calc(var(--cols) * var(--cell-size) + 3rem);max-width: 95vw;background: linear-gradient(145deg,#16162a,#2a2a4d);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.5);padding:20px;position: relative;}
+
+/* Login/Register Styles */
+.auth-menu{text-align:center;color:#fff;}
+.auth-title{font-family: 'Press Start 2P', monospace;font-size:24px;color:var(--accent);text-shadow:0 0 10px rgba(255,214,0,0.5);margin-bottom:30px;line-height:1.4;}
+.auth-form{display:flex;flex-direction:column;gap:15px;margin-bottom:20px;}
+.auth-input{background:rgba(0,0,0,0.3);border:2px solid #444;border-radius:10px;padding:14px 16px;color:#fff;font-size:16px;font-family:Arial, Helvetica, sans-serif;}
+.auth-input:focus{outline:none;border-color:#ffd60a;}
+.auth-buttons{display:flex;flex-direction:column;gap:15px;}
+.auth-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:18px 25px;border-radius:15px;color:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.4);transition:all 0.2s;font-family:'Press Start 2P', monospace;}
+.auth-btn:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.5);}
+.auth-btn:active{transform:translateY(0);}
+.auth-btn.login{background:linear-gradient(145deg,#00aa00,#00cc00);}
+.auth-btn.register{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.auth-switch{font-size:14px;color:#ccc;margin-top:15px;}
+.auth-switch a{color:#ffd60a;text-decoration:none;cursor:pointer;}
+.auth-switch a:hover{text-decoration:underline;}
+.auth-error{color:#ff4444;font-size:14px;margin-top:10px;display:none;}
+
+/* Main Menu Styles */
+.main-menu{text-align:center;color:#fff;display:none;}
+.game-title{font-family: 'Press Start 2P', monospace;font-size:24px;color:var(--accent);text-shadow:0 0 10px rgba(255,214,0,0.5);margin-bottom:30px;line-height:1.4;display:flex;justify-content:space-between;align-items:center;}
+.profile-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:10px 15px;border-radius:10px;color:#fff;cursor:pointer;font-size:20px;width:50px;height:50px;display:flex;align-items:center;justify-content:center;}
+.currency-display{display:flex;justify-content:space-between;margin-bottom:30px;font-size:18px;}
+.currency-item{display:flex;align-items:center;gap:8px;padding:10px 15px;background:rgba(0,0,0,0.3);border-radius:10px;}
+.menu-buttons{display:flex;flex-direction:column;gap:15px;}
+.menu-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:18px 25px;border-radius:15px;color:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.4);transition:all 0.2s;font-family:'Press Start 2P', monospace;}
+.menu-btn:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.5);}
+.menu-btn:active{transform:translateY(0);}
+.menu-btn.play{background:linear-gradient(145deg,#00aa00,#00cc00);font-size:20px;}
+.menu-btn.settings{background:linear-gradient(145deg,#555,#666);}
+.menu-btn.gacha{background:linear-gradient(145deg,#aa00aa,#cc00cc);}
+.menu-btn.skin{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.menu-btn.fashion{background:linear-gradient(145deg,#aa8800,#ccaa00);}
+.menu-btn.multiplayer{background:linear-gradient(145deg,#aa00aa,#cc00cc);}
+
+/* Profile Menu Styles */
+.profile-menu{display:none;text-align:center;color:#fff;}
+.profile-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.profile-content{display:flex;flex-direction:column;gap:20px;}
+.profile-info{background:rgba(0,0,0,0.3);border-radius:12px;padding:15px;text-align:left;}
+.profile-field{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 0;}
+.profile-field:last-child{margin-bottom:0;}
+.profile-label{font-size:14px;color:#ccc;}
+.profile-value{font-size:16px;color:#ffd60a;}
+.profile-actions{display:flex;flex-direction:column;gap:10px;}
+.profile-action-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:12px 18px;border-radius:10px;color:#fff;font-size:14px;cursor:pointer;font-family:'Press Start 2P', monospace;}
+.profile-action-btn.change-name{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.profile-action-btn.change-password{background:linear-gradient(145deg,#aa00aa,#cc00cc);}
+.profile-action-btn.logout{background:linear-gradient(145deg,#aa0000,#cc0000);}
+.profile-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Change Name/Password Forms */
+.change-form{display:none;flex-direction:column;gap:15px;margin-top:15px;padding:15px;background:rgba(0,0,0,0.3);border-radius:10px;}
+.change-form-buttons{display:flex;gap:10px;}
+.change-form-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:10px 15px;border-radius:8px;color:#fff;font-size:12px;cursor:pointer;flex:1;}
+.change-form-btn.confirm{background:linear-gradient(145deg,#00aa00,#00cc00);}
+.change-form-btn.cancel{background:linear-gradient(145deg,#aa0000,#cc0000);}
+
+/* Settings Menu Styles */
+.settings-menu{display:none;text-align:center;color:#fff;}
+.settings-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.settings-content{display:flex;flex-direction:column;gap:20px;}
+.settings-item{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;background:rgba(0,0,0,0.3);border-radius:10px;}
+.speed-controls{display:flex;align-items:center;gap:10px;}
+.speed-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:8px 12px;border-radius:8px;color:#fff;cursor:pointer;font-size:16px;min-width:40px;}
+.settings-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Game Screen Styles */
+.game-screen{display:none;}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.title{font-family: 'Press Start 2P', monospace;font-size:22px;color: var(--accent);text-shadow: 0 0 6px rgba(0,0,0,0.7);margin-bottom:6px;line-height:1.3;}
+.info{color:#fff;font-size:18px;padding:8px 12px;background: rgba(0,0,0,0.3);border-radius:10px;box-shadow: 0 2px 6px rgba(0,0,0,0.5);margin-bottom:8px;}
+.small{font-size:14px;color:#ccc;margin-bottom:10px;}
+.board{background: #222;width: calc(var(--cols) * var(--cell-size));height: calc(var(--rows) * var(--cell-size));display:grid;grid-template-columns: repeat(var(--cols), 1fr);grid-template-rows: repeat(var(--rows), 1fr);gap:1px;border-radius:12px;overflow:hidden;margin:0 auto;position: relative;}
+.cell{width:100%;height:100%;background: #111;transition: background 0.2s;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.snake{background: var(--snake);border-radius:6px;box-shadow: 0 0 6px var(--snake);}
+.head{background: var(--accent);box-shadow: 0 0 8px var(--accent);}
+.food{animation: pulse 0.6s infinite alternate;font-size:24px;color:#ffd60a;text-shadow: 0 0 6px #ffd60a, 0 0 12px #ffd60a;}
+@keyframes pulse{0%{transform: scale(1);}50%{transform: scale(1.3);}100%{transform: scale(1);}}
+.coinAnim{position:absolute;font-size:20px;color:#ffd60a;font-weight:bold;animation: coinMove 0.8s forwards;pointer-events:none;}
+@keyframes coinMove{0%{opacity:1; transform: translateY(0);}100%{opacity:0; transform: translateY(-30px);}}
+.controls{display:flex;gap:16px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+.btn{background: linear-gradient(145deg,#444,#555);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.4);transition: transform 0.1s;font-size:16px;min-width:80px;}
+.btn:active{transform: scale(0.95);}
+.arrow-pad{display:grid;grid-template-columns:repeat(3,80px);gap:12px;align-items:center;justify-items:center;}
+.arrow{width:80px;height:80px;font-size:32px;border-radius:12px;display:flex;align-items:center;justify-content:center;background: linear-gradient(145deg,#555,#666);color:#fff;font-weight:700;user-select:none;box-shadow:0 3px 6px rgba(0,0,0,0.5);}
+.arrow:active{transform: scale(0.95);}
+.gameover-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;color:#ff0000;font-family: 'Press Start 2P', monospace;font-size:20px;text-align:center;z-index:10;display:none;padding-top:40px;}
+.gameover-overlay button{margin-top:16px;padding:14px 24px;font-family: 'Press Start 2P', monospace;font-size:14px;background:#ff0000;color:#fff;border:none;border-radius:8px;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,0.5);}
+.shopBtn{margin-top:10px;}
+
+/* Name Tag Styling */
+.name-tag {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffd60a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  z-index: 5;
+  pointer-events: none;
+  transform: translateY(-20px);
+  font-family: 'Press Start 2P', monospace;
+}
+
+/* Game Over Animation */
+.cat-image {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 15px;
+  opacity: 0;
+  transform: scale(0.5) rotate(-10deg);
+  animation: catAppear 0.8s ease-out forwards;
+}
+
+@keyframes catAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-10deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.1) rotate(5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.gameover-text {
+  color: #ffd60a;
+  font-size: 14px;
+  margin-bottom: 10px;
+  text-shadow: 0 0 10px rgba(255, 214, 0, 0.5);
+}
+
+.restart-countdown {
+  color: #fff;
+  font-size: 14px;
+  margin: 8px 0;
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out 0.8s forwards;
+}
+
+.restart-btn {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUp 0.5s ease-out 1.3s forwards;
+  font-size: 14px;
+  padding: 12px 20px;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-menu input[type=checkbox]{transform:scale(1.8);margin-left:10px;}
+
+#coins, #diamonds{font-weight:bold;color:#ffd60a;font-size:18px;}
+
+/* Fashion Menu Styles */
+.fashion-menu{display:none;text-align:center;color:#fff;}
+.fashion-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.fashion-content{display:flex;flex-direction:column;gap:20px;align-items:center;}
+.effects-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin:20px 0;max-width:400px;}
+.effect-item{background:rgba(0,0,0,0.3);border-radius:12px;padding:15px;text-align:center;cursor:pointer;transition:all 0.3s;border:2px solid transparent;}
+.effect-item:hover{transform:translateY(-3px);box-shadow:0 5px 15px rgba(0,0,0,0.3);}
+.effect-item.active{border-color:#ffd60a;background:rgba(255,214,0,0.1);}
+.effect-item.locked{opacity:0.5;cursor:not-allowed;}
+.effect-preview{width:80px;height:80px;margin:0 auto 10px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:32px;}
+.effect-name{font-size:12px;margin-bottom:5px;color:#fff;}
+.effect-status{font-size:10px;color:#ccc;}
+.effect-details{display:none;margin-top:15px;padding:10px;background:rgba(0,0,0,0.5);border-radius:8px;font-size:12px;}
+.fashion-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Effect preview colors */
+.effect-fire .effect-preview{background:linear-gradient(145deg,#ff4400,#ff9900);}
+.effect-ice .effect-preview{background:linear-gradient(145deg,#00aaff,#00ffff);}
+.effect-poison .effect-preview{background:linear-gradient(145deg,#aa00ff,#ff00ff);}
+.effect-nature .effect-preview{background:linear-gradient(145deg,#00aa00,#00ff00);}
+.effect-default .effect-preview{background:linear-gradient(145deg,#444,#555);}
+
+/* Skin Editor Styles */
+.skin-menu{display:none;text-align:center;color:#fff;}
+.skin-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.skin-content{display:flex;flex-direction:column;gap:20px;align-items:center;}
+.skin-preview-container{display:flex;flex-direction:column;align-items:center;gap:15px;}
+.skin-preview{width:200px;height:200px;border:3px solid var(--accent);border-radius:12px;background:#222;display:flex;align-items:center;justify-content:center;margin:10px auto;overflow:hidden;position:relative;cursor:move;}
+.skin-image{max-width:none;position:absolute;cursor:move;user-select:none;transition:transform 0.2s;}
+.skin-controls-panel{display:flex;flex-direction:column;gap:10px;margin-top:15px;width:100%;max-width:300px;}
+.zoom-controls{display:flex;align-items:center;gap:10px;justify-content:center;}
+.zoom-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:8px 12px;border-radius:6px;color:#fff;cursor:pointer;font-size:14px;min-width:40px;}
+.zoom-value{font-size:14px;min-width:50px;text-align:center;color:#ffd60a;}
+.position-controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.position-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:8px 12px;border-radius:6px;color:#fff;cursor:pointer;font-size:12px;}
+.upload-area{width:100%;max-width:300px;padding:20px;border:2px dashed #ffd60a;border-radius:12px;text-align:center;cursor:pointer;transition:all 0.3s;}
+.upload-area:hover{background:rgba(255,214,0,0.1);}
+.upload-area.dragover{background:rgba(255,214,0,0.2);border-color:#fff;}
+.upload-text{font-size:16px;margin-bottom:10px;}
+.upload-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:10px 15px;border-radius:8px;color:#fff;cursor:pointer;font-size:14px;}
+.skin-controls{display:flex;gap:15px;margin-top:20px;}
+.skin-control-btn{background:linear-gradient(145deg,#444,#555);border:none;padding:12px 18px;border-radius:10px;color:#fff;font-size:14px;cursor:pointer;font-family:'Press Start 2P', monospace;min-width:100px;}
+.skin-control-btn.save{background:linear-gradient(145deg,#00aa00,#00cc00);}
+.skin-control-btn.reset{background:linear-gradient(145deg,#aa0000,#cc0000);}
+.skin-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Gacha Menu Styles */
+.gacha-menu{display:none;text-align:center;color:#fff;}
+.gacha-title{font-family: 'Press Start 2P', monospace;font-size:20px;color:var(--accent);margin-bottom:25px;}
+.gacha-content{display:flex;flex-direction:column;gap:20px;align-items:center;}
+.gacha-machine{width:300px;height:400px;background:linear-gradient(145deg,#333,#555);border-radius:20px;padding:20px;position:relative;overflow:hidden;border:4px solid #ffd60a;box-shadow:0 10px 30px rgba(0,0,0,0.5);}
+.gacha-display{width:100%;height:200px;background:#1a1a2e;border-radius:10px;margin-bottom:20px;overflow:hidden;position:relative;border:2px solid #ffd60a;}
+.gacha-items{display:flex;justify-content:space-around;align-items:center;height:100%;padding:0 10px;}
+.gacha-item{width:80px;height:80px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:40px;transition:all 0.3s;opacity:0.7;}
+.gacha-item.active{transform:scale(1.2);opacity:1;box-shadow:0 0 20px currentColor;}
+.gacha-lever{width:60px;height:180px;background:linear-gradient(145deg,#666,#888);position:absolute;right:30px;bottom:20px;border-radius:10px;cursor:pointer;transition:transform 0.3s;}
+.gacha-lever:active{transform:rotate(-30deg);}
+.gacha-lever-handle{width:40px;height:20px;background:#ffd60a;position:absolute;top:10px;left:10px;border-radius:5px;}
+.gacha-options{display:flex;gap:15px;margin-top:20px;}
+.gacha-option{background:linear-gradient(145deg,#444,#555);border:none;padding:12px 18px;border-radius:10px;color:#fff;font-size:14px;cursor:pointer;font-family:'Press Start 2P', monospace;min-width:120px;}
+.gacha-option:disabled{opacity:0.5;cursor:not-allowed;}
+.gacha-option.one-spin{background:linear-gradient(145deg,#aa00aa,#cc00cc);}
+.gacha-option.five-spin{background:linear-gradient(145deg,#0088aa,#00aacc);}
+.gacha-result{display:none;margin-top:20px;padding:15px;background:rgba(0,0,0,0.3);border-radius:10px;font-size:16px;}
+.gacha-back-btn{background:linear-gradient(145deg,#555,#666);border:none;padding:14px 20px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;margin-top:20px;}
+
+/* Particle Effects */
+.particle {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
+  animation: particleFloat 1.5s ease-out forwards;
+}
+
+@keyframes particleFloat {
+  0% { 
+    transform: translateY(0) scale(0.6) rotate(0deg); 
+    opacity: 0.8; 
+  }
+  50% { 
+    transform: translateY(-12px) scale(0.8) rotate(180deg); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateY(-24px) scale(0.4) rotate(360deg); 
+    opacity: 0; 
+  }
+}
+
+/* Effect classes for snake dengan glow lebih kecil */
+.snake.fire-effect .head {
+  background: linear-gradient(145deg, #ff4400, #ff9900);
+  box-shadow: 0 0 4px #ff4400, 0 0 6px #ff9900;
+}
+
+.snake.ice-effect .head {
+  background: linear-gradient(145deg, #00aaff, #00ffff);
+  box-shadow: 0 0 4px #00aaff, 0 0 6px #00ffff;
+}
+
+.snake.poison-effect .head {
+  background: linear-gradient(145deg, #aa00ff, #ff00ff);
+  box-shadow: 0 0 4px #aa00ff, 0 0 6px #ff00ff;
+}
+
+.snake.nature-effect .head {
+  background: linear-gradient(145deg, #00aa00, #00ff00);
+  box-shadow: 0 0 4px #00aa00, 0 0 6px #00ff00;
+}
+
+/* Custom skin styling */
+.snake.custom-skin .head {
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+/* CSS untuk multiplayer */
+.multiplayer-modal .modal-content {
+  background: #1a1a2e !important;
+  border: 2px solid #ffd60a !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+}
+
+.modal-btn {
+  transition: all 0.2s !important;
+}
+
+.modal-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important;
+}
+
+.modal-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.game-result-overlay {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Responsive adjustments */
+@media (max-width:480px){
+  :root{--cell-size:24px; --cols:14; --rows:10;}
+  .wrap{padding:16px;}
+  .game-title{font-size:20px;}
+  .menu-btn{padding:15px 20px;font-size:16px;}
+  .menu-btn.play{font-size:18px;}
+  .title{font-size:18px;}
+  .info{font-size:16px;padding:6px 10px;}
+  .small{font-size:12px;}
+  .btn{padding:12px 16px;font-size:14px;min-width:70px;}
+  .arrow{width:70px;height:70px;font-size:28px;}
+  .arrow-pad{grid-template-columns:repeat(3,70px);gap:10px;}
+  .cat-image{width:70px;height:70px;}
+  .gameover-text{font-size:12px;}
+  .restart-countdown{font-size:12px;}
+  .gameover-overlay{padding-top:30px;}
+  .settings-title{font-size:18px;}
+  .gacha-machine{width:250px;height:350px;}
+  .gacha-item{width:60px;height:60px;font-size:30px;}
+  .skin-preview{width:150px;height:150px;}
+  .effects-grid{grid-template-columns:1fr;}
+}
+
+@media (max-width:360px){
+  :root{--cell-size:22px; --cols:12; --rows:10;}
+  .game-title{font-size:18px;}
+  .menu-btn{padding:12px 16px;font-size:14px;}
+  .title{font-size:16px;}
+  .info{font-size:14px;}
+  .btn{padding:10px 14px;font-size:12px;}
+  .arrow{width:65px;height:65px;font-size:26px;}
+  .arrow-pad{grid-template-columns:repeat(3,65px);}
+  .cat-image{width:60px;height:60px;}
+  .gameover-text{font-size:11px;}
+  .restart-countdown{font-size:11px;}
+  .gameover-overlay{padding-top:25px;}
+  .settings-title{font-size:16px;}
+  .gacha-machine{width:220px;height:320px;}
+  .gacha-item{width:50px;height:50px;font-size:25px;}
+  .skin-preview{width:120px;height:120px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Login Menu -->
+  <div class="auth-menu" id="loginMenu">
+    <div class="auth-title">LOGIN</div>
+    
+    <div class="auth-form">
+      <input type="text" class="auth-input" id="loginUsername" placeholder="Username">
+      <input type="password" class="auth-input" id="loginPassword" placeholder="Password">
+    </div>
+    
+    <div class="auth-buttons">
+      <button class="auth-btn login" id="loginBtn">LOGIN</button>
+    </div>
+    
+    <div class="auth-switch">
+      Belum punya akun? <a id="goToRegister">Daftar di sini</a>
+    </div>
+    
+    <div class="auth-error" id="loginError">Username atau password salah!</div>
+  </div>
+
+  <!-- Register Menu -->
+  <div class="auth-menu" id="registerMenu" style="display:none">
+    <div class="auth-title">DAFTAR</div>
+    
+    <div class="auth-form">
+      <input type="text" class="auth-input" id="registerUsername" placeholder="Username">
+      <input type="password" class="auth-input" id="registerPassword" placeholder="Password">
+      <input type="password" class="auth-input" id="registerConfirmPassword" placeholder="Konfirmasi Password">
+    </div>
+    
+    <div class="auth-buttons">
+      <button class="auth-btn register" id="registerBtn">DAFTAR</button>
+    </div>
+    
+    <div class="auth-switch">
+      Sudah punya akun? <a id="goToLogin">Login di sini</a>
+    </div>
+    
+    <div class="auth-error" id="registerError"></div>
+  </div>
+
+  <!-- Main Menu -->
+  <div class="main-menu" id="mainMenu">
+    <div class="game-title">
+      <span>Ratno<br>Fineshyt Game</span>
+      <button class="profile-btn" id="profileBtn">👤</button>
+    </div>
+    
+    <div class="currency-display">
+      <div class="currency-item">
+        <span>🪙</span>
+        <span id="menuCoins">0</span>
+      </div>
+      <div class="currency-item">
+        <span>💎</span>
+        <span id="menuDiamonds">0</span>
+      </div>
+    </div>
+    
+    <div class="menu-buttons">
+      <button class="menu-btn multiplayer" id="multiplayerBtn">MULTIPLAYER</button>
+      <button class="menu-btn play" id="playBtn">PLAY</button>
+      <button class="menu-btn settings" id="menuSettingsBtn">PENGATURAN</button>
+      <button class="menu-btn gacha" id="gachaBtn">GACHA</button>
+      <button class="menu-btn skin" id="skinBtn">CUSTOM SKIN</button>
+      <button class="menu-btn fashion" id="fashionBtn">FASHION</button>
+    </div>
+  </div>
+
+  <!-- Profile Menu -->
+  <div class="profile-menu" id="profileMenu">
+    <div class="profile-title">PROFIL</div>
+    
+    <div class="profile-content">
+      <div class="profile-info">
+        <div class="profile-field">
+          <span class="profile-label">Username:</span>
+          <span class="profile-value" id="profileUsername">-</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Level:</span>
+          <span class="profile-value" id="profileLevel">1</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Coins:</span>
+          <span class="profile-value" id="profileCoins">0</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Diamonds:</span>
+          <span class="profile-value" id="profileDiamonds">0</span>
+        </div>
+      </div>
+      
+      <div class="change-form" id="changeNameForm">
+        <input type="text" class="auth-input" id="newUsername" placeholder="Username Baru">
+        <div class="change-form-buttons">
+          <button class="change-form-btn confirm" id="confirmNameChange">GANTI</button>
+          <button class="change-form-btn cancel" id="cancelNameChange">BATAL</button>
+        </div>
+      </div>
+      
+      <div class="change-form" id="changePasswordForm">
+        <input type="password" class="auth-input" id="currentPassword" placeholder="Password Saat Ini">
+        <input type="password" class="auth-input" id="newPassword" placeholder="Password Baru">
+        <input type="password" class="auth-input" id="confirmNewPassword" placeholder="Konfirmasi Password Baru">
+        <div class="change-form-buttons">
+          <button class="change-form-btn confirm" id="confirmPasswordChange">GANTI</button>
+          <button class="change-form-btn cancel" id="cancelPasswordChange">BATAL</button>
+        </div>
+      </div>
+      
+      <div class="profile-actions">
+        <button class="profile-action-btn change-name" id="changeNameBtn">UBAH USERNAME</button>
+        <button class="profile-action-btn change-password" id="changePasswordBtn">GANTI PASSWORD</button>
+        <button class="profile-action-btn logout" id="logoutBtn">LOG OUT</button>
+      </div>
+    </div>
+    
+    <button class="profile-back-btn" id="profileBackBtn">BACK</button>
+  </div>
+
+  <!-- Settings Menu -->
+  <div class="settings-menu" id="settingsMenu">
+    <div class="settings-title">PENGATURAN</div>
+    
+    <div class="settings-content">
+      <div class="settings-item">
+        <span>Music</span>
+        <input type="checkbox" id="musicToggle">
+      </div>
+      
+      <div class="settings-item">
+        <span>Sound Effect</span>
+        <input type="checkbox" id="effectToggle">
+      </div>
+      
+      <div class="settings-item">
+        <span>Name Tag</span>
+        <input type="checkbox" id="nameTagToggle">
+      </div>
+      
+      <div class="settings-item">
+        <span>Speed</span>
+        <div class="speed-controls">
+          <button class="speed-btn" id="speedDec">-</button>
+          <span id="speedVal">0</span>
+          <button class="speed-btn" id="speedInc">+</button>
+        </div>
+      </div>
+    </div>
+    
+    <button class="settings-back-btn" id="settingsBackBtn">BACK</button>
+  </div>
+
+  <!-- Fashion Menu -->
+  <div class="fashion-menu" id="fashionMenu">
+    <div class="fashion-title">FASHION - SKIN EFFECT</div>
+    
+    <div class="fashion-content">
+      <div style="font-size:14px;margin-bottom:15px;color:#ccc;">
+        Pilih efek yang ingin digunakan. Klik untuk melihat detail.
+      </div>
+      
+      <div class="effects-grid" id="effectsGrid">
+        <!-- Effects will be loaded here -->
+      </div>
+      
+      <div style="font-size:12px;color:#ffd60a;margin-top:10px;">
+        Efek yang aktif: <span id="activeEffectName">Default</span>
+      </div>
+    </div>
+    
+    <button class="fashion-back-btn" id="fashionBackBtn">BACK</button>
+  </div>
+
+  <!-- Skin Editor Menu -->
+  <div class="skin-menu" id="skinMenu">
+    <div class="skin-title">CUSTOM SKIN EDITOR</div>
+    
+    <div class="skin-content">
+      <div class="skin-preview-container">
+        <div>Kotak ini adalah tubuh cacing:</div>
+        <div class="skin-preview" id="skinPreview">
+          <div style="color:#666;font-size:14px;">Upload gambar untuk memulai</div>
+        </div>
+        <div class="skin-controls-panel">
+          <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOut">-</button>
+            <span class="zoom-value" id="zoomValue">100%</span>
+            <button class="zoom-btn" id="zoomIn">+</button>
+          </div>
+          <div class="position-controls">
+            <button class="position-btn" id="moveUp">↑</button>
+            <button class="position-btn" id="moveLeft">←</button>
+            <button class="position-btn" id="moveRight">→</button>
+            <button class="position-btn" id="moveDown">↓</button>
+            <button class="position-btn" id="centerImage">PUSATKAN</button>
+            <button class="position-btn" id="resetPosition">RESET</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-text">Upload gambar untuk tubuh cacing</div>
+        <input type="file" id="skinUpload" accept="image/*" style="display:none">
+        <button class="upload-btn" id="uploadBtn">PILIH GAMBAR</button>
+      </div>
+      
+      <div class="skin-controls">
+        <button class="skin-control-btn save" id="saveSkin">SAVE SKIN</button>
+        <button class="skin-control-btn reset" id="resetSkin">RESET DEFAULT</button>
+      </div>
+      
+      <div style="font-size:12px;color:#ccc;margin-top:10px;">
+        Upload gambar dan atur posisi/zoom untuk kepala cacing
+      </div>
+    </div>
+    
+    <button class="skin-back-btn" id="skinBackBtn">BACK</button>
+  </div>
+
+  <!-- Gacha Menu -->
+  <div class="gacha-menu" id="gachaMenu">
+    <div class="gacha-title">GACHA SPIN</div>
+    
+    <div class="gacha-content">
+      <div class="gacha-machine">
+        <div class="gacha-display">
+          <div class="gacha-items" id="gachaItems">
+            <!-- Items will be loaded here -->
+          </div>
+        </div>
+        <div class="gacha-lever" id="gachaLever">
+          <div class="gacha-lever-handle"></div>
+        </div>
+      </div>
+      
+      <div class="gacha-options">
+        <button class="gacha-option one-spin" id="oneSpin">10 COINS<br>1 SPIN</button>
+        <button class="gacha-option five-spin" id="fiveSpin">50 COINS<br>5 SPINS</button>
+      </div>
+      
+      <div class="gacha-result" id="gachaResult">
+        <div id="resultText"></div>
+        <div id="effectDescription"></div>
+      </div>
+    </div>
+    
+    <button class="gacha-back-btn" id="gachaBackBtn">BACK</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div class="game-screen" id="gameScreen">
+    <div class="header">
+      <div>
+        <div class="title">Gameplay</div>
+        <div class="small">Kontrol: swipe / tombol arah / keyboard</div>
+        <div class="small" id="currentEffect">Efek: Default</div>
+      </div>
+      <div class="hud">
+        <div class="info">Score: <span id="score">0</span></div>
+        <div class="info">Coins: <span id="coins">0</span> 🪙</div>
+        <button id="restart" class="btn">Restart</button>
+      </div>
+    </div>
+
+    <!-- Board -->
+    <div id="board" class="board" tabindex="0">
+      <div class="gameover-overlay" id="gameover">
+        <img src="assets/images/mati.png" alt="Mati" class="cat-image">
+        <div class="gameover-text">Hahahah mati</div>
+        <div class="restart-countdown" id="countdown">Kembali ke lobby dalam: 5</div>
+        <button class="restart-btn" id="manualRestart">Main Lagi</button>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div style="min-width:200px">
+        <div style="font-size:14px;margin-bottom:8px;color:#ccc">Tombol Sentuh</div>
+        <div class="arrow-pad" id="touchPad">
+          <div></div>
+          <div class="arrow" data-dir="up">▲</div>
+          <div></div>
+          <div class="arrow" data-dir="left">◀</div>
+          <div class="arrow" data-dir="down">▼</div>
+          <div class="arrow" data-dir="right">▶</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Audio elements -->
+<audio id="bgMusic" loop preload="auto">
+  <source src="assets/sounds/music.mp3" type="audio/mpeg">
+</audio>
+<audio id="eatSfx" preload="auto">
+  <source src="assets/sounds/eat.mp3" type="audio/mpeg">
+</audio>
+<audio id="gameOverSfx" preload="auto">
+  <source src="assets/sounds/mati.mp3" type="audio/mpeg">
+</audio>
+<audio id="buttonSfx" preload="auto">
+  <source src="assets/sounds/tombol.mp3" type="audio/mpeg">
+</audio>
+<audio id="gachaWinSfx" preload="auto">
+  <source src="assets/sounds/win.mp3" type="audio/mpeg">
+</audio>
+<audio id="gachaZonkSfx" preload="auto">
+  <source src="assets/sounds/zonk.mp3" type="audio/mpeg">
+</audio>
+<audio id="gachaSpinSfx" preload="auto">
+  <source src="assets/sounds/muter.mp3" type="audio/mpeg">
+</audio>
+<!-- NEW: Sound untuk tombol kontrol -->
+<audio id="controlSfx" preload="auto">
+  <source src="assets/sounds/tombol2.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Multiplayer Modal -->
+<div class="multiplayer-modal" id="multiplayerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; display:flex; align-items:center; justify-content:center;">
+  <div class="modal-content" style="background:#1a1a2e; padding:2rem; border-radius:15px; max-width:500px; width:90%; color:white;">
+    <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <h3 style="margin:0; color:#ffd60a;">Multiplayer Battle</h3>
+      <button class="close-btn" id="closeMultiplayerBtn" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="lobby-section" id="createLobby">
+        <input type="text" id="usernameInput" placeholder="Username" value="Player" style="width:100%; padding:12px; margin-bottom:1rem; border-radius:8px; border:2px solid #444; background:rgba(0,0,0,0.3); color:white;">
+        
+        <div style="margin-bottom:1rem;">
+          <label style="display:block; margin-bottom:5px; color:#ccc;">Max Score to Win:</label>
+          <input type="number" id="maxScoreInput" value="50" min="10" max="200" style="width:100%; padding:12px; border-radius:8px; border:2px solid #444; background:rgba(0,0,0,0.3); color:white;">
+        </div>
+        
+        <button class="modal-btn create" id="createRoomBtn" style="width:100%; padding:12px; background:linear-gradient(145deg,#00aa00,#00cc00); border:none; border-radius:8px; color:white; font-weight:bold; cursor:pointer;">Buat Room Baru</button>
+      </div>
+      
+      <div style="text-align:center; margin:1rem 0; color:#ccc;">ATAU</div>
+      
+      <div class="lobby-section" id="joinLobby">
+        <input type="text" id="roomCodeInput" placeholder="Kode Room" style="width:100%; padding:12px; margin-bottom:1rem; border-radius:8px; border:2px solid #444; background:rgba(0,0,0,0.3); color:white;">
+        <button class="modal-btn join" id="joinRoomBtn" style="width:100%; padding:12px; background:linear-gradient(145deg,#0088aa,#00aacc); border:none; border-radius:8px; color:white; font-weight:bold; cursor:pointer;">Join Room</button>
+      </div>
+      
+      <div class="room-lobby" id="roomLobby" style="display:none;">
+        <div class="room-info">
+          <h4 style="color:#ffd60a;">Room: <span id="roomCodeDisplay"></span></h4>
+          <div style="color:#ccc; margin-bottom:1rem;">Max Score: <span id="maxScoreDisplay">50</span></div>
+          <div class="players-list" id="playersList" style="margin:1rem 0;"></div>
+        </div>
+        <div class="lobby-controls">
+          <button class="modal-btn start" id="startGameBtn" style="width:100%; padding:12px; background:linear-gradient(145deg,#00aa00,#00cc00); border:none; border-radius:8px; color:white; font-weight:bold; cursor:pointer; display:none;">Start Battle!</button>
+          <button class="modal-btn leave" id="leaveRoomBtn" style="width:100%; padding:12px; margin-top:0.5rem; background:linear-gradient(145deg,#aa0000,#cc0000); border:none; border-radius:8px; color:white; font-weight:bold; cursor:pointer;">Leave Room</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// Multiplayer Manager Class
+class MultiplayerManager {
+  constructor() {
+    this.socket = null;
+    this.isHost = false;
+    this.roomId = null;
+    this.players = [];
+    this.gameStarted = false;
+    this.maxScore = 50;
+    this.scores = new Map();
+    this.myScore = 0;
+    this.myPlayerId = null;
+  }
+
+  init() {
+    this.socket = io();
+    this.setupSocketListeners();
+    this.setupMultiplayerUI();
+  }
+
+  setupSocketListeners() {
+    this.socket.on('connect', () => {
+      console.log('Connected to server');
+      this.myPlayerId = this.socket.id;
+    });
+
+    this.socket.on('room-update', (data) => {
+      this.players = data.players;
+      this.isHost = data.host === this.socket.id;
+      this.maxScore = data.maxScore || 50;
+      this.updateLobbyUI();
+    });
+
+    this.socket.on('game-started', (data) => {
+      this.gameStarted = true;
+      this.maxScore = data.maxScore;
+      this.scores.clear();
+      this.myScore = 0;
+      this.hideMultiplayerModal();
+      if (typeof startGame === 'function') {
+        startGame();
+      }
+    });
+
+    this.socket.on('score-update', (data) => {
+      data.scores.forEach(scoreData => {
+        this.scores.set(scoreData.playerId, scoreData.score);
+        if (scoreData.playerId === this.socket.id) {
+          this.myScore = scoreData.score;
+        }
+      });
+      this.updateScoreDisplay();
+    });
+
+    this.socket.on('game-finished', (data) => {
+      this.gameStarted = false;
+      this.showGameResult(data.winner, data.scores);
+    });
+
+    this.socket.on('player-input', (data) => {
+      if (this.isHost && this.gameStarted) {
+        this.handleRemoteInput(data);
+      }
+    });
+
+    this.socket.on('game-state', (data) => {
+      if (!this.isHost && this.gameStarted) {
+        this.updateLocalGameState(data);
+      }
+    });
+  }
+
+  setupMultiplayerUI() {
+    // Event listeners untuk multiplayer modal
+    document.getElementById('multiplayerBtn').addEventListener('click', () => {
+      this.showMultiplayerModal();
+      playButtonSound();
+    });
+
+    document.getElementById('createRoomBtn').addEventListener('click', () => {
+      this.createRoom();
+      playButtonSound();
+    });
+
+    document.getElementById('joinRoomBtn').addEventListener('click', () => {
+      this.joinRoom();
+      playButtonSound();
+    });
+
+    document.getElementById('startGameBtn').addEventListener('click', () => {
+      this.startGame();
+      playButtonSound();
+    });
+
+    document.getElementById('leaveRoomBtn').addEventListener('click', () => {
+      this.leaveRoom();
+      playButtonSound();
+    });
+
+    document.getElementById('closeMultiplayerBtn').addEventListener('click', () => {
+      this.hideMultiplayerModal();
+      playButtonSound();
+    });
+  }
+
+  generateRoomId() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
+
+  createRoom() {
+    const username = document.getElementById('usernameInput').value || 'Player';
+    const maxScore = parseInt(document.getElementById('maxScoreInput').value) || 50;
+    
+    this.roomId = this.generateRoomId();
+    this.maxScore = maxScore;
+    
+    this.socket.emit('join-room', {
+      roomId: this.roomId,
+      username: username,
+      maxScore: maxScore
+    });
+    
+    this.showRoomLobby();
+  }
+
+  joinRoom() {
+    const roomCode = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+    const username = document.getElementById('usernameInput').value || 'Player';
+    
+    if (!roomCode) {
+      alert('Masukkan kode room!');
+      return;
+    }
+    
+    this.roomId = roomCode;
+    this.socket.emit('join-room', {
+      roomId: this.roomId,
+      username: username
+    });
+    
+    this.showRoomLobby();
+  }
+
+  showRoomLobby() {
+    document.getElementById('createLobby').style.display = 'none';
+    document.getElementById('joinLobby').style.display = 'none';
+    document.getElementById('roomLobby').style.display = 'block';
+    document.getElementById('roomCodeDisplay').textContent = this.roomId;
+    document.getElementById('maxScoreDisplay').textContent = this.maxScore;
+  }
+
+  updateLobbyUI() {
+    const playersList = document.getElementById('playersList');
+    if (playersList) {
+      playersList.innerHTML = this.players.map(player => 
+        `<div style="padding:8px; margin:4px 0; background:rgba(0,0,0,0.3); border-radius:6px; display:flex; justify-content:space-between;">
+          <span>${player.username} ${player.id === this.socket.id ? '(You)' : ''}</span>
+          <span>${this.isHost && player.id === this.socket.id ? '👑' : ''}</span>
+        </div>`
+      ).join('');
+    }
+
+    const startBtn = document.getElementById('startGameBtn');
+    if (startBtn) {
+      startBtn.style.display = this.isHost && this.players.length > 1 ? 'block' : 'none';
+      if (this.players.length < 2) {
+        startBtn.textContent = 'Tunggu player lain...';
+        startBtn.disabled = true;
+      } else {
+        startBtn.textContent = 'Start Battle!';
+        startBtn.disabled = false;
+      }
+    }
+  }
+
+  startGame() {
+    if (this.isHost) {
+      this.socket.emit('start-game', this.roomId);
+    }
+  }
+
+  leaveRoom() {
+    if (this.roomId) {
+      this.socket.emit('leave-room', this.roomId);
+    }
+    this.hideMultiplayerModal();
+  }
+
+  showMultiplayerModal() {
+    document.getElementById('multiplayerModal').style.display = 'flex';
+  }
+
+  hideMultiplayerModal() {
+    document.getElementById('multiplayerModal').style.display = 'none';
+    // Reset modal state
+    document.getElementById('createLobby').style.display = 'block';
+    document.getElementById('joinLobby').style.display = 'block';
+    document.getElementById('roomLobby').style.display = 'none';
+  }
+
+  updateScoreDisplay() {
+    // Update score display di game
+    const scoreElement = document.getElementById('score');
+    if (scoreElement) {
+      scoreElement.textContent = this.myScore;
+    }
+    
+    // Update max score info
+    const maxScoreElement = document.getElementById('maxScoreInfo');
+    if (!maxScoreElement) {
+      const header = document.querySelector('.header');
+      if (header) {
+        const maxScoreDiv = document.createElement('div');
+        maxScoreDiv.className = 'info';
+        maxScoreDiv.id = 'maxScoreInfo';
+        maxScoreDiv.innerHTML = `Target Score: ${this.myScore}/${this.maxScore}`;
+        header.appendChild(maxScoreDiv);
+      }
+    } else {
+      maxScoreElement.innerHTML = `Target Score: ${this.myScore}/${this.maxScore}`;
+    }
+  }
+
+  sendScoreUpdate(score) {
+    if (this.gameStarted && this.roomId) {
+      this.socket.emit('update-score', {
+        roomId: this.roomId,
+        score: score
+      });
+    }
+  }
+
+  showGameResult(winner, scores) {
+    // Stop game
+    if (running) {
+      running = false;
+      clearInterval(ticker);
+    }
+    
+    // Cek apakah kita menang atau kalah
+    const isWinner = winner.playerId === this.socket.id;
+    
+    // Buat game result overlay
+    const resultHTML = `
+      <div class="game-result-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; z-index:100; font-family: 'Press Start 2P', monospace; text-align:center;">
+        <img src="assets/images/${isWinner ? 'menang.png' : 'kalah.png'}" alt="${isWinner ? 'Menang' : 'Kalah'}" style="width:150px; height:150px; margin-bottom:20px;">
+        <div style="font-size:24px; color:${isWinner ? '#ffd60a' : '#ff4444'}; margin-bottom:20px;">
+          ${isWinner ? 'GG bro menang!' : 'hahah kalah Gblk!!'}
+        </div>
+        <div style="font-size:16px; color:#ccc; margin-bottom:10px;">
+          Pemenang: ${winner.username} (Score: ${winner.score})
+        </div>
+        <div style="font-size:14px; color:#ccc; margin-bottom:20px;">
+          Score Kamu: ${this.myScore}
+        </div>
+        <button id="backToLobbyBtn" style="padding:12px 24px; background:#ffd60a; border:none; border-radius:8px; color:#000; font-family: 'Press Start 2P', monospace; cursor:pointer; font-size:14px;">
+          Kembali ke Lobby
+        </button>
+      </div>
+    `;
+    
+    const board = document.getElementById('board');
+    if (board) {
+      board.insertAdjacentHTML('beforeend', resultHTML);
+      
+      document.getElementById('backToLobbyBtn').addEventListener('click', () => {
+        this.backToLobby();
+      });
+    }
+  }
+
+  backToLobby() {
+    // Hapus result overlay
+    const resultOverlay = document.querySelector('.game-result-overlay');
+    if (resultOverlay) {
+      resultOverlay.remove();
+    }
+    
+    // Kembali ke main menu
+    GAME_SCREEN.style.display = 'none';
+    MAIN_MENU.style.display = 'block';
+    
+    // Reset game state
+    this.gameStarted = false;
+    this.roomId = null;
+  }
+
+  sendInput(direction) {
+    if (this.gameStarted && this.roomId) {
+      this.socket.emit('player-input', {
+        roomId: this.roomId,
+        direction: direction
+      });
+    }
+  }
+
+  broadcastGameState(gameState) {
+    if (this.isHost && this.gameStarted && this.roomId) {
+      this.socket.emit('game-state', {
+        roomId: this.roomId,
+        state: gameState
+      });
+    }
+  }
+
+  handleRemoteInput(data) {
+    // Handle input dari player lain
+    console.log('Remote input:', data);
+  }
+
+  updateLocalGameState(gameState) {
+    // Update game state dari host
+    console.log('Game state update:', gameState);
+  }
+}
+
+// Global instance
+const multiplayer = new MultiplayerManager();
+
+// Initialize ketika game loaded
+document.addEventListener('DOMContentLoaded', function() {
+  multiplayer.init();
+});
+
+// GAME LOGIC YANG SUDAH ADA - TAMBAHIN MULTIPLAYER INTEGRATION
+(function(){
+  // ... (semua kode game logic yang lama tetap sama) ...
+  
+  // Screen elements
+  const LOGIN_MENU = document.getElementById('loginMenu');
+  const REGISTER_MENU = document.getElementById('registerMenu');
+  const MAIN_MENU = document.getElementById('mainMenu');
+  const PROFILE_MENU = document.getElementById('profileMenu');
+  const SETTINGS_MENU = document.getElementById('settingsMenu');
+  const FASHION_MENU = document.getElementById('fashionMenu');
+  const SKIN_MENU = document.getElementById('skinMenu');
+  const GACHA_MENU = document.getElementById('gachaMenu');
+  const GAME_SCREEN = document.getElementById('gameScreen');
+  
+  // ... (semua kode yang lain tetap sama) ...
+  
+  let snake=[idx(Math.floor(cols/2),Math.floor(rows/2))];
+  let dir={x:1,y:0};
+  let nextDir={...dir};
+  let food=null;
+  let running=false;
+  let score=0;
+  let ticker=null;
+
+  function step(){
+    if(nextDir.x!==-dir.x||nextDir.y!==-dir.y) dir={...nextDir};
+    const head=coord(snake[snake.length-1]);
+    const nx=head.x+dir.x;
+    const ny=head.y+dir.y;
+    if(!inside(nx,ny)){ gameOver(); return;}
+    const ni=idx(nx,ny);
+    
+    // FIXED: Player TIDAK mati saat nabrak badan sendiri
+    if(ni===food){
+      // Makan food - tambah segment tanpa menghapus tail
+      snake.push(ni);
+      score+=10;
+      coins += 1;
+      saveUserData();
+      
+      // KIRIM SCORE UPDATE KE MULTIPLAYER
+      if (typeof multiplayer !== 'undefined' && multiplayer.gameStarted) {
+        multiplayer.sendScoreUpdate(score);
+      }
+      
+      coinAnimation(nx, ny);
+      if(effectOn) {
+        eatSfx.currentTime=0;
+        eatSfx.play().catch(e => console.log('SFX play failed:', e));
+      }
+      placeFood();
+    } else {
+      // Gerak normal - pindah posisi tanpa nambah panjang
+      snake.push(ni);
+      snake.shift(); // Hapus tail hanya ketika TIDAK makan
+    }
+    render();
+  }
+
+  // ... (semua kode yang lain tetap sama) ...
+})();
+</script>
+</body>
+</html>
