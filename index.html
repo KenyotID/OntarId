@@ -23,14 +23,12 @@
             flex-direction: column;
             align-items: center;
             padding: 10px;
-            overflow-x: hidden;
         }
 
         .scene {
             display: none;
             width: 100%;
             max-width: 500px;
-            animation: fadeIn 0.3s ease-in;
             flex-direction: column;
             align-items: center;
             gap: 15px;
@@ -40,11 +38,6 @@
             display: flex;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         /* MAIN MENU */
         .main-menu {
             text-align: center;
@@ -52,18 +45,11 @@
         }
 
         .game-title {
-            font-size: 2.8rem;
+            font-size: 2.5rem;
             margin-bottom: 5px;
-            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f, #4d96ff);
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-        }
-
-        .game-subtitle {
-            font-size: 1rem;
-            color: #a0a0a0;
-            margin-bottom: 30px;
         }
 
         .menu-buttons {
@@ -81,15 +67,6 @@
             font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .menu-btn:active {
-            transform: scale(0.98);
         }
 
         .btn-primary {
@@ -102,22 +79,112 @@
             color: white;
         }
 
-        .btn-warning {
-            background: linear-gradient(135deg, #ffd93d, #ffc107);
-            color: #333;
-        }
-
-        /* ROOM CREATION */
-        .room-creation {
-            gap: 20px;
+        /* GAME SCENE */
+        .game-scene {
+            gap: 15px;
             width: 100%;
         }
 
-        .creation-title {
-            font-size: 2rem;
-            color: #ffd93d;
-            margin-bottom: 10px;
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 10px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: 8px;
             text-align: center;
+            min-width: 80px;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffd93d;
+        }
+
+        .game-board {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #333;
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            text-align: center;
+        }
+
+        .game-over h2 {
+            color: #ff6b6b;
+            margin-bottom: 15px;
+            font-size: 2rem;
+        }
+
+        /* CONTROLS */
+        .game-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-btn-direction {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #4d96ff, #1e88e5);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .control-btn-direction:active {
+            transform: scale(0.95);
+        }
+
+        /* SIMPLE ROOM CREATION */
+        .room-creation {
+            gap: 20px;
+            width: 100%;
         }
 
         .creation-form {
@@ -137,7 +204,7 @@
             color: #a0a0a0;
         }
 
-        .form-group input, .form-group select {
+        .form-group input {
             width: 100%;
             padding: 12px;
             background: rgba(255, 255, 255, 0.05);
@@ -166,352 +233,6 @@
             background: rgba(255, 255, 255, 0.1);
             color: white;
         }
-
-        /* LOBBY */
-        .lobby {
-            gap: 20px;
-            width: 100%;
-        }
-
-        .lobby-header {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        .lobby-title {
-            font-size: 2rem;
-            color: #ffd93d;
-            margin-bottom: 5px;
-        }
-
-        .room-info {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .info-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            min-width: 120px;
-        }
-
-        .info-label {
-            font-size: 0.8rem;
-            color: #a0a0a0;
-            margin-bottom: 5px;
-        }
-
-        .info-value {
-            font-size: 1.3rem;
-            font-weight: bold;
-        }
-
-        .room-code {
-            color: #6bcf7f;
-        }
-
-        .timer {
-            color: #ffd93d;
-        }
-
-        .player-count {
-            color: #4d96ff;
-        }
-
-        .lobby-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            width: 100%;
-        }
-
-        .btn-start {
-            background: linear-gradient(135deg, #6bcf7f, #4caf50);
-            color: white;
-        }
-
-        .btn-leave {
-            background: linear-gradient(135deg, #ff6b6b, #f44336);
-            color: white;
-        }
-
-        .players-container {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 12px;
-            padding: 15px;
-        }
-
-        .players-title {
-            font-size: 1.2rem;
-            margin-bottom: 12px;
-            color: #ffd93d;
-            text-align: center;
-        }
-
-        .players-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .player-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 12px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .player-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #4d96ff, #1e88e5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        .player-info {
-            flex: 1;
-        }
-
-        .player-name {
-            font-weight: bold;
-            margin-bottom: 3px;
-        }
-
-        .player-you {
-            color: #ffd93d;
-        }
-
-        .player-score {
-            font-size: 0.8rem;
-            color: #a0a0a0;
-        }
-
-        /* GAME SCENE */
-        .game-scene {
-            gap: 15px;
-            width: 100%;
-        }
-
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .game-stats {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px 15px;
-            border-radius: 8px;
-            text-align: center;
-            min-width: 80px;
-        }
-
-        .stat-value {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #ffd93d;
-        }
-
-        .game-board {
-            position: relative;
-            background: #0a0a15;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            width: 100%;
-            max-width: 400px;
-            height: 400px;
-        }
-
-        #gameCanvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        .game-over {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            border-radius: 12px;
-            text-align: center;
-        }
-
-        .game-over h2 {
-            font-size: 2.5rem;
-            color: #ff6b6b;
-            margin-bottom: 15px;
-        }
-
-        .winner-board {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            text-align: center;
-        }
-
-        .winner-name {
-            font-size: 1.5rem;
-            color: #ffd93d;
-            margin-bottom: 10px;
-        }
-
-        .winner-score {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #6bcf7f;
-        }
-
-        /* CONTROLS */
-        .game-controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            margin-top: 15px;
-            width: 100%;
-            max-width: 300px;
-        }
-
-        .control-row {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            width: 100%;
-        }
-
-        .control-btn-direction {
-            width: 60px;
-            height: 60px;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #4d96ff, #1e88e5);
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .control-btn-direction:active {
-            transform: scale(0.95);
-        }
-
-        .keyboard-hint {
-            color: #a0a0a0;
-            margin-top: 10px;
-            font-size: 0.8rem;
-            text-align: center;
-        }
-
-        /* LEADERBOARD */
-        .leaderboard {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 12px;
-            padding: 15px;
-            margin-top: 10px;
-        }
-
-        .leaderboard-title {
-            font-size: 1.2rem;
-            margin-bottom: 12px;
-            color: #ffd93d;
-            text-align: center;
-        }
-
-        .leaderboard-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .leaderboard-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-        }
-
-        .leaderboard-rank {
-            font-weight: bold;
-            color: #ffd93d;
-            min-width: 30px;
-        }
-
-        .leaderboard-name {
-            flex: 1;
-        }
-
-        .leaderboard-score {
-            font-weight: bold;
-            color: #6bcf7f;
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 480px) {
-            .game-board {
-                height: 350px;
-            }
-            
-            .control-btn-direction {
-                width: 55px;
-                height: 55px;
-                font-size: 18px;
-            }
-            
-            .room-info {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .info-card {
-                width: 100%;
-                max-width: 200px;
-            }
-        }
-
-        .hidden {
-            display: none !important;
-        }
     </style>
 </head>
 <body>
@@ -520,48 +241,16 @@
         <div class="main-menu">
             <div class="header">
                 <h1 class="game-title">SNAKE ARENA</h1>
-                <p class="game-subtitle">Battle Royale - Score Tertinggi Menang!</p>
+                <p class="game-subtitle">Multiplayer Battle</p>
             </div>
             
             <div class="menu-buttons">
-                <button class="menu-btn btn-primary" onclick="showScene('createRoom')">
-                    <span>Buat Room Baru</span>
+                <button class="menu-btn btn-primary" onclick="createRoom()">
+                    Buat Room Baru
                 </button>
                 <button class="menu-btn btn-secondary" onclick="showScene('joinRoom')">
-                    <span>Gabung Room</span>
+                    Gabung Room
                 </button>
-                <button class="menu-btn btn-warning" onclick="showInstructions()">
-                    <span>Cara Bermain</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- CREATE ROOM -->
-    <div id="createRoom" class="scene">
-        <div class="room-creation">
-            <h2 class="creation-title">Buat Room Baru</h2>
-            
-            <div class="creation-form">
-                <div class="form-group">
-                    <label for="createPlayerName">Nama Player</label>
-                    <input type="text" id="createPlayerName" placeholder="Masukkan nama Anda" maxlength="15" value="Player1">
-                </div>
-                
-                <div class="form-group">
-                    <label for="gameDuration">Durasi Permainan (menit)</label>
-                    <select id="gameDuration">
-                        <option value="1">1 Menit</option>
-                        <option value="2" selected>2 Menit</option>
-                        <option value="3">3 Menit</option>
-                        <option value="5">5 Menit</option>
-                    </select>
-                </div>
-                
-                <div class="form-actions">
-                    <button class="control-btn back-btn" onclick="showScene('mainMenu')">Kembali</button>
-                    <button class="control-btn btn-primary" onclick="createRoom()">Buat Room</button>
-                </div>
             </div>
         </div>
     </div>
@@ -569,59 +258,22 @@
     <!-- JOIN ROOM -->
     <div id="joinRoom" class="scene">
         <div class="room-creation">
-            <h2 class="creation-title">Gabung Room</h2>
+            <h2>Gabung Room</h2>
             
             <div class="creation-form">
                 <div class="form-group">
                     <label for="joinPlayerName">Nama Player</label>
-                    <input type="text" id="joinPlayerName" placeholder="Masukkan nama Anda" maxlength="15" value="Player2">
+                    <input type="text" id="joinPlayerName" value="Player2">
                 </div>
                 
                 <div class="form-group">
                     <label for="roomCodeInput">Kode Room</label>
-                    <input type="text" id="roomCodeInput" placeholder="Masukkan kode room" style="text-transform: uppercase;">
+                    <input type="text" id="roomCodeInput" placeholder="Masukkan kode room">
                 </div>
                 
                 <div class="form-actions">
                     <button class="control-btn back-btn" onclick="showScene('mainMenu')">Kembali</button>
-                    <button class="control-btn btn-secondary" onclick="joinRoom()">Gabung Room</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- LOBBY -->
-    <div id="lobby" class="scene">
-        <div class="lobby">
-            <div class="lobby-header">
-                <h2 class="lobby-title">LOBBY ROOM</h2>
-                <p>Menunggu pemain lain bergabung...</p>
-            </div>
-            
-            <div class="room-info">
-                <div class="info-card">
-                    <div class="info-label">KODE ROOM</div>
-                    <div id="lobbyRoomCode" class="info-value room-code">-</div>
-                </div>
-                <div class="info-card">
-                    <div class="info-label">DURASI</div>
-                    <div id="lobbyDuration" class="info-value timer">-</div>
-                </div>
-                <div class="info-card">
-                    <div class="info-label">PEMAIN</div>
-                    <div id="lobbyPlayerCount" class="info-value player-count">0/4</div>
-                </div>
-            </div>
-            
-            <div class="lobby-controls">
-                <button class="control-btn btn-start" onclick="startGame()" id="startBtn">Mulai Game</button>
-                <button class="control-btn btn-leave" onclick="leaveRoom()">Keluar</button>
-            </div>
-            
-            <div class="players-container">
-                <h3 class="players-title">Daftar Pemain</h3>
-                <div class="players-list" id="playersList">
-                    <!-- Player cards will be added here -->
+                    <button class="control-btn btn-secondary" onclick="joinRoom()">Gabung</button>
                 </div>
             </div>
         </div>
@@ -633,39 +285,27 @@
             <div class="game-header">
                 <div class="game-stats">
                     <div class="stat-card">
-                        <div class="info-label">SCORE</div>
+                        <div>SCORE</div>
                         <div id="gameScore" class="stat-value">0</div>
                     </div>
                     <div class="stat-card">
-                        <div class="info-label">WAKTU</div>
-                        <div id="gameTimer" class="stat-value timer">02:00</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="info-label">ROOM</div>
+                        <div>ROOM</div>
                         <div id="gameRoomCode" class="stat-value">-</div>
                     </div>
                 </div>
                 
-                <button class="control-btn btn-leave" onclick="leaveGame()">Keluar Game</button>
+                <button class="control-btn back-btn" onclick="leaveGame()">Keluar</button>
             </div>
             
             <div class="game-board">
                 <canvas id="gameCanvas"></canvas>
                 <div class="game-over" id="gameOver">
                     <h2>GAME OVER</h2>
-                    <div class="winner-board">
-                        <div class="winner-name" id="winnerName">-</div>
-                        <div class="winner-score" id="winnerScore">0</div>
-                    </div>
-                    <p>Score Akhir: <span id="finalScore">0</span></p>
-                    <div class="form-actions">
-                        <button class="control-btn btn-primary" onclick="returnToLobby()">Main Lagi</button>
-                        <button class="control-btn back-btn" onclick="showScene('mainMenu')">Menu Utama</button>
-                    </div>
+                    <p>Score: <span id="finalScore">0</span></p>
+                    <button class="control-btn btn-primary" onclick="resetGame()">Main Lagi</button>
                 </div>
             </div>
 
-            <!-- CONTROLS -->
             <div class="game-controls">
                 <div class="control-row">
                     <button class="control-btn-direction" onclick="changeDirection('up')">↑</button>
@@ -675,23 +315,12 @@
                     <button class="control-btn-direction" onclick="changeDirection('down')">↓</button>
                     <button class="control-btn-direction" onclick="changeDirection('right')">→</button>
                 </div>
-                <p class="keyboard-hint">
-                    Gunakan tombol panah atau WASD pada keyboard
-                </p>
-            </div>
-
-            <!-- LEADERBOARD -->
-            <div class="leaderboard">
-                <h3 class="leaderboard-title">LEADERBOARD</h3>
-                <div class="leaderboard-list" id="leaderboardList">
-                    <!-- Leaderboard items will be added here -->
-                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Firebase configuration
+        // Firebase configuration - SIMPLE VERSION
         const firebaseConfig = {
             apiKey: "AIzaSyC3Yw5NIexJddefw-AtutQ1vPhErdfL89s",
             authDomain: "akun-7b590.firebaseapp.com",
@@ -710,20 +339,15 @@
         // Game variables
         let canvas, ctx;
         let gridSize = 20;
-        let tileCountX, tileCountY;
         let playerId;
         let playerName = "";
         let roomCode = "";
-        let gameDuration = 2;
         let players = {};
         let foods = [];
-        let gameActive = false;
         let gameRunning = false;
         let gameLoop;
-        let timerInterval;
-        let timeLeft = 120;
         
-        // Snake variables
+        // Current player snake
         let snake = [
             { x: 10, y: 10 },
             { x: 9, y: 10 },
@@ -741,24 +365,9 @@
             document.getElementById(sceneId).classList.add('active');
         }
 
-        function showInstructions() {
-            alert(`🎮 CARA BERMAIN:
-
-• Gunakan tombol panah atau WASD untuk menggerakkan ular
-• Makan makanan (bola merah) untuk menambah score
-• Hindari tabrakan dengan dinding, tubuh sendiri, dan ular pemain lain
-• Pemain dengan score tertinggi ketika waktu habis adalah pemenang!
-
-🏆 MULTIPLAYER:
-• Buat room baru atau gabung room yang sudah ada
-• Maksimal 4 pemain per room
-• Pilih durasi permainan (1-5 menit)
-• Score tertinggi menang!`);
-        }
-
         // Generate random ID
         function generateId() {
-            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            return Math.random().toString(36).substring(2, 15);
         }
 
         // Generate random room code
@@ -766,24 +375,24 @@
             return Math.random().toString(36).substring(2, 6).toUpperCase();
         }
 
-        // Format time
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        // Create a new room
+        // Create room - SIMPLE VERSION
         function createRoom() {
-            playerName = document.getElementById('createPlayerName').value.trim() || "Player1";
-            gameDuration = parseInt(document.getElementById('gameDuration').value);
-            
+            playerName = "Player1";
             roomCode = generateRoomCode();
-            timeLeft = gameDuration * 60;
+            playerId = generateId();
             
+            console.log("Creating room:", roomCode);
+            
+            // Save to localStorage
+            localStorage.setItem('playerId', playerId);
+            localStorage.setItem('playerName', playerName);
+            localStorage.setItem('roomCode', roomCode);
+            
+            // Initialize room in Firebase
             const roomRef = database.ref('rooms/' + roomCode);
             
-            roomRef.set({
+            // Simple room data
+            const roomData = {
                 players: {
                     [playerId]: {
                         name: playerName,
@@ -794,238 +403,111 @@
                     }
                 },
                 foods: [{ x: 15, y: 15 }],
-                gameActive: false,
-                gameDuration: gameDuration,
-                timeLeft: timeLeft,
-                gameStarted: false
-            }).then(() => {
-                setupRoomListeners(roomRef);
-                document.getElementById('lobbyRoomCode').textContent = roomCode;
-                document.getElementById('lobbyDuration').textContent = gameDuration + "m";
-                showScene('lobby');
-                document.getElementById('startBtn').disabled = false;
-            });
+                gameActive: true
+            };
+            
+            roomRef.set(roomData)
+                .then(() => {
+                    console.log("Room created successfully");
+                    setupGame();
+                })
+                .catch(error => {
+                    console.error("Error creating room:", error);
+                    // Fallback: langsung main tanpa Firebase
+                    setupGame();
+                });
         }
 
-        // Join an existing room
+        // Join room
         function joinRoom() {
-            playerName = document.getElementById('joinPlayerName').value.trim() || "Player2";
-            roomCode = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+            playerName = document.getElementById('joinPlayerName').value || "Player2";
+            roomCode = document.getElementById('roomCodeInput').value.toUpperCase();
+            playerId = generateId();
             
             if (!roomCode) {
-                alert("Masukkan kode room terlebih dahulu");
+                alert("Masukkan kode room!");
                 return;
             }
             
+            console.log("Joining room:", roomCode);
+            
+            // Save to localStorage
+            localStorage.setItem('playerId', playerId);
+            localStorage.setItem('playerName', playerName);
+            localStorage.setItem('roomCode', roomCode);
+            
             const roomRef = database.ref('rooms/' + roomCode);
+            
             roomRef.once('value').then(snapshot => {
                 if (snapshot.exists()) {
-                    const roomData = snapshot.val();
-                    
-                    if (roomData.players && Object.keys(roomData.players).length >= 4) {
-                        alert("Room sudah penuh. Buat atau gabung room lain.");
-                        return;
-                    }
-                    
-                    document.getElementById('lobbyRoomCode').textContent = roomCode;
-                    document.getElementById('lobbyDuration').textContent = roomData.gameDuration + "m";
-                    gameDuration = roomData.gameDuration;
-                    timeLeft = roomData.timeLeft;
-                    
+                    // Add player to room
                     roomRef.child('players/' + playerId).set({
                         name: playerName,
                         score: 0,
-                        snake: [{ x: Math.floor(Math.random() * 15) + 5, y: Math.floor(Math.random() * 15) + 5 }],
+                        snake: [{ x: 5, y: 5 }],
                         direction: { x: 0, y: 0 },
                         alive: true
+                    }).then(() => {
+                        setupGame();
                     });
-                    
-                    setupRoomListeners(roomRef);
-                    showScene('lobby');
                 } else {
-                    alert("Room tidak ditemukan. Periksa kode room.");
+                    alert("Room tidak ditemukan!");
                 }
+            }).catch(error => {
+                console.error("Error joining room:", error);
+                alert("Error connecting to server");
             });
         }
 
-        // Set up Firebase listeners
-        function setupRoomListeners(roomRef) {
-            roomRef.child('players').on('value', snapshot => {
+        // Setup game
+        function setupGame() {
+            console.log("Setting up game for room:", roomCode);
+            
+            // Initialize canvas
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            canvas.width = 400;
+            canvas.height = 400;
+            
+            document.getElementById('gameRoomCode').textContent = roomCode;
+            showScene('gameScene');
+            
+            // Setup Firebase listeners
+            setupFirebaseListeners();
+            
+            // Start game loop
+            startGame();
+        }
+
+        // Setup Firebase listeners
+        function setupFirebaseListeners() {
+            const roomRef = database.ref('rooms/' + roomCode);
+            
+            // Listen for players
+            roomRef.child('players').on('value', (snapshot) => {
                 players = snapshot.val() || {};
-                updatePlayersList();
-                updatePlayerCount();
-                updateLeaderboard();
+                console.log("Players updated:", players);
             });
             
-            roomRef.child('foods').on('value', snapshot => {
+            // Listen for foods
+            roomRef.child('foods').on('value', (snapshot) => {
                 foods = snapshot.val() || [];
+                console.log("Foods updated:", foods);
             });
-            
-            roomRef.child('gameActive').on('value', snapshot => {
-                gameActive = snapshot.val();
-                if (gameActive && !gameRunning) {
-                    initializeGame();
-                    showScene('gameScene');
-                }
-            });
-            
-            roomRef.child('timeLeft').on('value', snapshot => {
-                const newTime = snapshot.val();
-                if (newTime !== null) {
-                    timeLeft = newTime;
-                    document.getElementById('gameTimer').textContent = formatTime(timeLeft);
-                    
-                    if (timeLeft <= 0 && gameRunning) {
-                        endGame();
-                    }
-                }
-            });
-        }
-
-        // Update players list
-        function updatePlayersList() {
-            const playersList = document.getElementById('playersList');
-            playersList.innerHTML = '';
-            
-            if (Object.keys(players).length === 0) {
-                playersList.innerHTML = '<div class="player-card"><span>Belum ada pemain</span></div>';
-                return;
-            }
-            
-            Object.entries(players).forEach(([id, player]) => {
-                const playerCard = document.createElement('div');
-                playerCard.className = 'player-card';
-                
-                const firstLetter = player.name.charAt(0).toUpperCase();
-                const isYou = id === playerId;
-                
-                playerCard.innerHTML = `
-                    <div class="player-avatar">${firstLetter}</div>
-                    <div class="player-info">
-                        <div class="player-name ${isYou ? 'player-you' : ''}">
-                            ${player.name} ${isYou ? '(Anda)' : ''}
-                        </div>
-                        <div class="player-score">
-                            Score: ${player.score}
-                        </div>
-                    </div>
-                `;
-                
-                playersList.appendChild(playerCard);
-            });
-        }
-
-        // Update player count
-        function updatePlayerCount() {
-            const count = Object.keys(players).length;
-            document.getElementById('lobbyPlayerCount').textContent = `${count}/4`;
-        }
-
-        // Update leaderboard
-        function updateLeaderboard() {
-            const leaderboardList = document.getElementById('leaderboardList');
-            leaderboardList.innerHTML = '';
-            
-            const sortedPlayers = Object.entries(players)
-                .sort(([,a], [,b]) => b.score - a.score)
-                .slice(0, 5);
-            
-            if (sortedPlayers.length === 0) {
-                leaderboardList.innerHTML = '<div class="leaderboard-item"><span>Belum ada score</span></div>';
-                return;
-            }
-            
-            sortedPlayers.forEach(([id, player], index) => {
-                const item = document.createElement('div');
-                item.className = 'leaderboard-item';
-                item.innerHTML = `
-                    <div class="leaderboard-rank">${index + 1}</div>
-                    <div class="leaderboard-name ${id === playerId ? 'player-you' : ''}">${player.name}</div>
-                    <div class="leaderboard-score">${player.score}</div>
-                `;
-                leaderboardList.appendChild(item);
-            });
-        }
-
-        // Leave room
-        function leaveRoom() {
-            if (roomCode) {
-                database.ref('rooms/' + roomCode + '/players/' + playerId).remove();
-            }
-            resetGameState();
-            showScene('mainMenu');
         }
 
         // Start game
         function startGame() {
-            if (!roomCode) return;
-            
-            const roomRef = database.ref('rooms/' + roomCode);
-            roomRef.update({
-                gameActive: true,
-                gameStarted: true,
-                timeLeft: gameDuration * 60
-            });
-        }
-
-        // Initialize game
-        function initializeGame() {
-            canvas = document.getElementById('gameCanvas');
-            ctx = canvas.getContext('2d');
-            
-            const container = canvas.parentElement;
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
-            
-            gridSize = Math.min(canvas.width / 25, canvas.height / 20);
-            tileCountX = Math.floor(canvas.width / gridSize);
-            tileCountY = Math.floor(canvas.height / gridSize);
-            
-            document.getElementById('gameRoomCode').textContent = roomCode;
-            document.getElementById('gameTimer').textContent = formatTime(timeLeft);
-            
-            // Reset player state
-            snake = [
-                {x: 10, y: 10},
-                {x: 9, y: 10},
-                {x: 8, y: 10}
-            ];
-            dx = 1;
-            dy = 0;
-            score = 0;
-            document.getElementById('gameScore').textContent = score;
-            document.getElementById('gameOver').style.display = 'none';
             gameRunning = true;
-            
-            // Start timer
-            startTimer();
+            document.getElementById('gameOver').style.display = 'none';
             
             // Start game loop
-            if (gameLoop) clearInterval(gameLoop);
-            gameLoop = setInterval(updateGame, 100);
+            gameLoop = setInterval(updateGame, 150);
             
+            // Add keyboard controls
             document.addEventListener('keydown', handleKeyPress);
-        }
-
-        // Start timer
-        function startTimer() {
-            if (timerInterval) clearInterval(timerInterval);
             
-            timerInterval = setInterval(() => {
-                if (gameRunning) {
-                    timeLeft--;
-                    document.getElementById('gameTimer').textContent = formatTime(timeLeft);
-                    
-                    // Update timer in Firebase
-                    database.ref('rooms/' + roomCode).update({
-                        timeLeft: timeLeft
-                    });
-                    
-                    if (timeLeft <= 0) {
-                        endGame();
-                    }
-                }
-            }, 1000);
+            console.log("Game started!");
         }
 
         // Update game
@@ -1035,22 +517,23 @@
             updateSnake();
             
             if (checkCollision()) {
-                playerDie();
+                endGame();
                 return;
             }
             
             checkFood();
             drawGame();
-            updateLeaderboard();
         }
 
         // Update snake
         function updateSnake() {
+            // Move snake
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
             snake.unshift(head);
             snake.pop();
             
-            if (roomCode && (dx !== 0 || dy !== 0)) {
+            // Update in Firebase
+            if (roomCode) {
                 database.ref('rooms/' + roomCode + '/players/' + playerId).update({
                     snake: snake,
                     direction: { x: dx, y: dy },
@@ -1064,7 +547,8 @@
             const head = snake[0];
             
             // Wall collision
-            if (head.x < 0 || head.x >= tileCountX || head.y < 0 || head.y >= tileCountY) {
+            if (head.x < 0 || head.x >= canvas.width / gridSize || 
+                head.y < 0 || head.y >= canvas.height / gridSize) {
                 return true;
             }
             
@@ -1075,23 +559,12 @@
                 }
             }
             
-            // Other players collision
-            for (const [id, player] of Object.entries(players)) {
-                if (id !== playerId && player.alive) {
-                    for (const segment of player.snake) {
-                        if (head.x === segment.x && head.y === segment.y) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            
             return false;
         }
 
         // Check food
         function checkFood() {
-            for (let i = foods.length - 1; i >= 0; i--) {
+            for (let i = 0; i < foods.length; i++) {
                 if (snake[0].x === foods[i].x && snake[0].y === foods[i].y) {
                     // Increase score
                     score += 10;
@@ -1101,171 +574,48 @@
                     snake.push({ ...snake[snake.length - 1] });
                     
                     // Remove food and generate new one
-                    foods.splice(i, 1);
-                    generateFood();
-                    
-                    // Update player score
-                    database.ref('rooms/' + roomCode + '/players/' + playerId).update({
-                        score: score
-                    });
+                    generateNewFood();
                     
                     break;
                 }
             }
         }
 
-        // Generate food
-        function generateFood() {
+        // Generate new food
+        function generateNewFood() {
             let newFood;
             let validPosition = false;
             
             while (!validPosition) {
                 newFood = {
-                    x: Math.floor(Math.random() * (tileCountX - 2)) + 1,
-                    y: Math.floor(Math.random() * (tileCountY - 2)) + 1
+                    x: Math.floor(Math.random() * (canvas.width / gridSize - 2)) + 1,
+                    y: Math.floor(Math.random() * (canvas.height / gridSize - 2)) + 1
                 };
                 
                 validPosition = true;
                 
-                // Check against current player's snake
+                // Check against current snake
                 for (const segment of snake) {
                     if (segment.x === newFood.x && segment.y === newFood.y) {
                         validPosition = false;
                         break;
                     }
                 }
-                
-                // Check against other players' snakes
-                if (validPosition) {
-                    for (const [id, player] of Object.entries(players)) {
-                        if (player.alive) {
-                            for (const segment of player.snake) {
-                                if (segment.x === newFood.x && segment.y === newFood.y) {
-                                    validPosition = false;
-                                    break;
-                                }
-                            }
-                        }
-                        if (!validPosition) break;
-                    }
-                }
-                
-                // Check against existing foods
-                if (validPosition) {
-                    for (const existingFood of foods) {
-                        if (existingFood.x === newFood.x && existingFood.y === newFood.y) {
-                            validPosition = false;
-                            break;
-                        }
-                    }
-                }
             }
             
-            foods.push(newFood);
+            // Update foods in Firebase
+            foods = [newFood];
             database.ref('rooms/' + roomCode + '/foods').set(foods);
-        }
-
-        // Player die
-        function playerDie() {
-            gameRunning = false;
-            database.ref('rooms/' + roomCode + '/players/' + playerId).update({
-                alive: false
-            });
-            
-            // Check if game should end (all players dead or time up)
-            checkGameEnd();
-        }
-
-        // Check game end
-        function checkGameEnd() {
-            const alivePlayers = Object.values(players).filter(player => player.alive);
-            if (alivePlayers.length === 0 || timeLeft <= 0) {
-                endGame();
-            }
-        }
-
-        // End game
-        function endGame() {
-            gameRunning = false;
-            clearInterval(gameLoop);
-            clearInterval(timerInterval);
-            
-            // Determine winner
-            const sortedPlayers = Object.entries(players)
-                .sort(([,a], [,b]) => b.score - a.score);
-            const winner = sortedPlayers[0];
-            
-            document.getElementById('finalScore').textContent = score;
-            document.getElementById('winnerName').textContent = winner[1].name;
-            document.getElementById('winnerScore').textContent = winner[1].score;
-            document.getElementById('gameOver').style.display = 'flex';
-            
-            // Update game state
-            database.ref('rooms/' + roomCode).update({
-                gameActive: false
-            });
-        }
-
-        // Handle keyboard
-        function handleKeyPress(e) {
-            if (!gameRunning) return;
-            
-            if ([37, 38, 39, 40].includes(e.keyCode)) {
-                e.preventDefault();
-            }
-            
-            switch(e.key) {
-                case 'ArrowUp':
-                case 'w':
-                case 'W':
-                    if (dy === 0) changeDirection('up');
-                    break;
-                case 'ArrowDown':
-                case 's':
-                case 'S':
-                    if (dy === 0) changeDirection('down');
-                    break;
-                case 'ArrowLeft':
-                case 'a':
-                case 'A':
-                    if (dx === 0) changeDirection('left');
-                    break;
-                case 'ArrowRight':
-                case 'd':
-                case 'D':
-                    if (dx === 0) changeDirection('right');
-                    break;
-            }
-        }
-
-        // Change direction
-        function changeDirection(direction) {
-            if (!gameRunning) return;
-            
-            switch(direction) {
-                case 'up':
-                    if (dy === 0) { dx = 0; dy = -1; }
-                    break;
-                case 'down':
-                    if (dy === 0) { dx = 0; dy = 1; }
-                    break;
-                case 'left':
-                    if (dx === 0) { dx = -1; dy = 0; }
-                    break;
-                case 'right':
-                    if (dx === 0) { dx = 1; dy = 0; }
-                    break;
-            }
         }
 
         // Draw game
         function drawGame() {
-            ctx.fillStyle = '#0a0a15';
+            // Clear canvas
+            ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             // Draw grid
-            ctx.strokeStyle = '#151525';
-            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = '#222';
             for (let x = 0; x < canvas.width; x += gridSize) {
                 for (let y = 0; y < canvas.height; y += gridSize) {
                     ctx.strokeRect(x, y, gridSize, gridSize);
@@ -1280,68 +630,121 @@
                 ctx.fill();
             });
             
-            // Draw current player's snake
-            drawSnake(snake, '#4d96ff', '#6bcf7f');
+            // Draw current player snake (GREEN)
+            ctx.fillStyle = '#4CAF50';
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillRect(snake[i].x * gridSize, snake[i].y * gridSize, gridSize - 1, gridSize - 1);
+            }
             
-            // Draw other players' snakes
+            // Draw other players (DIFFERENT COLORS)
             Object.entries(players).forEach(([id, player]) => {
-                if (id !== playerId && player.alive) {
-                    const colors = ['#ff6b6b', '#ffd93d', '#6bcf7f'];
+                if (id !== playerId) {
+                    // Different color for each player
+                    const colors = ['#FF5252', '#FFEB3B', '#2196F3', '#9C27B0'];
                     const colorIndex = Object.keys(players).indexOf(id) % colors.length;
-                    drawSnake(player.snake, colors[colorIndex], colors[colorIndex] + '80');
+                    ctx.fillStyle = colors[colorIndex];
+                    
+                    for (let i = 0; i < player.snake.length; i++) {
+                        ctx.fillRect(player.snake[i].x * gridSize, player.snake[i].y * gridSize, gridSize - 1, gridSize - 1);
+                    }
                 }
             });
         }
 
-        // Draw snake
-        function drawSnake(snakeArray, headColor, bodyColor) {
-            for (let i = 0; i < snakeArray.length; i++) {
-                if (i === 0) {
-                    ctx.fillStyle = headColor;
-                } else {
-                    ctx.fillStyle = bodyColor;
-                }
-                
-                ctx.fillRect(snakeArray[i].x * gridSize, snakeArray[i].y * gridSize, gridSize - 1, gridSize - 1);
+        // Handle keyboard
+        function handleKeyPress(e) {
+            if (!gameRunning) return;
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                case 'w':
+                    if (dy === 0) changeDirection('up');
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    if (dy === 0) changeDirection('down');
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                    if (dx === 0) changeDirection('left');
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    if (dx === 0) changeDirection('right');
+                    break;
             }
+        }
+
+        // Change direction
+        function changeDirection(direction) {
+            switch(direction) {
+                case 'up':
+                    dx = 0; dy = -1; break;
+                case 'down':
+                    dx = 0; dy = 1; break;
+                case 'left':
+                    dx = -1; dy = 0; break;
+                case 'right':
+                    dx = 1; dy = 0; break;
+            }
+        }
+
+        // End game
+        function endGame() {
+            gameRunning = false;
+            clearInterval(gameLoop);
+            
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').style.display = 'flex';
+            
+            // Update player status in Firebase
+            if (roomCode) {
+                database.ref('rooms/' + roomCode + '/players/' + playerId).update({
+                    alive: false
+                });
+            }
+        }
+
+        // Reset game
+        function resetGame() {
+            score = 0;
+            snake = [
+                { x: 10, y: 10 },
+                { x: 9, y: 10 },
+                { x: 8, y: 10 }
+            ];
+            dx = 1;
+            dy = 0;
+            
+            document.getElementById('gameScore').textContent = score;
+            startGame();
         }
 
         // Leave game
         function leaveGame() {
             gameRunning = false;
             clearInterval(gameLoop);
-            clearInterval(timerInterval);
             
-            database.ref('rooms/' + roomCode + '/players/' + playerId).update({
-                alive: false
-            });
+            if (roomCode) {
+                database.ref('rooms/' + roomCode + '/players/' + playerId).remove();
+            }
             
-            showScene('lobby');
-        }
-
-        // Return to lobby
-        function returnToLobby() {
-            document.getElementById('gameOver').style.display = 'none';
-            showScene('lobby');
-        }
-
-        // Reset game state
-        function resetGameState() {
-            roomCode = "";
-            players = {};
-            snake = [{ x: 10, y: 10 }];
-            dx = 0;
-            dy = 0;
-            score = 0;
-            gameRunning = false;
-            
-            if (gameLoop) clearInterval(gameLoop);
-            if (timerInterval) clearInterval(timerInterval);
+            showScene('mainMenu');
         }
 
         // Initialize
         function init() {
-            playerId = generateId();
+            // Try to load from localStorage
+            const savedPlayerId = localStorage.getItem('playerId');
+            const savedRoomCode = localStorage.getItem('roomCode');
+            
+            if (savedPlayerId && savedRoomCode) {
+                playerId = savedPlayerId;
+                roomCode = savedRoomCode;
+                playerName = localStorage.getItem('playerName') || "Player";
+                setupGame();
+            }
+            
             showScene('mainMenu');
         }
 
