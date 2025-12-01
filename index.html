@@ -1,814 +1,159 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Multiplayer - Room System</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            color: white;
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 800px;
-            background-color: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            margin-top: 20px;
-        }
-        
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 2.5rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-        
-        h2 {
-            margin-bottom: 15px;
-            color: #ffcc00;
-        }
-        
-        .screen {
-            display: none;
-        }
-        
-        .active {
-            display: block;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        
-        input, select, button {
-            width: 100%;
-            padding: 12px 15px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-        
-        input, select {
-            background-color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 10px;
-        }
-        
-        button {
-            background: linear-gradient(to right, #ff8a00, #da1b60);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-        
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-        
-        button:active {
-            transform: translateY(1px);
-        }
-        
-        .btn-secondary {
-            background: linear-gradient(to right, #3498db, #2c3e50);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(to right, #e74c3c, #c0392b);
-        }
-        
-        .room-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .room-card {
-            background-color: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .room-card:hover {
-            background-color: rgba(255, 255, 255, 0.25);
-            transform: translateY(-5px);
-        }
-        
-        .room-card h3 {
-            color: #ffcc00;
-            margin-bottom: 10px;
-        }
-        
-        .room-card p {
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-        
-        #gameArea {
-            width: 100%;
-            height: 400px;
-            background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            position: relative;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-        
-        .player {
-            width: 50px;
-            height: 50px;
-            position: absolute;
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-            transition: all 0.2s ease;
-        }
-        
-        #myPlayer {
-            border: 3px solid white;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
-        }
-        
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-            max-width: 300px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .control-btn {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 24px;
-            cursor: pointer;
-            height: 60px;
-            transition: all 0.2s ease;
-        }
-        
-        .control-btn:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-        }
-        
-        .control-btn:active {
-            background-color: rgba(255, 255, 255, 0.4);
-        }
-        
-        #upBtn {
-            grid-column: 2;
-            grid-row: 1;
-        }
-        
-        #leftBtn {
-            grid-column: 1;
-            grid-row: 2;
-        }
-        
-        #rightBtn {
-            grid-column: 3;
-            grid-row: 2;
-        }
-        
-        #downBtn {
-            grid-column: 2;
-            grid-row: 3;
-        }
-        
-        .game-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            background-color: rgba(0, 0, 0, 0.2);
-            padding: 10px 15px;
-            border-radius: 8px;
-        }
-        
-        .player-list {
-            margin-top: 20px;
-            background-color: rgba(0, 0, 0, 0.2);
-            padding: 15px;
-            border-radius: 8px;
-        }
-        
-        .player-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            padding: 8px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-        }
-        
-        .player-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        
-        .status {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            color: #ffcc00;
-        }
-        
-        .chat-box {
-            margin-top: 20px;
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            padding: 15px;
-            height: 150px;
-            overflow-y: auto;
-        }
-        
-        .chat-message {
-            margin-bottom: 8px;
-            padding: 8px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-        }
-        
-        .chat-input {
-            display: flex;
-            margin-top: 10px;
-        }
-        
-        .chat-input input {
-            flex-grow: 1;
-            margin-right: 10px;
-            margin-bottom: 0;
-        }
-        
-        @media (max-width: 600px) {
-            .container {
-                padding: 15px;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-            }
-            
-            .room-list {
-                grid-template-columns: 1fr;
-            }
-            
-            .controls {
-                max-width: 250px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Snake Multiplayer</title>
+<style>
+ body{background:#000;color:#ffd700;font-family:Arial;text-align:center;padding:20px;} 
+ h1,h2,h3{color:#ffd700;} 
+ .card{background:#111;border:2px solid #ffd700;padding:15px;border-radius:12px;margin:10px;} 
+ button,input{padding:10px;font-size:18px;margin:5px;border-radius:8px;border:2px solid #ffd700;background:#222;color:#ffd700;} 
+ button:active{transform:scale(0.95);} 
+ #gameCanvas{background:#111;border:2px solid #ffd700;} 
+ .playerBox{background:#222;border:1px solid #ffd700;margin:5px;padding:8px;border-radius:8px;} 
+</style>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
-    <h1>Game Multiplayer dengan Room</h1>
-    
-    <div class="container">
-        <!-- Screen 1: Menu Utama -->
-        <div id="mainMenu" class="screen active">
-            <h2>Menu Utama</h2>
-            <div class="form-group">
-                <label for="playerName">Nama Pemain:</label>
-                <input type="text" id="playerName" placeholder="Masukkan nama Anda" maxlength="15">
-            </div>
-            <button id="createRoomBtn">Buat Room Baru</button>
-            <button id="joinRoomBtn" class="btn-secondary">Gabung Room</button>
-        </div>
-        
-        <!-- Screen 2: Buat Room -->
-        <div id="createRoomScreen" class="screen">
-            <h2>Buat Room Baru</h2>
-            <div class="form-group">
-                <label for="roomName">Nama Room:</label>
-                <input type="text" id="roomName" placeholder="Masukkan nama room" maxlength="20">
-            </div>
-            <div class="form-group">
-                <label for="maxPlayers">Jumlah Pemain Maksimal:</label>
-                <select id="maxPlayers">
-                    <option value="2">2 Pemain</option>
-                    <option value="4" selected>4 Pemain</option>
-                    <option value="6">6 Pemain</option>
-                    <option value="8">8 Pemain</option>
-                </select>
-            </div>
-            <button id="confirmCreateRoomBtn">Buat Room</button>
-            <button id="backToMainFromCreate" class="btn-secondary">Kembali</button>
-        </div>
-        
-        <!-- Screen 3: Daftar Room -->
-        <div id="roomListScreen" class="screen">
-            <h2>Daftar Room Tersedia</h2>
-            <div id="roomsContainer" class="room-list">
-                <!-- Room cards will be generated here -->
-            </div>
-            <button id="backToMainFromList" class="btn-secondary">Kembali</button>
-        </div>
-        
-        <!-- Screen 4: Game Room -->
-        <div id="gameScreen" class="screen">
-            <div class="game-info">
-                <div>
-                    <strong>Room:</strong> <span id="currentRoomName">-</span>
-                </div>
-                <div>
-                    <strong>Pemain:</strong> <span id="playerCount">0</span>/<span id="maxPlayerCount">0</span>
-                </div>
-                <div>
-                    <strong>Anda:</strong> <span id="currentPlayerName">-</span>
-                </div>
-            </div>
-            
-            <div id="gameArea"></div>
-            
-            <div class="controls">
-                <button class="control-btn" id="upBtn">↑</button>
-                <button class="control-btn" id="leftBtn">←</button>
-                <button class="control-btn" id="rightBtn">→</button>
-                <button class="control-btn" id="downBtn">↓</button>
-            </div>
-            
-            <div class="player-list">
-                <h3>Daftar Pemain</h3>
-                <div id="playersList">
-                    <!-- Player list will be generated here -->
-                </div>
-            </div>
-            
-            <div class="chat-box">
-                <h3>Chat Room</h3>
-                <div id="chatMessages">
-                    <!-- Chat messages will appear here -->
-                </div>
-                <div class="chat-input">
-                    <input type="text" id="chatInput" placeholder="Ketik pesan...">
-                    <button id="sendChatBtn">Kirim</button>
-                </div>
-            </div>
-            
-            <button id="leaveRoomBtn" class="btn-danger">Keluar Room</button>
-        </div>
-    </div>
+<h1>SNAKE MULTIPLAYER - DARK GOLD</h1>
 
-    <script>
-        // Konfigurasi Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyC3Yw5NIexJddefw-AtutQ1vPhErdfL89s",
-            authDomain: "akun-7b590.firebaseapp.com",
-            databaseURL: "https://akun-7b590-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "akun-7b590",
-            storageBucket: "akun-7b590.firebasestorage.app",
-            messagingSenderId: "65784994154",
-            appId: "1:65784994154:web:f7b9fd921736462985ed13",
-            measurementId: "G-31JW6E46L1"
-        };
+<div id="mainMenu" class="card">
+ <h2>MENU</h2>
+ <button onclick="openCreate()">CREATE ROOM</button>
+ <button onclick="openJoin()">JOIN ROOM</button>
+</div>
 
-        // Inisialisasi Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+<div id="menuCreate" class="card" style="display:none;">
+ <h2>CREATE ROOM</h2>
+ <p>KODE ROOM:</p>
+ <h1 id="roomCodeText"></h1>
+ <p>SET SKOR MENANG:</p>
+ <input id="winScore" type="number" placeholder="contoh: 10">
+ <h3>PLAYER LIST:</h3>
+ <div id="playerListCreate"></div>
+ <button onclick="startGame()">MULAI</button>
+</div>
 
-        // Variabel global
-        let playerId;
-        let playerName;
-        let currentRoomId;
-        let currentRoomRef;
-        let playersRef;
-        let chatRef;
-        
-        // Elemen UI
-        const screens = document.querySelectorAll('.screen');
-        const mainMenu = document.getElementById('mainMenu');
-        const createRoomScreen = document.getElementById('createRoomScreen');
-        const roomListScreen = document.getElementById('roomListScreen');
-        const gameScreen = document.getElementById('gameScreen');
-        
-        const playerNameInput = document.getElementById('playerName');
-        const createRoomBtn = document.getElementById('createRoomBtn');
-        const joinRoomBtn = document.getElementById('joinRoomBtn');
-        const roomNameInput = document.getElementById('roomName');
-        const maxPlayersSelect = document.getElementById('maxPlayers');
-        const confirmCreateRoomBtn = document.getElementById('confirmCreateRoomBtn');
-        const backToMainFromCreate = document.getElementById('backToMainFromCreate');
-        const backToMainFromList = document.getElementById('backToMainFromList');
-        const roomsContainer = document.getElementById('roomsContainer');
-        const currentRoomName = document.getElementById('currentRoomName');
-        const playerCount = document.getElementById('playerCount');
-        const maxPlayerCount = document.getElementById('maxPlayerCount');
-        const currentPlayerName = document.getElementById('currentPlayerName');
-        const playersList = document.getElementById('playersList');
-        const gameArea = document.getElementById('gameArea');
-        const chatMessages = document.getElementById('chatMessages');
-        const chatInput = document.getElementById('chatInput');
-        const sendChatBtn = document.getElementById('sendChatBtn');
-        const leaveRoomBtn = document.getElementById('leaveRoomBtn');
-        
-        const upBtn = document.getElementById('upBtn');
-        const downBtn = document.getElementById('downBtn');
-        const leftBtn = document.getElementById('leftBtn');
-        const rightBtn = document.getElementById('rightBtn');
-        
-        // Fungsi untuk beralih antar screen
-        function showScreen(screen) {
-            screens.forEach(s => s.classList.remove('active'));
-            screen.classList.add('active');
-        }
-        
-        // Event listeners untuk navigasi
-        createRoomBtn.addEventListener('click', () => {
-            if (!playerNameInput.value.trim()) {
-                alert('Masukkan nama pemain terlebih dahulu!');
-                return;
-            }
-            playerName = playerNameInput.value.trim();
-            showScreen(createRoomScreen);
-        });
-        
-        joinRoomBtn.addEventListener('click', () => {
-            if (!playerNameInput.value.trim()) {
-                alert('Masukkan nama pemain terlebih dahulu!');
-                return;
-            }
-            playerName = playerNameInput.value.trim();
-            loadRooms();
-            showScreen(roomListScreen);
-        });
-        
-        backToMainFromCreate.addEventListener('click', () => showScreen(mainMenu));
-        backToMainFromList.addEventListener('click', () => showScreen(mainMenu));
-        
-        // Fungsi untuk membuat room baru
-        confirmCreateRoomBtn.addEventListener('click', () => {
-            const roomName = roomNameInput.value.trim();
-            const maxPlayers = parseInt(maxPlayersSelect.value);
-            
-            if (!roomName) {
-                alert('Masukkan nama room terlebih dahulu!');
-                return;
-            }
-            
-            // Generate ID room unik
-            const roomId = 'room_' + Math.random().toString(36).substr(2, 9);
-            
-            // Buat data room
-            const roomData = {
-                name: roomName,
-                maxPlayers: maxPlayers,
-                created: Date.now(),
-                createdBy: playerName
-            };
-            
-            // Simpan room ke Firebase
-            database.ref('rooms/' + roomId).set(roomData)
-                .then(() => {
-                    joinRoom(roomId);
-                })
-                .catch(error => {
-                    console.error('Error creating room:', error);
-                    alert('Terjadi kesalahan saat membuat room. Silakan coba lagi.');
-                });
-        });
-        
-        // Fungsi untuk memuat daftar room
-        function loadRooms() {
-            roomsContainer.innerHTML = '<p>Memuat room...</p>';
-            
-            database.ref('rooms').on('value', (snapshot) => {
-                const rooms = snapshot.val();
-                roomsContainer.innerHTML = '';
-                
-                if (!rooms) {
-                    roomsContainer.innerHTML = '<p>Tidak ada room yang tersedia. Buat room baru!</p>';
-                    return;
-                }
-                
-                // Hitung jumlah pemain di setiap room
-                Object.keys(rooms).forEach(roomId => {
-                    database.ref('roomPlayers/' + roomId).once('value')
-                        .then(playersSnapshot => {
-                            const players = playersSnapshot.val() || {};
-                            const playerCount = Object.keys(players).length;
-                            
-                            // Hanya tampilkan room yang belum penuh
-                            if (playerCount < rooms[roomId].maxPlayers) {
-                                const roomCard = document.createElement('div');
-                                roomCard.className = 'room-card';
-                                roomCard.innerHTML = `
-                                    <h3>${rooms[roomId].name}</h3>
-                                    <p>Pemain: ${playerCount}/${rooms[roomId].maxPlayers}</p>
-                                    <p>Dibuat oleh: ${rooms[roomId].createdBy}</p>
-                                `;
-                                roomCard.addEventListener('click', () => joinRoom(roomId));
-                                roomsContainer.appendChild(roomCard);
-                            }
-                        });
-                });
-            });
-        }
-        
-        // Fungsi untuk bergabung ke room
-        function joinRoom(roomId) {
-            currentRoomId = roomId;
-            currentRoomRef = database.ref('rooms/' + roomId);
-            playersRef = database.ref('roomPlayers/' + roomId);
-            chatRef = database.ref('roomChats/' + roomId);
-            
-            // Generate ID pemain unik
-            playerId = 'player_' + Math.random().toString(36).substr(2, 9);
-            
-            // Dapatkan data room
-            currentRoomRef.once('value')
-                .then(snapshot => {
-                    const roomData = snapshot.val();
-                    if (!roomData) {
-                        alert('Room tidak ditemukan!');
-                        showScreen(mainMenu);
-                        return;
-                    }
-                    
-                    // Periksa apakah room sudah penuh
-                    playersRef.once('value')
-                        .then(playersSnapshot => {
-                            const players = playersSnapshot.val() || {};
-                            const currentPlayerCount = Object.keys(players).length;
-                            
-                            if (currentPlayerCount >= roomData.maxPlayers) {
-                                alert('Room sudah penuh!');
-                                showScreen(roomListScreen);
-                                return;
-                            }
-                            
-                            // Setup posisi awal pemain
-                            const initialPosition = {
-                                x: Math.floor(Math.random() * (gameArea.offsetWidth - 50)),
-                                y: Math.floor(Math.random() * (gameArea.offsetHeight - 50)),
-                                color: getRandomColor(),
-                                name: playerName
-                            };
-                            
-                            // Simpan data pemain
-                            playersRef.child(playerId).set(initialPosition);
-                            
-                            // Update UI
-                            currentRoomName.textContent = roomData.name;
-                            maxPlayerCount.textContent = roomData.maxPlayers;
-                            currentPlayerName.textContent = playerName;
-                            
-                            // Setup real-time listeners
-                            setupGameListeners();
-                            
-                            // Tampilkan screen game
-                            showScreen(gameScreen);
-                        });
-                })
-                .catch(error => {
-                    console.error('Error joining room:', error);
-                    alert('Terjadi kesalahan saat bergabung ke room. Silakan coba lagi.');
-                });
-        }
-        
-        // Fungsi untuk setup listeners game
-        function setupGameListeners() {
-            // Listen untuk perubahan data pemain
-            playersRef.on('value', (snapshot) => {
-                const players = snapshot.val() || {};
-                const playerCountValue = Object.keys(players).length;
-                
-                // Update jumlah pemain
-                playerCount.textContent = playerCountValue;
-                
-                // Hapus semua pemain dari game area
-                const existingPlayers = document.querySelectorAll('.player');
-                existingPlayers.forEach(player => {
-                    if (player.id !== 'myPlayer') {
-                        player.remove();
-                    }
-                });
-                
-                // Update daftar pemain
-                playersList.innerHTML = '';
-                
-                // Tambahkan/update pemain di game area dan daftar pemain
-                for (const id in players) {
-                    const playerData = players[id];
-                    
-                    // Tambahkan ke daftar pemain
-                    const playerItem = document.createElement('div');
-                    playerItem.className = 'player-item';
-                    playerItem.innerHTML = `
-                        <div class="player-color" style="background-color: ${playerData.color};"></div>
-                        <span>${playerData.name} ${id === playerId ? '(Anda)' : ''}</span>
-                    `;
-                    playersList.appendChild(playerItem);
-                    
-                    // Tambahkan ke game area (kecuali pemain sendiri)
-                    if (id !== playerId) {
-                        let playerElement = document.getElementById(id);
-                        
-                        if (!playerElement) {
-                            playerElement = document.createElement('div');
-                            playerElement.id = id;
-                            playerElement.className = 'player';
-                            playerElement.textContent = playerData.name.charAt(0);
-                            gameArea.appendChild(playerElement);
-                        }
-                        
-                        playerElement.style.left = playerData.x + 'px';
-                        playerElement.style.top = playerData.y + 'px';
-                        playerElement.style.backgroundColor = playerData.color;
-                    } else {
-                        // Update pemain sendiri
-                        const myPlayer = document.getElementById('myPlayer');
-                        if (myPlayer) {
-                            myPlayer.style.left = playerData.x + 'px';
-                            myPlayer.style.top = playerData.y + 'px';
-                            myPlayer.style.backgroundColor = playerData.color;
-                        } else {
-                            // Buat elemen pemain sendiri
-                            const myPlayer = document.createElement('div');
-                            myPlayer.id = 'myPlayer';
-                            myPlayer.className = 'player';
-                            myPlayer.textContent = playerData.name.charAt(0);
-                            myPlayer.style.left = playerData.x + 'px';
-                            myPlayer.style.top = playerData.y + 'px';
-                            myPlayer.style.backgroundColor = playerData.color;
-                            gameArea.appendChild(myPlayer);
-                        }
-                    }
-                }
-            });
-            
-            // Listen untuk chat
-            chatRef.limitToLast(20).on('child_added', (snapshot) => {
-                const message = snapshot.val();
-                const messageElement = document.createElement('div');
-                messageElement.className = 'chat-message';
-                messageElement.innerHTML = `<strong>${message.sender}:</strong> ${message.text}`;
-                chatMessages.appendChild(messageElement);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
-        }
-        
-        // Fungsi untuk menggerakkan pemain
-        function movePlayer(dx, dy) {
-            if (!playersRef) return;
-            
-            const myPlayerRef = playersRef.child(playerId);
-            
-            myPlayerRef.once('value')
-                .then(snapshot => {
-                    const playerData = snapshot.val();
-                    if (!playerData) return;
-                    
-                    // Batas area game
-                    const maxX = gameArea.offsetWidth - 50;
-                    const maxY = gameArea.offsetHeight - 50;
-                    
-                    // Hitung posisi baru
-                    let newX = (playerData.x || 0) + dx;
-                    let newY = (playerData.y || 0) + dy;
-                    
-                    // Pastikan tidak keluar dari area game
-                    newX = Math.max(0, Math.min(newX, maxX));
-                    newY = Math.max(0, Math.min(newY, maxY));
-                    
-                    // Update posisi
-                    myPlayerRef.update({
-                        x: newX,
-                        y: newY
-                    });
-                });
-        }
-        
-        // Event listeners untuk kontrol
-        upBtn.addEventListener('click', () => movePlayer(0, -15));
-        downBtn.addEventListener('click', () => movePlayer(0, 15));
-        leftBtn.addEventListener('click', () => movePlayer(-15, 0));
-        rightBtn.addEventListener('click', () => movePlayer(15, 0));
-        
-        // Event listener untuk keyboard
-        document.addEventListener('keydown', (event) => {
-            switch(event.key) {
-                case 'ArrowUp':
-                    movePlayer(0, -15);
-                    break;
-                case 'ArrowDown':
-                    movePlayer(0, 15);
-                    break;
-                case 'ArrowLeft':
-                    movePlayer(-15, 0);
-                    break;
-                case 'ArrowRight':
-                    movePlayer(15, 0);
-                    break;
-            }
-        });
-        
-        // Fungsi untuk mengirim chat
-        function sendChatMessage() {
-            const message = chatInput.value.trim();
-            if (!message) return;
-            
-            const messageData = {
-                sender: playerName,
-                text: message,
-                timestamp: Date.now()
-            };
-            
-            chatRef.push(messageData);
-            chatInput.value = '';
-        }
-        
-        sendChatBtn.addEventListener('click', sendChatMessage);
-        chatInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                sendChatMessage();
-            }
-        });
-        
-        // Fungsi untuk keluar dari room
-        leaveRoomBtn.addEventListener('click', () => {
-            if (playersRef && playerId) {
-                playersRef.child(playerId).remove();
-            }
-            
-            // Hapus room jika kosong
-            playersRef.once('value')
-                .then(snapshot => {
-                    const players = snapshot.val() || {};
-                    if (Object.keys(players).length === 0) {
-                        currentRoomRef.remove();
-                        chatRef.remove();
-                    }
-                });
-            
-            showScreen(mainMenu);
-        });
-        
-        // Fungsi untuk mendapatkan warna acak
-        function getRandomColor() {
-            const colors = [
-                '#3498db', '#e74c3c', '#2ecc71', '#f1c40f', 
-                '#9b59b6', '#1abc9c', '#d35400', '#34495e'
-            ];
-            return colors[Math.floor(Math.random() * colors.length)];
-        }
-        
-        // Hapus data pemain saat meninggalkan halaman
-        window.addEventListener('beforeunload', () => {
-            if (playersRef && playerId) {
-                playersRef.child(playerId).remove();
-                
-                // Hapus room jika kosong
-                playersRef.once('value')
-                    .then(snapshot => {
-                        const players = snapshot.val() || {};
-                        if (Object.keys(players).length === 0) {
-                            currentRoomRef.remove();
-                            chatRef.remove();
-                        }
-                    });
-            }
-        });
-    </script>
+<div id="menuJoin" class="card" style="display:none;">
+ <h2>JOIN ROOM</h2>
+ <input id="joinInput" placeholder="Kode Room">
+ <button onclick="joinRoom()">MASUK</button>
+</div>
+
+<div id="lobby" class="card" style="display:none;">
+ <h2>LOBBY ROOM</h2>
+ <p>Kode Room: <b id="lobbyCode"></b></p>
+ <h3>PLAYER LIST:</h3>
+ <div id="playerListLobby"></div>
+ <p>Menunggu host mulai...</p>
+</div>
+
+<canvas id="gameCanvas" width="360" height="360" style="display:none;"></canvas>
+
+<script>
+// FIREBASE CONFIG
+const firebaseConfig={apiKey:"AIzaSyC3Yw5NIexJddefw-AtutQ1vPhErdfL89s",authDomain:"akun-7b590.firebaseapp.com",databaseURL:"https://akun-7b590-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"akun-7b590",storageBucket:"akun-7b590.firebasestorage.app",messagingSenderId:"65784994154",appId:"1:65784994154:web:f7b9fd921736462985ed13",measurementId:"G-31JW6E46L1"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+let playerId="P"+Math.floor(Math.random()*999999);
+let currentRoom="";
+let isHost=false;
+
+// MENU OPEN
+function openCreate(){
+ document.getElementById("mainMenu").style.display="none";
+ document.getElementById("menuCreate").style.display="block";
+ const code=Math.floor(100000+Math.random()*900000);
+ currentRoom=code;
+ isHost=true;
+ document.getElementById("roomCodeText").innerText=code;
+ db.ref("rooms/"+code).set({winScore:10,host:playerId,started:false});
+ db.ref("rooms/"+code+"/players/"+playerId).set({x:5,y:5,score:0});
+ db.ref("rooms/"+code+"/players").on("value",snap=>{
+  let box="";
+  for(let id in snap.val()){box+=`<div class='playerBox'>${id}</div>`;}
+  document.getElementById("playerListCreate").innerHTML=box;
+ });
+}
+
+function openJoin(){
+ document.getElementById("mainMenu").style.display="none";
+ document.getElementById("menuJoin").style.display="block";
+}
+
+function joinRoom(){
+ let code=document.getElementById("joinInput").value;
+ if(!code)return alert("Isi kode!");
+ currentRoom=code;
+ isHost=false;
+ db.ref("rooms/"+code).once("value",snap=>{
+  if(!snap.exists())return alert("Room tidak ditemukan!");
+  db.ref("rooms/"+code+"/players/"+playerId).set({x:5,y:5,score:0});
+  openLobby();
+ });
+}
+
+function openLobby(){
+ document.getElementById("menuJoin").style.display="none";
+ document.getElementById("lobby").style.display="block";
+ document.getElementById("lobbyCode").innerText=currentRoom;
+
+ db.ref("rooms/"+currentRoom+"/players").on("value",snap=>{
+  let box="";
+  for(let id in snap.val()){box+=`<div class='playerBox'>${id}</div>`;}
+  document.getElementById("playerListLobby").innerHTML=box;
+ });
+
+ db.ref("rooms/"+currentRoom+"/started").on("value",snap=>{
+  if(snap.val()===true){startGameplay();}
+ });
+}
+
+function startGame(){
+ if(!isHost)return;
+ let win=document.getElementById("winScore").value;
+ if(!win)win=10;
+ db.ref("rooms/"+currentRoom+"/winScore").set(win);
+ db.ref("rooms/"+currentRoom+"/started").set(true);
+}
+
+// GAMEPLAY SNAKE
+let ctx,grid=20,snake=[{x:5,y:5}],food={x:10,y:10},vx=1,vy=0;
+
+function startGameplay(){
+ document.getElementById("lobby").style.display="none";
+ document.getElementById("menuCreate").style.display="none";
+ document.getElementById("gameCanvas").style.display="block";
+ const c=document.getElementById("gameCanvas");ctx=c.getContext("2d");
+
+ spawnFood();
+ setInterval(gameLoop,120);
+ window.addEventListener("keydown",control);
+}
+
+function control(e){
+ if(e.key==="ArrowUp"&&vy!==1){vx=0;vy=-1;}
+ if(e.key==="ArrowDown"&&vy!==-1){vx=0;vy=1;}
+ if(e.key==="ArrowLeft"&&vx!==1){vx=-1;vy=0;}
+ if(e.key==="ArrowRight"&&vx!==-1){vx=1;vy=0;}
+}
+
+function spawnFood(){food.x=Math.floor(Math.random()*18);food.y=Math.floor(Math.random()*18);}
+
+function gameLoop(){
+ let head={x:snake[0].x+vx,y:snake[0].y+vy};
+ snake.unshift(head);
+ if(head.x===food.x&&head.y===food.y){spawnFood();} else snake.pop();
+
+ ctx.fillStyle="#000";ctx.fillRect(0,0,360,360);
+ ctx.fillStyle="#ffd700";
+ snake.forEach(p=>ctx.fillRect(p.x*grid,p.y*grid,grid-2,grid-2));
+ ctx.fillStyle="#fffa50";ctx.fillRect(food.x*grid,food.y*grid,grid-2,grid-2);
+}
+</script>
+
 </body>
-    </html>
+</html>
