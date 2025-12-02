@@ -1,159 +1,298 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Snake Multiplayer</title>
-<style>
- body{background:#000;color:#ffd700;font-family:Arial;text-align:center;padding:20px;} 
- h1,h2,h3{color:#ffd700;} 
- .card{background:#111;border:2px solid #ffd700;padding:15px;border-radius:12px;margin:10px;} 
- button,input{padding:10px;font-size:18px;margin:5px;border-radius:8px;border:2px solid #ffd700;background:#222;color:#ffd700;} 
- button:active{transform:scale(0.95);} 
- #gameCanvas{background:#111;border:2px solid #ffd700;} 
- .playerBox{background:#222;border:1px solid #ffd700;margin:5px;padding:8px;border-radius:8px;} 
-</style>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Landscape Runner — HTML Game</title>
+  <style>
+    /* Basic reset */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:#0b1020;font-family:Inter,Arial,Helvetica,sans-serif;color:#fff}
+
+    /* Full-screen landscape game area */
+    #wrap{
+      width:100vw;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      position:relative;
+      background: linear-gradient(180deg,#1b2a47 0%, #0b1020 60%);
+    }
+
+    /* Canvas fills the width in landscape; keep aspect ratio */
+    canvas#game {
+      width:100%;
+      height:100%;
+      display:block;
+      max-height:100vh;
+    }
+
+    /* HUD */
+    .hud{
+      position:absolute;
+      top:12px;
+      left:12px;
+      font-weight:700;
+      letter-spacing:1px;
+      background:rgba(0,0,0,0.25);
+      padding:8px 12px;
+      border-radius:10px;
+      backdrop-filter: blur(4px);
+    }
+    .hud .score{font-size:18px}
+
+    /* Rotate warning for portrait phones */
+    #rotateHint{
+      position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:40;
+      background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);text-align:center;padding:20px;display:none
+    }
+    #rotateHint p{max-width:420px}
+
+    /* Touch controls (mobile) */
+    .controls{
+      position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:18px;z-index:30
+    }
+    .btn{
+      width:78px;height:56px;border-radius:12px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#fff;user-select:none
+    }
+    .btn:active{transform:scale(0.98)}
+
+    /* Small hint */
+    .hint{position:absolute;right:12px;top:12px;background:rgba(0,0,0,0.25);padding:6px 10px;border-radius:10px;font-size:13px}
+
+    /* Restart overlay */
+    #overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:50;pointer-events:none}
+    #overlay .panel{background:rgba(0,0,0,0.7);padding:24px;border-radius:14px;text-align:center;pointer-events:auto}
+    #overlay .panel h2{margin-bottom:10px}
+    #overlay .panel button{margin-top:12px;padding:10px 16px;border-radius:8px;border:0;background:#1db954;color:white;font-weight:700}
+
+    @media (orientation:portrait){
+      #rotateHint{display:flex}
+    }
+  </style>
 </head>
 <body>
-<h1>SNAKE MULTIPLAYER - DARK GOLD</h1>
+  <div id="wrap">
+    <canvas id="game" width="1280" height="720"></canvas>
 
-<div id="mainMenu" class="card">
- <h2>MENU</h2>
- <button onclick="openCreate()">CREATE ROOM</button>
- <button onclick="openJoin()">JOIN ROOM</button>
-</div>
+    <div class="hud">
+      <div class="score">Score: <span id="score">0</span></div>
+      <div class="speed" style="font-size:12px;opacity:0.9">Speed: <span id="spd">1.0</span></div>
+    </div>
 
-<div id="menuCreate" class="card" style="display:none;">
- <h2>CREATE ROOM</h2>
- <p>KODE ROOM:</p>
- <h1 id="roomCodeText"></h1>
- <p>SET SKOR MENANG:</p>
- <input id="winScore" type="number" placeholder="contoh: 10">
- <h3>PLAYER LIST:</h3>
- <div id="playerListCreate"></div>
- <button onclick="startGame()">MULAI</button>
-</div>
+    <div class="hint">Keys: ↑ / Space = Jump</div>
 
-<div id="menuJoin" class="card" style="display:none;">
- <h2>JOIN ROOM</h2>
- <input id="joinInput" placeholder="Kode Room">
- <button onclick="joinRoom()">MASUK</button>
-</div>
+    <div class="controls" id="controls">
+      <div class="btn" id="jumpBtn">JUMP</div>
+      <div class="btn" id="duckBtn">DUCK</div>
+    </div>
 
-<div id="lobby" class="card" style="display:none;">
- <h2>LOBBY ROOM</h2>
- <p>Kode Room: <b id="lobbyCode"></b></p>
- <h3>PLAYER LIST:</h3>
- <div id="playerListLobby"></div>
- <p>Menunggu host mulai...</p>
-</div>
+    <div id="rotateHint"><p>Putar perangkat ke mode <strong>landscape</strong> untuk pengalaman terbaik. Jika menggunakan komputer — cukup resize jendela lebih lebar.</p></div>
 
-<canvas id="gameCanvas" width="360" height="360" style="display:none;"></canvas>
+    <div id="overlay" style="display:none">
+      <div class="panel">
+        <h2 id="overlayTitle">Game Over</h2>
+        <div>Score: <strong id="finalScore">0</strong></div>
+        <button id="restart">Main Lagi</button>
+      </div>
+    </div>
+  </div>
 
-<script>
-// FIREBASE CONFIG
-const firebaseConfig={apiKey:"AIzaSyC3Yw5NIexJddefw-AtutQ1vPhErdfL89s",authDomain:"akun-7b590.firebaseapp.com",databaseURL:"https://akun-7b590-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"akun-7b590",storageBucket:"akun-7b590.firebasestorage.app",messagingSenderId:"65784994154",appId:"1:65784994154:web:f7b9fd921736462985ed13",measurementId:"G-31JW6E46L1"};
-firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
+  <script>
+    /* Simple landscape endless runner
+       Controls: Space or Up arrow to jump. Touch the JUMP button on mobile.
+    */
 
-let playerId="P"+Math.floor(Math.random()*999999);
-let currentRoom="";
-let isHost=false;
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    // internal resolution (kept fixed for consistent gameplay)
+    const GAME_W = 1280, GAME_H = 720;
+    canvas.width = GAME_W; canvas.height = GAME_H;
 
-// MENU OPEN
-function openCreate(){
- document.getElementById("mainMenu").style.display="none";
- document.getElementById("menuCreate").style.display="block";
- const code=Math.floor(100000+Math.random()*900000);
- currentRoom=code;
- isHost=true;
- document.getElementById("roomCodeText").innerText=code;
- db.ref("rooms/"+code).set({winScore:10,host:playerId,started:false});
- db.ref("rooms/"+code+"/players/"+playerId).set({x:5,y:5,score:0});
- db.ref("rooms/"+code+"/players").on("value",snap=>{
-  let box="";
-  for(let id in snap.val()){box+=`<div class='playerBox'>${id}</div>`;}
-  document.getElementById("playerListCreate").innerHTML=box;
- });
-}
+    // HUD elements
+    const scoreEl = document.getElementById('score');
+    const spdEl = document.getElementById('spd');
+    const overlay = document.getElementById('overlay');
+    const finalScore = document.getElementById('finalScore');
+    const restartBtn = document.getElementById('restart');
 
-function openJoin(){
- document.getElementById("mainMenu").style.display="none";
- document.getElementById("menuJoin").style.display="block";
-}
+    // Controls
+    const jumpBtn = document.getElementById('jumpBtn');
+    const duckBtn = document.getElementById('duckBtn');
 
-function joinRoom(){
- let code=document.getElementById("joinInput").value;
- if(!code)return alert("Isi kode!");
- currentRoom=code;
- isHost=false;
- db.ref("rooms/"+code).once("value",snap=>{
-  if(!snap.exists())return alert("Room tidak ditemukan!");
-  db.ref("rooms/"+code+"/players/"+playerId).set({x:5,y:5,score:0});
-  openLobby();
- });
-}
+    // Game state
+    let running = true;
+    let score = 0;
+    let speed = 6; // world speed
+    let gravity = 0.9;
+    let groundY = GAME_H - 120;
 
-function openLobby(){
- document.getElementById("menuJoin").style.display="none";
- document.getElementById("lobby").style.display="block";
- document.getElementById("lobbyCode").innerText=currentRoom;
+    // Player
+    const player = {
+      x:160,
+      y:groundY - 80,
+      w:60,
+      h:80,
+      vy:0,
+      onGround:true,
+      duck:false
+    };
 
- db.ref("rooms/"+currentRoom+"/players").on("value",snap=>{
-  let box="";
-  for(let id in snap.val()){box+=`<div class='playerBox'>${id}</div>`;}
-  document.getElementById("playerListLobby").innerHTML=box;
- });
+    // Obstacles
+    let obstacles = [];
+    let spawnTimer = 0;
 
- db.ref("rooms/"+currentRoom+"/started").on("value",snap=>{
-  if(snap.val()===true){startGameplay();}
- });
-}
+    function reset(){
+      running = true; score = 0; speed = 6; obstacles = []; spawnTimer = 0; player.y = groundY - player.h; player.vy = 0; player.onGround = true; overlay.style.display = 'none';
+    }
 
-function startGame(){
- if(!isHost)return;
- let win=document.getElementById("winScore").value;
- if(!win)win=10;
- db.ref("rooms/"+currentRoom+"/winScore").set(win);
- db.ref("rooms/"+currentRoom+"/started").set(true);
-}
+    restartBtn.addEventListener('click', ()=>{ reset(); loop(performance.now()); });
 
-// GAMEPLAY SNAKE
-let ctx,grid=20,snake=[{x:5,y:5}],food={x:10,y:10},vx=1,vy=0;
+    function spawnObstacle(){
+      const h = 40 + Math.random()*80;
+      const w = 30 + Math.random()*60;
+      obstacles.push({x:GAME_W + 40, y: groundY - h, w, h});
+    }
 
-function startGameplay(){
- document.getElementById("lobby").style.display="none";
- document.getElementById("menuCreate").style.display="none";
- document.getElementById("gameCanvas").style.display="block";
- const c=document.getElementById("gameCanvas");ctx=c.getContext("2d");
+    function update(dt){
+      if(!running) return;
+      // increase difficulty slowly
+      speed += 0.0004 * dt;
+      spdEl.textContent = (speed/6).toFixed(2);
 
- spawnFood();
- setInterval(gameLoop,120);
- window.addEventListener("keydown",control);
-}
+      // Spawn obstacles
+      spawnTimer -= dt;
+      if(spawnTimer <= 0){
+        spawnObstacle();
+        spawnTimer = 700 + Math.random()*900 - Math.min(500, score*2); // faster as score grows
+      }
 
-function control(e){
- if(e.key==="ArrowUp"&&vy!==1){vx=0;vy=-1;}
- if(e.key==="ArrowDown"&&vy!==-1){vx=0;vy=1;}
- if(e.key==="ArrowLeft"&&vx!==1){vx=-1;vy=0;}
- if(e.key==="ArrowRight"&&vx!==-1){vx=1;vy=0;}
-}
+      // Update obstacles
+      for(let i=obstacles.length-1;i>=0;i--){
+        obstacles[i].x -= speed*(dt/16);
+        if(obstacles[i].x + obstacles[i].w < -50) obstacles.splice(i,1);
+      }
 
-function spawnFood(){food.x=Math.floor(Math.random()*18);food.y=Math.floor(Math.random()*18);}
+      // Player physics
+      player.vy += gravity*(dt/16);
+      player.y += player.vy*(dt/16);
+      if(player.y + player.h >= groundY){ player.y = groundY - player.h; player.vy = 0; player.onGround = true; }
+      else player.onGround = false;
 
-function gameLoop(){
- let head={x:snake[0].x+vx,y:snake[0].y+vy};
- snake.unshift(head);
- if(head.x===food.x&&head.y===food.y){spawnFood();} else snake.pop();
+      // Score
+      score += dt*0.02;
+      scoreEl.textContent = Math.floor(score);
 
- ctx.fillStyle="#000";ctx.fillRect(0,0,360,360);
- ctx.fillStyle="#ffd700";
- snake.forEach(p=>ctx.fillRect(p.x*grid,p.y*grid,grid-2,grid-2));
- ctx.fillStyle="#fffa50";ctx.fillRect(food.x*grid,food.y*grid,grid-2,grid-2);
-}
-</script>
+      // Collision
+      for(let obs of obstacles){
+        if(rectIntersect(player, obs)){
+          gameOver(); break;
+        }
+      }
+    }
 
+    function rectIntersect(a,b){
+      const ax = a.x, ay = a.y, aw = a.w, ah = a.h;
+      const bx = b.x, by = b.y, bw = b.w, bh = b.h;
+      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    function draw(){
+      // clear
+      ctx.clearRect(0,0,GAME_W,GAME_H);
+
+      // background parallax
+      drawParallax();
+
+      // ground
+      ctx.fillStyle = '#123048';
+      ctx.fillRect(0, groundY, GAME_W, GAME_H-groundY);
+
+      // player
+      ctx.fillStyle = '#ffd166';
+      ctx.fillRect(player.x, player.y, player.w, player.h);
+      // face
+      ctx.fillStyle = '#2b2d42';
+      ctx.fillRect(player.x+12, player.y+18, 36, 12);
+
+      // obstacles
+      ctx.fillStyle = '#ef476f';
+      for(let obs of obstacles) ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+
+      // foreground: ground texture
+      ctx.fillStyle = 'rgba(255,255,255,0.02)';
+      for(let i=0;i<GAME_W;i+=40) ctx.fillRect((i + (performance.now()/20)%40), groundY+60, 20, 6);
+    }
+
+    function drawParallax(){
+      const t = performance.now()/1000;
+      // sky gradient already in CSS; draw simple hills
+      for(let layer=1;layer<=3;layer++){
+        ctx.beginPath();
+        const baseY = groundY - 20*layer;
+        ctx.fillStyle = `rgba(2,30,50,${0.08*layer})`;
+        ctx.moveTo(0, GAME_H);
+        for(let x=0;x<=GAME_W;x+=40){
+          const y = baseY - Math.sin((x/200) + t*0.2*layer)*40*layer;
+          ctx.lineTo(x,y);
+        }
+        ctx.lineTo(GAME_W, GAME_H);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+
+    let last = performance.now();
+    function loop(now){
+      const dt = Math.min(40, now-last);
+      last = now;
+      update(dt);
+      draw();
+      if(running) requestAnimationFrame(loop);
+    }
+
+    function gameOver(){
+      running = false;
+      finalScore.textContent = Math.floor(score);
+      overlay.style.display = 'flex';
+    }
+
+    // Input handling
+    window.addEventListener('keydown', (e)=>{
+      if(e.code === 'Space' || e.code === 'ArrowUp'){ jump(); e.preventDefault(); }
+      if(e.code === 'KeyD' || e.code === 'ArrowDown'){ duck(true); }
+    });
+    window.addEventListener('keyup', (e)=>{ if(e.code === 'KeyD' || e.code === 'ArrowDown'){ duck(false); } });
+
+    function jump(){
+      if(!running){ reset(); return; }
+      if(player.onGround){ player.vy = -18; player.onGround = false; }
+    }
+    function duck(d){ player.duck = d; if(d){ player.h = 48 } else { player.h = 80; player.y = Math.min(player.y, groundY - player.h); } }
+
+    // Touch buttons
+    jumpBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); jump(); });
+    duckBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); duck(true); });
+    duckBtn.addEventListener('touchend', (e)=>{ e.preventDefault(); duck(false); });
+
+    // Auto-start
+    loop(performance.now());
+
+    // Responsive: if portrait, show rotate overlay (handled by CSS). But also show controls only on narrow screens
+    function checkControls(){
+      const controls = document.getElementById('controls');
+      if(window.innerWidth < 700) controls.style.display = 'flex';
+      else controls.style.display = 'none';
+    }
+    window.addEventListener('resize', checkControls); checkControls();
+
+    // Simple tap to start if stopped
+    canvas.addEventListener('click', ()=>{ if(!running) { reset(); loop(performance.now()); } });
+
+    // Small accessibility: prevent overscroll on mobile
+    document.addEventListener('touchmove', function(e){ if(e.target === document.body) e.preventDefault(); }, {passive:false});
+
+  </script>
 </body>
 </html>
