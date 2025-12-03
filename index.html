@@ -2194,8 +2194,453 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
   
   // ==================== OTHER GAME FEATURES ====================
   
-  // [Kode untuk Fashion Menu, Skin Editor, Gacha System tetap sama seperti sebelumnya]
-  // Karena panjang kode, saya potong bagian ini untuk fokus pada multiplayer
+  // Fashion Menu functionality
+  function initFashionMenu() {
+    if (!EFFECTS_GRID) return;
+    
+    EFFECTS_GRID.innerHTML = '';
+    
+    effects.forEach(effect => {
+      const effectItem = document.createElement('div');
+      effectItem.className = `effect-item effect-${effect.id} ${effect.unlocked ? '' : 'locked'} ${effect.id === currentEffect ? 'active' : ''}`;
+      
+      effectItem.innerHTML = `
+        <div class="effect-preview">${effect.icon}</div>
+        <div class="effect-name">${effect.name}</div>
+        <div class="effect-status">${effect.unlocked ? '✓ UNLOCKED' : '🔒 LOCKED'}</div>
+        <div class="effect-details">${effect.description}</div>
+      `;
+      
+      effectItem.addEventListener('click', function() {
+        playButtonSound();
+        
+        if (!effect.unlocked) {
+          alert(`${effect.name} masih terkunci! Spin gacha untuk membuka efek baru.`);
+          return;
+        }
+        
+        // Remove active class from all items
+        document.querySelectorAll('.effect-item').forEach(item => {
+          item.classList.remove('active');
+        });
+        
+        // Add active class to clicked item
+        effectItem.classList.add('active');
+        
+        // Update current effect
+        currentEffect = effect.id;
+        saveToStorage('effect_current', currentEffect);
+        
+        // Update display
+        if (CURRENT_EFFECT) CURRENT_EFFECT.textContent = 'Efek: ' + effect.name;
+        if (ACTIVE_EFFECT_NAME) ACTIVE_EFFECT_NAME.textContent = effect.name;
+      });
+      
+      // Show details on hover
+      effectItem.addEventListener('mouseenter', function() {
+        const details = effectItem.querySelector('.effect-details');
+        if (details) details.style.display = 'block';
+      });
+      
+      effectItem.addEventListener('mouseleave', function() {
+        const details = effectItem.querySelector('.effect-details');
+        if (details) details.style.display = 'none';
+      });
+      
+      EFFECTS_GRID.appendChild(effectItem);
+    });
+  }
+  
+  // Skin Editor functionality
+  function initSkinEditor() {
+    // Upload button click
+    if (UPLOAD_BTN && SKIN_UPLOAD) {
+      UPLOAD_BTN.addEventListener('click', function() {
+        SKIN_UPLOAD.click();
+      });
+      
+      SKIN_UPLOAD.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (!file.type.match('image.*')) {
+          alert('Silakan pilih file gambar!');
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          // Clear previous image
+          const existingImage = SKIN_PREVIEW.querySelector('.skin-image');
+          if (existingImage) {
+            SKIN_PREVIEW.removeChild(existingImage);
+          }
+          
+          // Create new image
+          const img = new Image();
+          img.className = 'skin-image';
+          img.src = event.target.result;
+          
+          // Set initial position and size
+          skinZoom = 1;
+          skinPosition = { x: 0, y: 0 };
+          updateSkinImage(img);
+          
+          SKIN_PREVIEW.appendChild(img);
+          currentSkinImage = img;
+          
+          // Make image draggable
+          makeImageDraggable(img);
+        };
+        
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    // Upload area drag and drop
+    if (SKIN_PREVIEW) {
+      SKIN_PREVIEW.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        SKIN_PREVIEW.classList.add('dragover');
+      });
+      
+      SKIN_PREVIEW.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        SKIN_PREVIEW.classList.remove('dragover');
+      });
+      
+      SKIN_PREVIEW.addEventListener('drop', function(e) {
+        e.preventDefault();
+        SKIN_PREVIEW.classList.remove('dragover');
+        
+        const file = e.dataTransfer.files[0];
+        if (!file || !file.type.match('image.*')) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          // Clear previous image
+          const existingImage = SKIN_PREVIEW.querySelector('.skin-image');
+          if (existingImage) {
+            SKIN_PREVIEW.removeChild(existingImage);
+          }
+          
+          // Create new image
+          const img = new Image();
+          img.className = 'skin-image';
+          img.src = event.target.result;
+          
+          // Set initial position and size
+          skinZoom = 1;
+          skinPosition = { x: 0, y: 0 };
+          updateSkinImage(img);
+          
+          SKIN_PREVIEW.appendChild(img);
+          currentSkinImage = img;
+          
+          // Make image draggable
+          makeImageDraggable(img);
+        };
+        
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    // Zoom controls
+    if (ZOOM_IN) {
+      ZOOM_IN.addEventListener('click', function() {
+        skinZoom = Math.min(3, skinZoom + 0.1);
+        updateSkinImage();
+        if (ZOOM_VALUE) ZOOM_VALUE.textContent = Math.round(skinZoom * 100) + '%';
+      });
+    }
+    
+    if (ZOOM_OUT) {
+      ZOOM_OUT.addEventListener('click', function() {
+        skinZoom = Math.max(0.5, skinZoom - 0.1);
+        updateSkinImage();
+        if (ZOOM_VALUE) ZOOM_VALUE.textContent = Math.round(skinZoom * 100) + '%';
+      });
+    }
+    
+    // Position controls
+    if (MOVE_UP) {
+      MOVE_UP.addEventListener('click', function() {
+        skinPosition.y -= 5;
+        updateSkinImage();
+      });
+    }
+    
+    if (MOVE_DOWN) {
+      MOVE_DOWN.addEventListener('click', function() {
+        skinPosition.y += 5;
+        updateSkinImage();
+      });
+    }
+    
+    if (MOVE_LEFT) {
+      MOVE_LEFT.addEventListener('click', function() {
+        skinPosition.x -= 5;
+        updateSkinImage();
+      });
+    }
+    
+    if (MOVE_RIGHT) {
+      MOVE_RIGHT.addEventListener('click', function() {
+        skinPosition.x += 5;
+        updateSkinImage();
+      });
+    }
+    
+    if (CENTER_IMAGE) {
+      CENTER_IMAGE.addEventListener('click', function() {
+        skinPosition = { x: 0, y: 0 };
+        updateSkinImage();
+      });
+    }
+    
+    if (RESET_POSITION) {
+      RESET_POSITION.addEventListener('click', function() {
+        skinPosition = { x: 0, y: 0 };
+        skinZoom = 1;
+        updateSkinImage();
+        if (ZOOM_VALUE) ZOOM_VALUE.textContent = '100%';
+      });
+    }
+    
+    // Save and reset skin
+    if (SAVE_SKIN) {
+      SAVE_SKIN.addEventListener('click', function() {
+        if (!currentSkinImage) {
+          alert('Upload gambar terlebih dahulu!');
+          return;
+        }
+        
+        // Get image data URL
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 200;
+        canvas.height = 200;
+        
+        // Draw the image at the current position and zoom
+        const img = new Image();
+        img.onload = function() {
+          // Calculate scaled dimensions
+          const scaledWidth = img.width * skinZoom;
+          const scaledHeight = img.height * skinZoom;
+          
+          // Calculate position to center
+          const x = (200 - scaledWidth) / 2 + skinPosition.x;
+          const y = (200 - scaledHeight) / 2 + skinPosition.y;
+          
+          // Draw image
+          ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+          
+          // Save to localStorage
+          const skinDataURL = canvas.toDataURL('image/png');
+          customSkin = skinDataURL;
+          saveToStorage('custom_skin', skinDataURL);
+          
+          alert('Skin berhasil disimpan!');
+        };
+        
+        img.src = currentSkinImage.src;
+      });
+    }
+    
+    if (RESET_SKIN) {
+      RESET_SKIN.addEventListener('click', function() {
+        customSkin = null;
+        saveToStorage('custom_skin', '');
+        
+        // Clear preview
+        const existingImage = SKIN_PREVIEW.querySelector('.skin-image');
+        if (existingImage) {
+          SKIN_PREVIEW.removeChild(existingImage);
+        }
+        
+        currentSkinImage = null;
+        skinZoom = 1;
+        skinPosition = { x: 0, y: 0 };
+        
+        if (ZOOM_VALUE) ZOOM_VALUE.textContent = '100%';
+        
+        alert('Skin direset ke default!');
+      });
+    }
+  }
+  
+  function updateSkinImage(imageElement) {
+    const img = imageElement || currentSkinImage;
+    if (!img) return;
+    
+    img.style.transform = `translate(${skinPosition.x}px, ${skinPosition.y}px) scale(${skinZoom})`;
+  }
+  
+  function makeImageDraggable(img) {
+    img.addEventListener('mousedown', startDrag);
+    img.addEventListener('touchstart', startDrag);
+    
+    function startDrag(e) {
+      e.preventDefault();
+      isDragging = true;
+      
+      const event = e.type === 'touchstart' ? e.touches[0] : e;
+      dragStart = {
+        x: event.clientX - skinPosition.x,
+        y: event.clientY - skinPosition.y
+      };
+      
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('touchmove', drag);
+      document.addEventListener('mouseup', stopDrag);
+      document.addEventListener('touchend', stopDrag);
+    }
+    
+    function drag(e) {
+      if (!isDragging) return;
+      
+      const event = e.type === 'touchmove' ? e.touches[0] : e;
+      skinPosition.x = event.clientX - dragStart.x;
+      skinPosition.y = event.clientY - dragStart.y;
+      
+      updateSkinImage(img);
+    }
+    
+    function stopDrag() {
+      isDragging = false;
+      document.removeEventListener('mousemove', drag);
+      document.removeEventListener('touchmove', drag);
+      document.removeEventListener('mouseup', stopDrag);
+      document.removeEventListener('touchend', stopDrag);
+    }
+  }
+  
+  // Gacha System
+  function initGacha() {
+    if (!GACHA_ITEMS) return;
+    
+    GACHA_ITEMS.innerHTML = '';
+    
+    // Create gacha items
+    const gachaIcons = ['🔥', '❄️', '☠️', '🌿', '🌟', '💎', '🎯', '🎨'];
+    
+    gachaIcons.forEach(icon => {
+      const item = document.createElement('div');
+      item.className = 'gacha-item';
+      item.textContent = icon;
+      GACHA_ITEMS.appendChild(item);
+    });
+    
+    // Gacha lever
+    if (GACHA_LEVER) {
+      GACHA_LEVER.addEventListener('click', async function() {
+        if (ONE_SPIN && ONE_SPIN.disabled) {
+          alert('Koin tidak cukup! Main game dulu untuk dapat koin.');
+          return;
+        }
+        
+        playButtonSound();
+        
+        // Animate lever
+        GACHA_LEVER.style.transform = 'rotate(-30deg)';
+        setTimeout(() => {
+          GACHA_LEVER.style.transform = 'rotate(0deg)';
+        }, 300);
+        
+        // Play spin sound
+        if (effectOn && gachaSpinSfx) {
+          gachaSpinSfx.currentTime = 0;
+          gachaSpinSfx.play().catch(e => console.log('Gacha spin SFX play failed:', e));
+        }
+        
+        // Animate items
+        const items = GACHA_ITEMS.querySelectorAll('.gacha-item');
+        items.forEach(item => {
+          item.classList.remove('active');
+        });
+        
+        let spins = 0;
+        const maxSpins = 20;
+        const spinInterval = setInterval(() => {
+          items.forEach(item => item.classList.remove('active'));
+          const randomIndex = Math.floor(Math.random() * items.length);
+          items[randomIndex].classList.add('active');
+          
+          spins++;
+          if (spins >= maxSpins) {
+            clearInterval(spinInterval);
+            
+            // Determine result
+            const resultIndex = Math.floor(Math.random() * items.length);
+            items[resultIndex].classList.add('active');
+            
+            // Calculate win/lose
+            const isWin = Math.random() < 0.3; // 30% chance to win
+            let resultEffect = null;
+            
+            if (isWin) {
+              // Get a random locked effect
+              const lockedEffects = effects.filter(e => !e.unlocked);
+              if (lockedEffects.length > 0) {
+                resultEffect = lockedEffects[Math.floor(Math.random() * lockedEffects.length)];
+                resultEffect.unlocked = true;
+                
+                // Update localStorage
+                unlockedEffects.push(resultEffect.id);
+                saveToStorage('unlocked_effects', JSON.stringify(unlockedEffects));
+                
+                // Play win sound
+                if (effectOn && gachaWinSfx) {
+                  gachaWinSfx.currentTime = 0;
+                  gachaWinSfx.play().catch(e => console.log('Gacha win SFX play failed:', e));
+                }
+              } else {
+                // All effects already unlocked
+                coins += 5; // Bonus coins instead
+                saveToStorage('coins', coins);
+                renderCurrency();
+                
+                if (effectOn && gachaWinSfx) {
+                  gachaWinSfx.currentTime = 0;
+                  gachaWinSfx.play().catch(e => console.log('Gacha win SFX play failed:', e));
+                }
+              }
+            } else {
+              // Lose
+              if (effectOn && gachaZonkSfx) {
+                gachaZonkSfx.currentTime = 0;
+                gachaZonkSfx.play().catch(e => console.log('Gacha zonk SFX play failed:', e));
+              }
+            }
+            
+            // Deduct coins
+            coins -= 10;
+            saveToStorage('coins', coins);
+            renderCurrency();
+            
+            // Show result
+            if (GACHA_RESULT && RESULT_TEXT && EFFECT_DESC) {
+              GACHA_RESULT.style.display = 'block';
+              
+              if (isWin && resultEffect) {
+                RESULT_TEXT.innerHTML = `🎉 SELAMAT!<br>Kamu mendapatkan: <strong>${resultEffect.name}</strong>`;
+                EFFECT_DESC.textContent = resultEffect.description;
+              } else if (isWin) {
+                RESULT_TEXT.innerHTML = `🎉 SELAMAT!<br>Semua efek sudah terbuka!<br>Kamu dapat 5 koin bonus!`;
+                EFFECT_DESC.textContent = '';
+              } else {
+                RESULT_TEXT.innerHTML = `😢 COBA LAGI!<br>Kamu tidak mendapatkan efek baru.`;
+                EFFECT_DESC.textContent = 'Coba lagi!';
+              }
+            }
+          }
+        }, 100);
+      });
+    }
+    
+    // Update button states
+    renderCurrency();
+  }
   
   // ==================== EVENT LISTENERS ====================
   
@@ -2225,6 +2670,7 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
         playButtonSound();
         hideAllMenus();
         FASHION_MENU.style.display = 'block';
+        initFashionMenu();
         initAudio();
       });
     }
@@ -2234,6 +2680,7 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
         playButtonSound();
         hideAllMenus();
         SKIN_MENU.style.display = 'block';
+        initSkinEditor();
         initAudio();
       });
     }
@@ -2385,10 +2832,14 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
             gameTime
           });
           
-          // Start countdown for all players
+          // PERBAIKAN DI SINI: Gunakan path yang benar tanpa titik
+          // Sebelum (salah): 'gameData.countdown': 3
+          // Sesudah (benar): 
           await firebaseDatabase.ref(`rooms/${multiplayer.roomId}`).update({
             status: 'starting',
-            'gameData.countdown': 3
+            gameData: {
+              countdown: 3
+            }
           });
           
           // The countdown will be handled by listenToRoom()
@@ -2418,7 +2869,136 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
       });
     }
     
-    // [Kode event listeners lainnya tetap sama]
+    // Close coming soon overlay
+    if (CLOSE_COMING_SOON) {
+      CLOSE_COMING_SOON.addEventListener('click', function() {
+        playButtonSound();
+        COMING_SOON.style.display = 'none';
+        hideAllMenus();
+        MAIN_MENU.style.display = 'block';
+      });
+    }
+    
+    // Game controls
+    if (RESTART) {
+      RESTART.addEventListener('click', function() {
+        playButtonSound();
+        startGame();
+      });
+    }
+    
+    if (MANUAL_RESTART) {
+      MANUAL_RESTART.addEventListener('click', function() {
+        playButtonSound();
+        if (countdownTimer) clearInterval(countdownTimer);
+        startGame();
+      });
+    }
+    
+    // Settings controls
+    if (speedInc) {
+      speedInc.addEventListener('click', function() {
+        playArrowButtonSound();
+        if (speed > 50) {
+          speed -= 10;
+          speedValEl.textContent = speed;
+          saveToStorage('speed', speed);
+        }
+      });
+    }
+    
+    if (speedDec) {
+      speedDec.addEventListener('click', function() {
+        playArrowButtonSound();
+        if (speed < 300) {
+          speed += 10;
+          speedValEl.textContent = speed;
+          saveToStorage('speed', speed);
+        }
+      });
+    }
+    
+    if (musicToggle) {
+      musicToggle.addEventListener('change', function() {
+        musicOn = this.checked;
+        saveToStorage('music', musicOn);
+        if (bgMusic) {
+          if (musicOn) {
+            bgMusic.play().catch(e => console.log('Music play failed:', e));
+          } else {
+            bgMusic.pause();
+          }
+        }
+      });
+    }
+    
+    if (effectToggle) {
+      effectToggle.addEventListener('change', function() {
+        effectOn = this.checked;
+        saveToStorage('effect', effectOn);
+      });
+    }
+    
+    // Touch controls
+    const touchArrows = document.querySelectorAll('.arrow');
+    touchArrows.forEach(arrow => {
+      arrow.addEventListener('click', function() {
+        const dir = this.getAttribute('data-dir');
+        playArrowButtonSound();
+        initAudio();
+        
+        if (dir === 'up') nextDir = {x:0,y:-1};
+        if (dir === 'down') nextDir = {x:0,y:1};
+        if (dir === 'left') nextDir = {x:-1,y:0};
+        if (dir === 'right') nextDir = {x:1,y:0};
+      });
+    });
+    
+    // Swipe controls for mobile
+    let touchStart = null;
+    BOARD.addEventListener('touchstart', function(e) {
+      touchStart = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+      };
+      initAudio();
+    });
+    
+    BOARD.addEventListener('touchmove', function(e) {
+      if (!touchStart) return;
+      e.preventDefault();
+    });
+    
+    BOARD.addEventListener('touchend', function(e) {
+      if (!touchStart) return;
+      
+      const touchEnd = {
+        x: e.changedTouches[0].clientX,
+        y: e.changedTouches[0].clientY
+      };
+      
+      const dx = touchEnd.x - touchStart.x;
+      const dy = touchEnd.y - touchStart.y;
+      const minSwipe = 30;
+      
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal swipe
+        if (Math.abs(dx) > minSwipe) {
+          if (dx > 0) nextDir = {x:1,y:0}; // right
+          else nextDir = {x:-1,y:0}; // left
+          playArrowButtonSound();
+        }
+      } else {
+        // Vertical swipe
+        if (Math.abs(dy) > minSwipe) {
+          if (dy > 0) nextDir = {x:0,y:1}; // down
+          else nextDir = {x:0,y:-1}; // up
+          playArrowButtonSound();
+        }
+      }
+      
+      touchStart = null;
+    });
     
     // Keyboard controls
     document.addEventListener('keydown', function(e) {
@@ -2431,7 +3011,10 @@ html,body{height:100%;margin:0;font-family:Arial, Helvetica, sans-serif;backgrou
       initAudio();
     });
     
-    // [Kode kontrol lainnya tetap sama]
+    // Focus on board for keyboard controls
+    BOARD.addEventListener('click', function() {
+      BOARD.focus();
+    });
   }
   
   // ==================== INITIALIZATION ====================
