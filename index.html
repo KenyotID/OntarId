@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nightmare Topup</title>
+
+<style>
+body{
+    margin:0;
+    background:#050000;
+    color:#fff;
+    font-family:Arial, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+}
+
+/* MATA MERAH */
+.eyes{position:fixed; inset:0; pointer-events:none}
+.eye{
+    position:absolute;
+    width:120px;height:55px;
+    background:radial-gradient(circle, red 20%, #600 60%, transparent 70%);
+    border-radius:0 0 60px 60px;
+    box-shadow:0 0 25px red;
+    animation:blink 6s infinite;
+}
+.eye.left{top:12%;left:20%}
+.eye.right{top:12%;right:20%}
+@keyframes blink{
+    0%,90%,100%{transform:scaleY(1)}
+    92%{transform:scaleY(0.1)}
+}
+
+/* BOX */
+.box{
+    background:#0c0202;
+    border:1px solid #550000;
+    border-radius:14px;
+    padding:22px;
+    box-shadow:0 0 30px rgba(255,0,0,.5);
+    max-width:650px;
+    width:100%;
+    z-index:5;
+}
+
+h1{
+    text-align:center;
+    color:#ff2b2b;
+    text-shadow:0 0 15px red;
+    margin-bottom:5px;
+}
+.sub{
+    text-align:center;
+    color:#c88;
+    margin-bottom:18px;
+}
+
+/* LIST */
+.list{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+    text-align:center;
+}
+.item{
+    background:#130303;
+    border:1px solid #400;
+    padding:14px 8px;
+    border-radius:10px;
+}
+.amount{
+    font-size:22px;
+    font-weight:bold;
+    color:#ffb3b3;
+}
+.price{
+    font-size:14px;
+    color:#ff6b6b;
+    margin-top:4px;
+}
+
+.buy{
+    display:inline-block;
+    margin-top:10px;
+    padding:7px 14px;
+    background:linear-gradient(135deg,#ff1e1e,#7a0000);
+    color:#000;
+    font-weight:bold;
+    text-decoration:none;
+    border-radius:8px;
+    box-shadow:0 0 12px rgba(255,0,0,.6);
+}
+.buy:hover{box-shadow:0 0 22px red}
+
+/* FOOTER */
+.footer{
+    margin-top:20px;
+    text-align:center;
+    font-size:13px;
+}
+.footer span{
+    color:red;
+    font-weight:bold;
+    animation:glow 1.5s infinite alternate;
+}
+@keyframes glow{
+    from{text-shadow:0 0 5px red}
+    to{text-shadow:0 0 15px red,0 0 25px #600}
+}
+</style>
+</head>
+
+<body>
+
+<div class="eyes">
+    <div class="eye left"></div>
+    <div class="eye right"></div>
+</div>
+
+<div class="box">
+<h1>Nightmare Store</h1>
+<div class="sub">Batu Roh List</div>
+
+<div class="list">
+
+<div class="item">
+<div class="amount">10</div>
+<div class="price">1 K</div>
+<a class="buy" href="https://wa.me/6283843422293?text=TopUp%20bang%0ATOTAL%20:%2010%20BATU%20ROH%0AHARGA%20:%201%20K">BELI</a>
+</div>
+
+<div class="item">
+<div class="amount">50</div>
+<div class="price">10 K</div>
+<a class="buy" href="https://wa.me/6283843422293?text=TopUp%20bang%0ATOTAL%20:%2050%20BATU%20ROH%0AHARGA%20:%2010%20K">BELI</a>
+</div>
+
+<div class="item">
+<div class="amount">100</div>
+<div class="price">20 K</div>
+<a class="buy" href="https://wa.me/6283843422293?text=TopUp%20bang%0ATOTAL%20:%20100%20BATU%20ROH%0AHARGA%20:%2020%20K">BELI</a>
+</div>
+
+<div class="item">
+<div class="amount">150</div>
+<div class="price">30 K</div>
+<a class="buy" href="https://wa.me/6283843422293?text=TopUp%20bang%0ATOTAL%20:%20150%20BATU%20ROH%0AHARGA%20:%2030%20K">BELI</a>
+</div>
+
+<div class="item">
+<div class="amount">500</div>
+<div class="price">40 K</div>
+<a class="buy" href="https://wa.me/6283843422293?text=TopUp%20bang%0ATOTAL%20:%20500%20BATU%20ROH%0AHARGA%20:%2040%20K">BELI</a>
+</div>
+
+<div class="item">
+<div class="amount">1000</div>
+<div class="price">60 K</div>
+<a class="buy" href="https://wa.me/6283843422293?text=TopUp%20bang%0ATOTAL%20:%201000%20BATU%20ROH%0AHARGA%20:%2060%20K">BELI</a>
+</div>
+
+</div>
+
+<div class="footer">Powered by <span>Sero</span></div>
+</div>
+
+</body>
+</html>
